@@ -1,5 +1,6 @@
 import streamlit as st
-from services.include_contract import listar_contratos
+from src.services.contracts import listar_contratos
+from views.components.modal_contracts_incluir import modal_incluir_contrato
 
 def transformar_float_em_str(valor):
     '''Função para transformar valores em formato brasileiro.'''
@@ -36,6 +37,10 @@ def main():
             'Vencimento final': st.column_config.DateColumn('Vencimento', format='DD/MM/YYYY')
         }
     )
+
+    # botões de interação
+    with st.container(horizontal=True):
+        if st.button('Novo'): modal_incluir_contrato()
 
 if __name__ == '__main__':
     main()

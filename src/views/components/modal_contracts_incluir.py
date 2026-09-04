@@ -1,6 +1,6 @@
 import streamlit as st
 from tools.funcoes import listar_empresas, listar_bancos
-from services.include_contract import incluir_contrato
+from src.services.contracts import incluir_contrato
 
 def inicializar_state():
     '''Inicializar state do servidor.'''
@@ -56,23 +56,14 @@ def inicializar_state():
         if not key in st.session_state:
             st.session_state[key] = val
 
-def main():
-
-    # definindo o título da página
-    st.markdown('''
-        <h2 style='margin-bottom: 0px;'>Inclusão de Contrato</h2>
-        <p style='margin-top: -15px; color: #666; font-style: italic;'>
-            Preencha as informações abaixo para incluir um novo contrato no sistema.
-        </p>
-        ''',
-        unsafe_allow_html=True
-    )
+@st.dialog('Inclusão de Novos Contratos', width='large', dismissible=False)
+def modal_incluir_contrato():
 
     # inicializando as variáveis de armazenamento
     inicializar_state()
 
     # formulário de interação
-    with st.form('include_contract', border=False):
+    with st.form('contract', border=False):
 
         c1, c2, c3, c4 = st.columns([1, 1.5, 1.5, 1])
 
@@ -110,16 +101,18 @@ def main():
         c20.selectbox('Débito em cc', st.session_state.ic_debito_cc, key='ic_debito_cc')
         c21.selectbox('Registro de cobrança', st.session_state.ic_registro_cobranca, key='ic_registro_cobranca')
 
-        if st.form_submit_button('Confirmar'):
-            incluir_contrato(st.session_state)
+        with st.container(horizontal=True):
+            if st.form_submit_button('Confirmar'):
+                incluir_contrato(st.session_state)
+
+            if st.form_submit_button('Cancelar'):
+                st.rerun()
             
         ## notificações
         if 'mensagem_sucesso' in st.session_state:
             st.toast(st.session_state.pop('mensagem_sucesso'), icon='✅')
             inicializar_state()
+            st.rerun()
 
         if 'mensagem_erro' in st.session_state:
             st.toast(st.session_state.pop('mensagem_erro'), icon='⚠️')
-
-if __name__ == '__main__':
-    main()

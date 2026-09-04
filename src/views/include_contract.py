@@ -48,7 +48,8 @@ def inicializar_state():
         'ic_dt_primeiro_encargo': None,
         'ic_dt_primeiro_principal': None,
         'ic_dt_ultima_parcela': None,
-        'ic_debito_cc': ['NAO', 'SIM']
+        'ic_debito_cc': ['NAO', 'SIM'],
+        'ic_registro_cobranca': ['PRIMEIRO_DIA_UTIL', 'VENCIMENTO']
     }
 
     for key, val in default.items():
@@ -101,12 +102,13 @@ def main():
         c15.number_input('Prazo final', st.session_state.ic_prazo_final, key='ic_prazo_final')
         c16.number_input('Pagamento de carência', st.session_state.ic_pagamento_carencia, key='ic_pagamento_carencia')
 
-        c17, c18, c19, c20 = st.columns([1, 1, 1, 1])
+        c17, c18, c19, c20, c21 = st.columns([1, 1, 1, 1, 1])
         
         c17.date_input('Data primeira parcela de encargo', value=st.session_state.ic_dt_primeiro_encargo, format='DD/MM/YYYY', key='ic_dt_primeiro_encargo')
         c18.date_input('Data primeira parcela do principal', value=st.session_state.ic_dt_primeiro_principal, format='DD/MM/YYYY', key='ic_dt_primeiro_principal')
         c19.date_input('Data ultima parcela', value=st.session_state.ic_dt_ultima_parcela, format='DD/MM/YYYY', key='ic_dt_ultima_parcela')
         c20.selectbox('Débito em cc', st.session_state.ic_debito_cc, key='ic_debito_cc')
+        c21.selectbox('Registro de cobrança', st.session_state.ic_registro_cobranca, key='ic_registro_cobranca')
 
         if st.form_submit_button('Confirmar'):
             incluir_contrato(st.session_state)

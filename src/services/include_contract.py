@@ -1,8 +1,9 @@
 import streamlit as st
+import pandas as pd
 from sqlalchemy import text
 from database.connection import ConexaoBancoSQL
-from queries.queries_gerais import INCLUIR_CONTRATO
-from repositories.include_antecipation import registrar_contrato
+from queries.queries_gerais import INCLUIR_CONTRATO, SELECT_CONTRATOS
+from repositories.include_antecipation import registrar_contrato, consultar_contratos
 
 connect = ConexaoBancoSQL()
 engine = connect.conexao_banco()
@@ -88,7 +89,8 @@ def incluir_contrato(session_state):
         'data_primeira_parcela_prestacao': session_state['ic_dt_primeiro_principal'],
         'data_ultima_parcela': session_state['ic_dt_ultima_parcela'],
         'debito_conta_corrente': debito_em_conta,
-        'carencia_pagamento': session_state['ic_pagamento_carencia']
+        'carencia_pagamento': session_state['ic_pagamento_carencia'],
+        'registro_cobranca': session_state['ic_registro_cobranca']
     }
 
     # definindo a query
@@ -103,3 +105,17 @@ def incluir_contrato(session_state):
     except Exception as e:
         st.session_state['mensagem_erro'] = f'Erro ao incluir contrato. ({e})'
         st.rerun()
+
+def listar_contratos():
+    '''Função definida para listar todos os contratos registrados no banco de dados.'''
+
+    df = pd.DataFrame()
+    query = SELECT_CONTRATOS
+
+    try:
+        with engine.begin() as conn:
+            df = consultar_contratos(query, conn)
+    except:
+        pass
+
+    return df

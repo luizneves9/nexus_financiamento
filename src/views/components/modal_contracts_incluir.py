@@ -102,7 +102,7 @@ def modal_incluir_contrato():
         c21.selectbox('Registro de cobrança', st.session_state.ic_registro_cobranca, key='ic_registro_cobranca')
 
         with st.container(horizontal=True):
-            if st.form_submit_button('Confirmar'):
+            if st.form_submit_button('Confirmar', type='primary'):
                 incluir_contrato(st.session_state)
 
             if st.form_submit_button('Cancelar'):

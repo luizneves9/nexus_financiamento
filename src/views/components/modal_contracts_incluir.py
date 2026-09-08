@@ -1,6 +1,6 @@
 import streamlit as st
 from tools.funcoes import listar_empresas, listar_bancos
-from src.services.contracts import incluir_contrato
+from services.contracts import incluir_contrato
 
 def inicializar_state():
     '''Inicializar state do servidor.'''

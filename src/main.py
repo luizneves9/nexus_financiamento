@@ -8,7 +8,7 @@ st.set_page_config(
 def main():
     pages = {
         'Operacional': [
-            st.Page('views/include_contract.py', title='Contrato'),
+            st.Page('views/contracts.py', title='Contratos'),
             st.Page('views/include_antecipation.py', title='Antecipação')
         ]
     }

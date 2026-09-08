@@ -1,5 +1,5 @@
 import streamlit as st
-from src.services.contracts import listar_contratos
+from services.contracts import listar_contratos
 from views.components.modal_contracts_incluir import modal_incluir_contrato
 
 def transformar_float_em_str(valor):

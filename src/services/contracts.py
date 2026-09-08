@@ -3,7 +3,11 @@ import pandas as pd
 from sqlalchemy import text
 from database.connection import ConexaoBancoSQL
 from queries.queries_gerais import INCLUIR_CONTRATO, SELECT_CONTRATOS
+from queries.queries_contracts import SELECT_PROJECAO
 from repositories.include_antecipation import registrar_contrato, consultar_contratos
+from repositories.contract import listar_projecao
+from views.components.modal_contracts_projecao import modal_projecao_valores
+from tools.funcoes import transformar_float_em_str
 
 connect = ConexaoBancoSQL()
 engine = connect.conexao_banco()
@@ -119,3 +123,33 @@ def listar_contratos():
         pass
 
     return df
+
+def visualizar_projecao(linha_selecionada):
+    '''Visualização da projeção referente a um contrato.'''
+
+    # validando quantidade selecionada (deve ser um)
+    if len(linha_selecionada) != 1:
+        st.session_state['mensagem_erro'] = 'Selecione um registro!'
+        return
+
+    # selecionando registro
+    linha = linha_selecionada.iloc[0].copy()
+    id_linha = int(linha['Id'])
+
+    # montando a query e parametros
+    query = text(SELECT_PROJECAO)
+    parametro = {'id': id_linha}
+
+    # importando dataframe
+    try:
+        df = listar_projecao(query, engine, parametro)
+    except:
+        df = pd.DataFrame()
+
+    # formatando data
+    df['Data de Vencimento'] = pd.to_datetime(df['Data de Vencimento'], format='dd/mm/YYYY', errors='coerce').dt.strftime('%d/%m/%Y')
+    df['Valor'] = df['Valor'].map(transformar_float_em_str)
+
+    # visualizando df
+    modal_projecao_valores(df, linha)
+

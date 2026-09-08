@@ -1,0 +1,18 @@
+services:
+  fin-financiamento:
+    build: .
+    image: fin-financiamento:1.0
+    container_name: fin-financiamento
+    networks:
+      - default
+      - rede-proxy
+    ports:
+      - "8502:8502"
+    env_file:
+      - .env
+    environment:
+      - TZ=America/Sao_Paulo
+
+networks:
+  rede-proxy:
+    external: true

@@ -1,5 +1,5 @@
 import streamlit as st
-from services.contracts import listar_contratos
+from services.contracts import listar_contratos, visualizar_projecao
 from views.components.modal_contracts_incluir import modal_incluir_contrato
 
 def transformar_float_em_str(valor):
@@ -26,21 +26,34 @@ def main():
     # listando contratos
     df_contratos = listar_contratos()
 
+    # definindo formato
     df_contratos['Juros'] = df_contratos['Juros'].astype(str).str.replace('.', ',').str.ljust(4, '0') + '%'
     df_contratos['Valor'] = df_contratos['Valor'].map(transformar_float_em_str)
 
-    st.data_editor(
+    # inclusão da opção de seleção
+    df_contratos.insert(0, 'sel', False)
+
+    # visualização do dataframe
+    df_visual = st.data_editor(
         df_contratos,
         hide_index=True,
         column_config={
             'Data de Emissão': st.column_config.DateColumn('Data', format='DD/MM/YYYY'),
-            'Vencimento final': st.column_config.DateColumn('Vencimento', format='DD/MM/YYYY')
+            'Vencimento final': st.column_config.DateColumn('Vencimento', format='DD/MM/YYYY'),
+            'sel': st.column_config.CheckboxColumn('', default=False)
         }
     )
 
     # botões de interação
     with st.container(horizontal=True):
         if st.button('Novo'): modal_incluir_contrato()
+        if st.button('Projeção'): visualizar_projecao(df_visual[df_visual['sel'] == True])
+
+    if 'mensagem_sucesso' in st.session_state:
+        st.toast(st.session_state.pop('mensagem_sucesso'), icon='✅')
+
+    if 'mensagem_erro' in st.session_state:
+        st.toast(st.session_state.pop('mensagem_erro'), icon='⚠️')
 
 if __name__ == '__main__':
     main()

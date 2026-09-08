@@ -30,4 +30,12 @@ def listar_bancos():
 
 def incluir_contrato(session_state):
     '''Função para incluir novo contrato.'''
-    
+
+def transformar_float_em_str(valor):
+    '''Função para transformar valores em formato brasileiro.'''
+
+    if isinstance(valor, str):
+        return str
+
+    if isinstance(valor, (float, int)):
+        return f'{valor:,.2f}'.replace(',', 'v').replace('.', ',').replace('v', '.')

@@ -14,3 +14,8 @@ FROM financiamento.mv_projecao_real
 CROSS JOIN selic s
 WHERE id_contrato = :id
 '''
+
+DELETE_CONTRATO = '''
+	DELETE FROM financiamento.contratos
+	WHERE id = :id
+'''

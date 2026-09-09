@@ -3,9 +3,9 @@ import pandas as pd
 from sqlalchemy import text
 from database.connection import ConexaoBancoSQL
 from queries.queries_gerais import INCLUIR_CONTRATO, SELECT_CONTRATOS
-from queries.queries_contracts import SELECT_PROJECAO
+from queries.queries_contracts import SELECT_PROJECAO, DELETE_CONTRATO
 from repositories.include_antecipation import registrar_contrato, consultar_contratos
-from repositories.contract import listar_projecao
+from repositories.contract import listar_projecao, interacao_database
 from views.components.modal_contracts_projecao import modal_projecao_valores
 from tools.funcoes import transformar_float_em_str
 
@@ -153,3 +153,22 @@ def visualizar_projecao(linha_selecionada):
     # visualizando df
     modal_projecao_valores(df, linha)
 
+def deletar_contrato_banco(id_contrato):
+    '''Registrando exclusão no banco de dados.'''
+
+    # iniciando exclusão
+    try:
+
+        # definindo query e parametro
+        query = text(DELETE_CONTRATO)
+        parametro = {'id': id_contrato}
+
+        # iniciando engine e chaando a função de interação com banco de dados
+        with engine.begin() as conn:
+            interacao_database(query, conn, parametro)
+
+        # registrando notificação e encerrando
+        st.session_state['mensagem_sucesso'] = 'Contrato excluído com sucesso!'
+
+    except:
+        raise ValueError('Erro ao excluir contrato!')

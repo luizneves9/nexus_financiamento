@@ -1,12 +1,5 @@
 # Nexus - Documentacao do Projeto
 
-Esta pasta contem a documentacao consolidada do projeto para leitura, revisao
-e validacao antes da substituicao da documentacao atualmente mantida em `docs/`.
-
-O conteudo foi organizado conforme praticas de engenharia de software e
-separado por requisitos, arquitetura, dados, operacao, seguranca, testes e
-casos de uso.
-
 ## Objetivo do projeto
 
 O Nexus - Gestao de Financiamentos tem como objetivo centralizar a gestao e o

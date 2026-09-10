@@ -10,7 +10,7 @@ SELECT
     parcela AS "Parcela",
     data_vcto AS "Data de Vencimento",
     ROUND(COALESCE(valor_pagamento, total_parcela * s.valor), 2) AS "Valor"
-FROM financiamento.mv_projecao_real
+FROM financiamento.mv_projecao_moeda_final
 CROSS JOIN selic s
 WHERE id_contrato = :id
 '''

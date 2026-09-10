@@ -13,4 +13,5 @@ INCLUIR_CONTRATO = '''
 
 SELECT_CONTRATOS = '''
     SELECT * FROM financiamento.vw_controle_contratos
+    ORDER BY "Id"
 '''

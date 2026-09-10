@@ -147,8 +147,9 @@ def visualizar_projecao(linha_selecionada):
         df = pd.DataFrame()
 
     # formatando data
-    df['Data de Vencimento'] = pd.to_datetime(df['Data de Vencimento'], format='dd/mm/YYYY', errors='coerce').dt.strftime('%d/%m/%Y')
-    df['Valor'] = df['Valor'].map(transformar_float_em_str)
+    if not df.empty:
+        df['Data de Vencimento'] = pd.to_datetime(df['Data de Vencimento'], format='%d/%m/%Y', errors='coerce').dt.strftime('%d/%m/%Y')
+        df['Valor'] = df['Valor'].map(transformar_float_em_str)
 
     # visualizando df
     modal_projecao_valores(df, linha)

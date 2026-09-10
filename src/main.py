@@ -13,7 +13,8 @@ def main():
         ],
         'Cadastros': [
             st.Page('views/empresas.py', title='Empresas'),
-            st.Page('views/bancos.py', title='Bancos')
+            st.Page('views/bancos.py', title='Bancos'),
+            st.Page('views/fornecedor.py', title='Fornecedor'),
         ]
     }
 

@@ -10,31 +10,31 @@ continua sendo a fonte normativa para tipos, nulidade, indices e restricoes.
 | `id` | Identificador do contrato. |
 | `id_empresa` | Empresa relacionada. |
 | `id_banco` | Banco relacionado. |
-| `numero_contrato` | Numero informado no contrato. |
-| `data_emissao` | Data de emissao. |
+| `número_contrato` | Numero informado no contrato. |
+| `data_emissão` | Data de emissão. |
 | `data_bndes` | Data usada para localizar Selic. |
 | `selic` | Taxa preenchida pelo trigger quando nula. |
-| `tipo_contrato` | Tipo de calculo, como SELIC ou TFC. |
+| `tipo_contrato` | Tipo de cálculo, como SELIC ou TFC. |
 | `valor_financiado` | Valor principal financiado. |
 | `pos_fixado` | Indicador/modalidade pos-fixada. |
-| `taxa_juros_efetiva` | Taxa efetiva usada na projecao. |
+| `taxa_juros_efetiva` | Taxa efetiva usada na projeção. |
 | `prazo_total` | Prazo total informado. |
-| `prazo_carencia` | Prazo de carencia. |
-| `prazo_final` | Prazo de amortizacao final. |
+| `prazo_carencia` | Prazo de carência. |
+| `prazo_final` | Prazo de amortização final. |
 | `data_referencia` | Data calculada pelo trigger. |
-| `carencia_pagamento` | Quantidade de pagamentos durante carencia. |
-| `registro_cobranca` | Regra de registro da cobranca. |
+| `carencia_pagamento` | Quantidade de pagamentos durante carência. |
+| `registro_cobrança` | Regra de registro da cobrança. |
 
-## Antecipacao
+## Antecipação
 
 | Campo | Significado |
 | --- | --- |
-| `id_contrato` | Contrato da antecipacao. |
+| `id_contrato` | Contrato da antecipação. |
 | `data_pagamento` | Data do pagamento. |
 | `data_tesouraria` | Data usada para localizar Selic. |
-| `selic` | Taxa aplicada a antecipacao. |
+| `selic` | Taxa aplicada a antecipação. |
 | `valor_pago` | Valor financeiro pago. |
-| `valor_moeda` | Valor calculado pela taxa aplicavel. |
+| `valor_moeda` | Valor calculado pela taxa aplicável. |
 
 ## Bem e veiculo
 
@@ -48,8 +48,8 @@ carroceria.
 - `feriados`: data e descricao do feriado.
 - `empresas`, `bancos` e `fornecedor`: CNPJ e razao social.
 
-## Convencoes
+## Convenções
 
-Campos financeiros utilizam tipos numericos do PostgreSQL. Datas sao
-armazenadas como `date`. Regras de nulidade e unicidade devem ser consultadas
-no DDL vigente antes de qualquer integracao.
+Campos financeiros utilizam tipos numericos do PostgreSQL. Datas são
+armazenadas como `daté`. Regras de nulidade e unicidade devem ser consultadas
+no DDL vigente antes de qualquer integração.

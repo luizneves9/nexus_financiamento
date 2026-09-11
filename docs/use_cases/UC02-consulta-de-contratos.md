@@ -1,8 +1,10 @@
 # UC02 - Consulta de Contratos
 
 **Status:** Implementado  
-**Ator principal:** Usuario responsavel pelo setor financeiro  
+**Ator principal:** Usuario responsável pelo setor financeiro  
 **Requisitos associados:** RF03
+
+**Rastreamento detalhado:** [Registro de Status e Pendências](../requirements/status-register.md#uc02---consulta-de-contratos)
 
 ## Objetivo
 
@@ -10,42 +12,42 @@ Exibir os contratos cadastrados para consulta operacional.
 
 ## Pre-condicoes
 
-1. A aplicacao esta disponivel.
-2. A conexao com o PostgreSQL esta disponivel.
+1. A aplicação está disponível.
+2. A conexão com o PostgreSQL está disponível.
 
 ## Pos-condicoes
 
-O usuario visualiza os contratos retornados pela view `financiamento.vw_controle_contratos`.
+O usuário visualiza os contratos retornados pela view `financiamento.vw_controle_contratos`.
 
 ## Fluxo principal
 
-1. O usuario acessa a pagina **Contratos**.
+1. O usuário acessa a página **Contratos**.
 2. O sistema consulta a view de controle de contratos.
-3. O sistema exibe identificador, empresa, banco, numero, data de emissao, valor, tipo de pos-fixacao, juros, prazo e vencimento final.
-4. O usuario pode selecionar um registro para executar uma operacao disponivel.
+3. O sistema exibe identificador, empresa, banco, número, data de emissão, valor, tipo de pos-fixação, juros, prazo e vencimento final.
+4. O usuário pode selecionar um registro para executar uma operação disponível.
 
 ## Fluxos alternativos
 
 ### FA01 - Nenhum contrato encontrado
 
-O sistema exibe uma tabela sem registros. O usuario pode retornar a consulta posteriormente.
+O sistema exibe uma tabela sem registros. O usuário pode retornar a consulta posteriormente.
 
 ### FA02 - Filtragem de contratos
 
-Filtros por banco, taxa, periodo, valor e tipo de contrato fazem parte da evolucao planejada.
+Filtros por banco, taxa, período, valor e tipo de contrato fazem parte da evolução planejada.
 
-## Fluxos de excecao
+## Fluxos de exceção
 
 ### FE01 - Falha na consulta
 
 O sistema deve informar a indisponibilidade do banco ou da consulta. O
-tratamento de erros da consulta sera aprimorado em evolucao futura.
+tratamento de erros da consulta será aprimorado em evolução futura.
 
-## Regras de negocio
+## Regras de negócio
 
 - A consulta utiliza a view de controle do banco.
-- A ordenacao atual e feita pelo identificador do contrato.
+- A ordenação atual e feita pelo identificador do contrato.
 
 ## Dados consultados
 
-Os campos exibidos sao definidos por `financiamento.vw_controle_contratos`.
+Os campos exibidos são definidos por `financiamento.vw_controle_contratos`.

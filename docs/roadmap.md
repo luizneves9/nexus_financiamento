@@ -1,34 +1,37 @@
 # Roadmap
 
+O detalhamento de cada pendência, sua evidência e o critério de conclusão
+está no [Registro de Status e Pendências](requirements/status-register.md).
+
 ## Fase atual - Desenvolvimento
 
-- Inclusao e consulta de contratos.
+- Inclusão e consulta de contratos.
 - Consulta de empresas, bancos e fornecedores.
-- Visualizacao parcial de projecoes.
-- Exclusao fisica de contratos.
-- Estruturas de banco para Selic, bens, veiculos e antecipacao.
+- Visualização parcial de projeções.
+- Exclusão física de contratos.
+- Estruturas de banco para Selic, bens, veículos e antecipação.
 
-## Versao 1.0
+## Versão 1.0
 
-- Completar cadastro e vinculo de bens e veiculos.
-- Disponibilizar registro de antecipacoes.
-- Disponibilizar liquidacao total e parcial com registro.
-- Implementar autenticacao e perfis.
+- Completar cadastro e vínculo de bens e veículos.
+- Disponibilizar registro de antecipações.
+- Disponibilizar liquidação total e parcial com registro.
+- Implementar autenticação e perfis.
 - Implementar filtros e detalhamento.
-- Validar calculos com testes de banco e aceite do financeiro.
-- Definir integracao da Selic por API ou job.
+- Validar cálculos com testes de banco e aceite do financeiro.
+- Definir integração da Selic por API ou job.
 
 ## Evolucoes posteriores
 
-- Avaliar exclusao logica.
+- Avaliar exclusão lógica.
 - Implementar auditoria completa.
-- Definir aprovacao por perfil para ajustes e baixas.
-- Formalizar backup, restauracao, RTO e RPO.
+- Definir aprovação por perfil para ajustes e baixas.
+- Formalizar backup, restauração, RTO e RPO.
 - Aprimorar regras de unicidade de chassi e placa.
-- Automatizar atualizacao das materialized views apos operacoes relevantes.
+- Automatizar atualização das matérialized views apos operações relevantes.
 
-## Criterio de conclusao da versao 1.0
+## Critério de conclusão da versão 1.0
 
-A versao 1.0 sera considerada pronta quando os fluxos prioritarios estiverem
+A versão 1.0 será considerada pronta quando os fluxos prioritários estiverem
 implementados na interface, persistidos corretamente, cobertos por testes,
-protegidos por acesso adequado e aprovados pelo responsavel do negocio.
+protegidos por acesso adequado e aprovados pelo responsável do negócio.

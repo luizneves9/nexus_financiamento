@@ -1,8 +1,10 @@
-# UC03 - Visualizacao de Projecao Financeira
+# UC03 - Visualização de Projeção Financeira
 
 **Status:** Parcialmente implementado  
-**Ator principal:** Usuario responsavel pelo setor financeiro  
+**Ator principal:** Usuario responsável pelo setor financeiro  
 **Requisitos associados:** RF07, RN02
+
+**Rastreamento detalhado:** [Registro de Status e Pendências](../requirements/status-register.md#uc03---visualização-de-projeção)
 
 ## Objetivo
 
@@ -10,47 +12,47 @@ Permitir a consulta das parcelas projetadas de um contrato.
 
 ## Pre-condicoes
 
-1. O contrato esta cadastrado.
-2. O contrato esta selecionado na tela de contratos.
-3. As estruturas de calculo do banco estao disponiveis.
+1. O contrato está cadastrado.
+2. O contrato está selecionado na tela de contratos.
+3. As estruturas de cálculo do banco estão disponíveis.
 
 ## Pos-condicoes
 
-O usuario visualiza parcela, data de vencimento e valor calculado para o contrato selecionado.
+O usuário visualiza parcela, data de vencimento e valor calculado para o contrato selecionado.
 
 ## Fluxo principal
 
-1. O usuario acessa a pagina de contratos.
-2. O usuario seleciona exatamente um contrato.
-3. O usuario aciona **Projecao**.
-4. A aplicacao consulta as materialized views de projecao.
-5. O sistema apresenta os valores em uma janela de dialogo.
+1. O usuário acessa a página de contratos.
+2. O usuário seleciona exatamente um contrato.
+3. O usuário aciona **Projeção**.
+4. A aplicação consulta as matérialized views de projeção.
+5. O sistema apresenta os valores em uma janela de diálogo.
 
 ## Fluxos alternativos
 
 ### FA01 - Contrato TFC
 
-A consulta utiliza a materialized view correspondente ao tipo de contrato. A
-consulta atual combina os resultados retornados pelas views de projecao.
+A consulta utiliza a matérialized view correspondente ao tipo de contrato. A
+consulta atual combina os resultados retornados pelas views de projeção.
 
-### FA02 - Exportacao da projecao
+### FA02 - Exportação da projeção
 
-A exportacao para CSV esta planejada, mas ainda nao faz parte da interface atual.
+A exportação para CSV está planejada, mas ainda não faz parte da interface atual.
 
-## Fluxos de excecao
+## Fluxos de exceção
 
-### FE01 - Nenhum ou varios contratos selecionados
+### FE01 - Nenhum ou vários contratos selecionados
 
 O sistema informa que exatamente um registro deve ser selecionado.
 
-### FE02 - Projecao indisponivel
+### FE02 - Projeção indisponível
 
-O sistema informa a falha de consulta ou apresenta uma projecao sem registros,
+O sistema informa a falha de consulta ou apresenta uma projeção sem registros,
 conforme o resultado retornado pelo banco.
 
-## Regras de negocio
+## Regras de negócio
 
-- O calculo e executado exclusivamente no PostgreSQL.
-- Dias uteis consideram fins de semana e a tabela `financiamento.feriados`.
+- O cálculo e executado exclusivamente no PostgreSQL.
+- Dias úteis consideram fins de semana e a tabela `financiamento.feriados`.
 - A Selic e obtida conforme os triggers e views definidos no banco.
-- Antecipacoes podem alterar a projecao quando registradas no banco.
+- Antecipacoes podem alterar a projeção quando registradas no banco.

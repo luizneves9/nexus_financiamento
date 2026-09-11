@@ -1,75 +1,111 @@
-# Nexus - Documentacao do Projeto
+# Nexus - Documentação do Projeto
+
+Esta pasta contém a documentação oficial do projeto. Ela reúne os requisitos,
+as regras de negócio, a arquitetura, os casos de uso, os procedimentos
+operacionais, a segurança e os testes do Nexus.
+
+O conteúdo foi organizado conforme práticas de engenharia de software e
+separado por requisitos, arquitetura, dados, operação, segurança, testes e
+casos de uso.
 
 ## Objetivo do projeto
 
-O Nexus - Gestao de Financiamentos tem como objetivo centralizar a gestao e o
+O Nexus - Gestão de Financiamentos tem como objetivo centralizar a gestão e o
 controle dos contratos de financiamento do Grupo GBS, incluindo seus dados
 financeiros, empresas, bancos, fornecedores e bens vinculados.
 
-O sistema deve apoiar o ciclo operacional dos contratos, desde a inclusao e
-consulta dos dados ate a projecao de parcelas, o acompanhamento de
-antecipacoes e a liquidacao total ou parcial. Os calculos financeiros devem
-considerar as regras do contrato, a Selic, os dias uteis e o calendario de
+O sistema deve apoiar o ciclo operacional dos contratos, desde a inclusão e
+consulta dos dados até a projeção de parcelas, o acompanhamento de
+antecipações e a liquidação total ou parcial. Os cálculos financeiros devem
+considerar as regras do contrato, a Selic, os dias úteis e o calendário de
 feriados mantido no PostgreSQL.
 
-Na evolucao planejada, o Nexus tambem devera permitir o cadastro e vinculo de
-bens e veiculos, atualizacao automatica da Selic, controle de acesso, filtros
-operacionais, detalhamento dos registros e rastreabilidade das operacoes
+Na evolução planejada, o Nexus também deverá permitir o cadastro e vínculo de
+bens e veículos, atualização automática da Selic, controle de acesso, filtros
+operacionais, detalhamento dos registros e rastreabilidade das operações
 financeiras.
 
-## Objetivo da documentacao
+## Objetivo da documentação
 
-Consolidar os requisitos, regras de negocio, arquitetura, modelo de dados,
-casos de uso, procedimentos operacionais, seguranca e testes do Nexus,
-alinhando a documentacao ao estado real da aplicacao e ao roadmap do projeto.
+Consolidar os requisitos, regras de negócio, arquitetura, modelo de dados,
+casos de uso, procedimentos operacionais, segurança e testes do Nexus,
+alinhando a documentação ao estado real da aplicação e ao roadmap do projeto.
 
 ## Status dos Use Cases
 
 | ID | Caso de uso | Status |
 | --- | --- | --- |
-| UC01 | Inclusao de contratos | Parcialmente implementado |
+| UC01 | Inclusão de contratos | Parcialmente implementado |
 | UC02 | Consulta de contratos | Implementado |
-| UC03 | Visualizacao de projecao | Parcialmente implementado |
-| UC04 | Exclusao fisica de contrato | Implementado, sujeito a dependencias |
-| UC05 | Cadastro de bens e veiculos | Banco preparado; interface planejada para a versao 1.0 |
-| UC06 | Registro de antecipacao | Banco preparado; interface planejada para a versao 1.0 |
-| UC07 | Liquidacao de contrato | Planejado para a versao 1.0 |
-| UC08 | Atualizacao da Selic | Dados no banco; integracao por API planejada |
+| UC03 | Visualização de projeção | Parcialmente implementado |
+| UC04 | Exclusão física de contrato | Implementado |
+| UC05 | Cadastro de bens e veículos | Banco preparado |
+| UC06 | Registro de antecipação | Banco preparado |
+| UC07 | Liquidação de contrato | Planejado para a versão 1.0 |
+| UC08 | Atualização da Selic | Dados no banco; integração por API planejada |
 
-## Estrutura da documentacao
+## Estrutura da documentação
 
-| Pasta ou arquivo | Conteudo |
+| Pasta ou arquivo | Conteúdo |
 | --- | --- |
-| `requirements/` | Requisitos funcionais, regras de negocio, requisitos nao funcionais, premissas e rastreabilidade. |
-| `architecture/` | Visao da solucao, modelo de dados, calculos financeiros e decisoes arquiteturais. |
-| `use_cases/` | Fluxos funcionais do sistema, seus atores, excecoes e pos-condicoes. |
-| `operations/` | Instalacao, configuracao, execucao, monitoramento e procedimentos operacionais. |
-| `security/` | Autenticacao, autorizacao, segredos, auditoria e riscos conhecidos. |
-| `testing/` | Estrategia, niveis, cenarios e criterios de aceite de testes. |
-| `architecture/integrations.md` | Integracoes atuais e contrato futuro da API da Selic. |
+| `requirements/` | Requisitos funcionais, regras de negócio, requisitos não funcionais, premissas, rastreabilidade, painel de pendências e templaté de novas funcionalidades. |
+| `architecture/` | Visão da solução, modelo de dados, cálculos financeiros e decisões arquiteturais. |
+| `use_cases/` | Fluxos funcionais do sistema, seus atores, exceções e pós-condições. |
+| `operations/` | Instalação, configuração, execução, monitoramento e procedimentos operacionais. |
+| `security/` | Autenticação, autorização, segredos, auditoria e riscos conhecidos. |
+| `testing/` | Estratégia, níveis, cenários e critérios de aceite de testes. |
+| `architecture/integrations.md` | Integrações atuais e contrato futuro da API da Selic. |
 | `architecture/data-dictionary.md` | Significado dos campos principais do banco. |
-| `operations/release-management.md` | Checklist de versoes, ambientes e rollback. |
-| `security/threat-model.md` | Ameacas, impactos e mitigacoes. |
-| `glossary.md` | Termos de negocio e tecnologia utilizados no projeto. |
-| `roadmap.md` | Escopo atual, versao 1.0 e evolucoes posteriores. |
+| `operations/release-management.md` | Checklist de versões, ambientes e rollback. |
+| `security/threat-model.md` | Ameaças, impactos e mitigações. |
+| `glossary.md` | Termos de negócio e tecnologia utilizados no projeto. |
+| `roadmap.md` | Escopo atual, versão 1.0 e evoluções posteriores. |
 
-## Convencoes
+Para incluir uma nova funcionalidade, use o [Templaté de Rastreabilidade de
+Nova Funcionalidade](requirements/feature-traceability-templaté.md).
 
-Cada caso de uso apresenta objetivo, atores, pre-condicoes, pos-condicoes,
-fluxo principal, fluxos alternativos, excecoes, regras de negocio, dados
-persistidos e status da implementacao.
+## Como saber o que falta
 
-Os status significam:
+Consulte primeiro o [Registro de Status e Pendências](requirements/status-register.md).
+Ele é a fonte de consulta rápida para identificar o que está implementado,
+parcial, preparado somente no banco, planejado ou bloqueado.
 
-- **Implementado:** existe fluxo funcional na aplicacao.
-- **Parcialmente implementado:** parte do fluxo existe, mas ha etapas ou
+Para cada item, o registro informa o motivo do status, o que já foi entregue,
+o que está pendente, a evidência no código ou no banco, a próxima ação e o
+critério de conclusão. A [Matriz de Rastreabilidade](requirements/traceability-matrix.md)
+relaciona o item aos requisitos, regras e Use Cases.
+
+## Convenções
+
+Cada caso de uso apresenta objetivo, atores, pré-condições, pós-condições,
+fluxo principal, fluxos alternativos, exceções, regras de negócio, dados
+persistidos e status da implementação.
+
+Os status resumidos significam:
+
+- **Implementado:** existe fluxo funcional na aplicação.
+- **Parcialmente implementado:** parte do fluxo existe, mas há etapas ou
 	recursos pendentes.
-- **Planejado:** o fluxo esta definido para desenvolvimento futuro.
+- **Planejado:** o fluxo está definido para desenvolvimento futuro.
+
+- **Banco preparado:** existem objetos no PostgreSQL, mas falta o fluxo
+	completo na aplicação.
+- **Bloqueado:** uma dependência impede a conclusão.
+- **A validar:** existe implementação, mas falta validação técnica ou do
+	negócio.
+- **Concluído:** implementação, persistência, testes e validação foram
+	aprovados.
 
 Os Use Cases descrevem o comportamento funcional. Detalhes do modelo
-PostgreSQL, triggers, views e materialized views devem ser mantidos na
-documentacao de arquitetura.
+PostgreSQL, triggers, views e matérialized views devem ser mantidos na
+documentação de arquitetura.
 
-Os documentos distinguem o estado atual da aplicacao, o que ja existe no
-banco de dados e o que esta planejado. Uma funcionalidade planejada nao deve
-ser considerada entregue apenas porque sua tabela ou trigger ja existe.
+Os documentos distinguem o estado atual da aplicação, o que já existe no
+banco de dados e o que está planejado. Uma funcionalidade planejada não deve
+ser considerada entregue apenas porque sua tabela ou trigger já existe.
+
+## Critério de promoção
+
+Uma alteração deve ser considerada concluída quando o fluxo estiver validado
+pelo responsável do negócio, os requisitos associados estiverem coerentes com
+a implementação e as evidências estiverem registradas no painel de status.

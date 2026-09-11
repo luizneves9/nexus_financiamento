@@ -2,27 +2,27 @@
 
 ## Estado atual
 
-A aplicacao nao possui integracoes HTTP ou API externas implementadas. Ela
+A aplicação não possui integrações HTTP ou API externas implementadas. Ela
 acessa diretamente o PostgreSQL configurado no ambiente.
 
-## Integracao futura da Selic
+## Integração futura da Selic
 
-A atualizacao automatica da Selic esta planejada. A solucao devera definir:
+A atualização automática da Selic está planejada. A solução deverá definir:
 
 - fonte oficial e endpoint;
-- autenticacao, caso exigida;
+- autenticação, caso exigida;
 - periodicidade da coleta;
 - formato de data e valor;
 - tratamento de duplicidade por data;
 - retry e comportamento offline;
 - logs sem exposicao de credenciais;
-- validacao dos dados antes da persistencia;
-- politica para indisponibilidade da fonte;
-- atualizacao das estruturas de projecao.
+- validação dos dados antes da persistência;
+- política para indisponibilidade da fonte;
+- atualização das estruturas de projeção.
 
-## Contrato de integracao a definir
+## Contrato de integração a definir
 
-Quando a API for escolhida, este documento devera registrar request, response,
-codigos de erro, limites, timeout, versionamento, idempotencia e responsavel
+Quando a API for escolhida, este documento deverá registrar request, response,
+códigos de erro, limites, timeout, versionamento, idempotência e responsável
 operacional. Ate essa definicao, a tabela `financiamento.selic` deve ser
-considerada uma dependencia de dados previamente carregados.
+considerada uma dependência de dados previamente carregados.

@@ -1,60 +1,60 @@
-# Estrategia de Testes
+# Estratégia de Testes
 
 ## Objetivo
 
-Validar regras de negocio, calculos financeiros, integridade dos dados e
-fluxos da aplicacao antes da promocao para ambientes superiores.
+Validar regras de negócio, cálculos financeiros, integridade dos dados e
+fluxos da aplicação antes da promocao para ambientes superiores.
 
-## Niveis
+## Níveis
 
 ### Testes unitarios
 
-Validar funcoes Python de validacao, transformacao de valores, selecao de
+Validar funções Python de validação, transformação de valores, seleção de
 registros e tratamento de estados da interface.
 
-### Testes de integracao
+### Testes de integração
 
-Validar services, repositories, queries, conexao SQLAlchemy e transacoes com
+Validar services, repositories, queries, conexão SQLAlchemy e transacoes com
 um PostgreSQL de teste contendo o schema `financiamento`.
 
 ### Testes de banco
 
-Validar funcoes, triggers, views, materialized views, chaves estrangeiras,
-unicidades, dias uteis, feriados, Selic, carencia e antecipacao.
+Validar funções, triggers, views, matérialized views, chaves estrangeiras,
+unicidades, dias úteis, feriados, Selic, carência e antecipação.
 
-### Testes de aceitacao
+### Testes de aceitação
 
-Executar os fluxos dos Use Cases com um usuario do setor financeiro e dados
+Executar os fluxos dos Use Cases com um usuário do setor financeiro e dados
 representativos, verificando resultado funcional e mensagens.
 
-## Cenários prioritarios
+## Cenários prioritários
 
 | ID | Cenario | Resultado esperado |
 | --- | --- | --- |
-| T01 | Incluir contrato valido | Contrato persistido e projecao disponivel. |
-| T02 | Campo obrigatorio ausente | Inclusao rejeitada com mensagem. |
-| T03 | Valor, taxa ou prazo invalido | Inclusao rejeitada. |
-| T04 | Datas fora de ordem | Inclusao rejeitada. |
-| T05 | Numero de contrato repetido | Banco rejeita a operacao. |
+| T01 | Incluir contrato válido | Contrato persistido e projeção disponível. |
+| T02 | Campo obrigatório ausente | Inclusão rejeitada com mensagem. |
+| T03 | Valor, taxa ou prazo inválido | Inclusão rejeitada. |
+| T04 | Datas fora de ordem | Inclusão rejeitada. |
+| T05 | Numero de contrato repetido | Banco rejeita a operação. |
 | T06 | Consultar contratos | View retorna dados esperados. |
-| T07 | Visualizar projecao | Parcelas e valores sao apresentados. |
-| T08 | Excluir contrato sem dependencias | Registro removido. |
-| T09 | Excluir contrato com dependencias | Integridade impede ou procedimento trata o caso. |
-| T10 | Selic e feriado | Dias e valores seguem o calendario cadastrado. |
-| T11 | Registrar antecipacao | Selic e valor em moeda sao calculados. |
-| T12 | Falha de banco | Operacao nao e confirmada e erro e informado. |
+| T07 | Visualizar projeção | Parcelas e valores são apresentados. |
+| T08 | Excluir contrato sem dependências | Registro removido. |
+| T09 | Excluir contrato com dependências | Integridade impede ou procedimento trata o caso. |
+| T10 | Selic e feriado | Dias e valores seguem o calendário cadastrado. |
+| T11 | Registrar antecipação | Selic e valor em moeda são calculados. |
+| T12 | Falha de banco | Operação não e confirmada e erro e informado. |
 
 ## Dados de teste
 
 Os testes devem utilizar dados ficticios ou anonimizados. Dados financeiros
-reais nao devem ser usados em ambiente de desenvolvimento sem autorizacao.
+reais não devem ser usados em ambiente de desenvolvimento sem autorização.
 
-## Criterio de entrada
+## Critério de entrada
 
-Ambiente configurado, schema atualizado, dados de teste carregados e versao
+Ambiente configurado, schema atualizado, dados de teste carregados e versão
 identificada.
 
-## Criterio de saida
+## Critério de saída
 
-Cenarios prioritarios aprovados, sem defeitos criticos abertos e resultados
-registrados para a versao avaliada.
+Cenários prioritários aprovados, sem defeitos críticos abertos e resultados
+registrados para a versão avaliada.

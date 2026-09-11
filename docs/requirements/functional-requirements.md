@@ -13,6 +13,7 @@ existência de estruturas correspondentes no banco de dados.
 | RF01 | Disponibilização da Selic | Manter valores da Selic no banco e, futuramente, importar dados por API ou job. | Banco disponível; API planejada |
 | RF02 | Inclusão de contratos | Permitir o cadastro manual de contratos com dados da empresa, banco, valores, taxas, prazos e cobrança. | Parcialmente implementado |
 | RF02.1 | Formulario de contrato | Disponibilizar formulario web com validação dos campos obrigatórios, valores e datas. | Implementado |
+| RF02.3 | Projeção durante a inclusão | Permitir solicitar a projeção antes da gravação definitiva, exibindo o resultado no mesmo modal do formulário. | Implementado |
 | RF02.2 | Vínculo de bens e veículos | Associar bens, chassis e carrocerias a um contrato. | Planejado para a versão 1.0 |
 | RF03 | Consulta de contratos | Exibir contratos cadastrados para consulta operacional. | Implementado |
 | RF03.1 | Filtros de contratos | Filtrar contratos por banco, taxa, período, valor e tipo. | Planejado |

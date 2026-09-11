@@ -2,7 +2,7 @@
 
 **Status:** Parcialmente implementado  
 **Ator principal:** Usuario responsável pelo setor financeiro  
-**Requisitos associados:** RF02, RF02.1, RN01, RN02, RN05
+**Requisitos associados:** RF02, RF02.1, RF02.3, RN01, RN02, RN02.1, RN05
 
 **Rastreamento detalhado:** [Registro de Status e Pendências](../requirements/status-register.md#uc01---inclusão-de-contratos)
 
@@ -37,9 +37,18 @@ Cadastrar um contrato de financiamento com seus dados cadastrais e financeiros, 
 
 ## Fluxos alternativos
 
-### FA01 - Visualizar projeção antes da gravação (planejado)
+### FA01 - Projetar antes da gravação
 
-O usuário solicita uma projeção antes da inclusão definitiva. O sistema deverá apresentar a projeção sem persistir o contrato. Esse fluxo ainda não está disponível no formulario atual.
+1. O usuário preenche os dados do contrato.
+2. O usuário clica em **Projetar**.
+3. O sistema valida as informações obrigatórias e as regras de entrada.
+4. O sistema envia os parâmetros para uma função PostgreSQL de projeção temporária.
+5. O PostgreSQL calcula a projeção final sem persistir o contrato.
+6. O sistema exibe a projeção abaixo do formulário, no mesmo modal.
+7. O usuário consulta a projeção e permanece no formulário para confirmar ou cancelar a inclusão.
+
+O fluxo não deve inserir o contrato, atualizar dados permanentes ou alterar as
+materialized views de produção.
 
 ### FA02 - Cancelar inclusão
 

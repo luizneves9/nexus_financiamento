@@ -18,6 +18,17 @@ política aprovada de exclusão lógica.
 **Consequência:** Integridade referencial pode impedir a exclusão e histórico
 precisa ser tratado em evolução futura.
 
+## DA05 - Projeção temporária por função PostgreSQL
+
+**Status:** Aceita  
+**Decisão:** A projeção acionada durante a inclusão será executada por uma
+função PostgreSQL que receberá os parâmetros do contrato e retornará o cálculo
+final sem persistir o contrato.  
+**Motivo:** Manter o cálculo financeiro no banco e evitar efeitos colaterais de
+uma inserção seguida de rollback.  
+**Consequência:** A função deverá possuir contrato de entrada e saída, testes
+próprios e alinhamento com as regras das materialized views.
+
 ## DA03 - API da Selic posterior
 
 **Status:** Planejada  

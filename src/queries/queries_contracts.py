@@ -27,6 +27,35 @@ SELECT_PROJECAO = '''
 	SELECT "Parcela", "Data de Vencimento", "Valor" FROM valores_tfc
 '''
 
+PROJETAR_CONTRATO_SELIC = '''
+	SELECT *
+	FROM financiamento.projetar_contrato_selic(
+		:data_emissao,
+		:data_bndes,
+		:valor_financiado,
+		:taxa_juros_efetiva,
+		:prazo_carencia,
+		:prazo_final,
+		:carencia_pagamento,
+		:registro_cobranca
+	)
+	ORDER BY parcela
+'''
+
+PROJETAR_CONTRATO_TFC = '''
+	SELECT *
+	FROM financiamento.projetar_contrato_tfc(
+		:data_emissao,
+		:data_bndes,
+		:valor_financiado,
+		:taxa_juros_efetiva,
+		:prazo_carencia,
+		:prazo_final,
+		:carencia_pagamento
+	)
+	ORDER BY parcela
+'''
+
 DELETE_CONTRATO = '''
 	DELETE FROM financiamento.contratos
 	WHERE id = :id

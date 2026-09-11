@@ -7,6 +7,7 @@ comportamento atualmente definido para o projeto.
 | --- | --- | --- | --- |
 | RN01 | Unicidade de contrato | O número do contrato deve obedecer a restrição de unicidade atualmente definida no banco. Regras específicas por banco seráo avaliadas posteriormente. | Atual |
 | RN02 | Projeção no banco | Saldos, parcelas, juros e antecipações são calculados exclusivamente pelo PostgreSQL. | Atual |
+| RN02.1 | Projeção temporária | A projeção solicitada durante a inclusão deve ser calculada por função PostgreSQL parametrizada, sem persistir o contrato ou alterar dados permanentes. | Atual |
 | RN03 | Dias úteis | Finais de semana e datas cadastradas em `financiamento.feriados` não são considerados dias úteis. | Atual |
 | RN04 | Selic do contrato | A Selic do contrato e obtida pela última taxa disponível até a data BNDES. | Atual |
 | RN05 | Selic da antecipação | A Selic da antecipação e obtida pela última taxa disponível até a data de tesouraria. | Atual |

@@ -8,6 +8,7 @@ ver o motivo de cada status, as lacunas e a próxima ação, consulte o
 | --- | --- | --- | --- | --- |
 | RF01 | RN04, RN05 | UC08 | Banco preparado | Implementar API ou job da Selic. |
 | RF02, RF02.1 | RN01, RN06 | UC01 | Parcial | Completar fluxo de contrato e recursos planejados. |
+| RF02.3 | RN02.1 | UC01 | Implementado | Funções PostgreSQL, queries, service e exibição no modal concluídos. |
 | RF02.2 | RN08 | UC05 | Planejado | Implementar vínculo de bens e veículos. |
 | RF03 | - | UC02 | Implementado | Validar tratamento de erros e desempenho. |
 | RF03.1 | - | UC02 | Planejado | Implementar filtros. |

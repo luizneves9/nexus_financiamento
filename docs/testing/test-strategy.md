@@ -32,6 +32,7 @@ representativos, verificando resultado funcional e mensagens.
 | ID | Cenario | Resultado esperado |
 | --- | --- | --- |
 | T01 | Incluir contrato válido | Contrato persistido e projeção disponível. |
+| T01.1 | Projetar contrato antes da inclusão | Projeção exibida no mesmo modal sem persistir contrato. |
 | T02 | Campo obrigatório ausente | Inclusão rejeitada com mensagem. |
 | T03 | Valor, taxa ou prazo inválido | Inclusão rejeitada. |
 | T04 | Datas fora de ordem | Inclusão rejeitada. |

@@ -40,7 +40,7 @@ com este registro.
 
 | ID | Assunto | Status atual | Motivo resumido | Próxima ação |
 | --- | --- | --- | --- | --- |
-| UC01 | Inclusão de contratos | Parcial | Inclusão funciona, mas projeção previa e vínculo de bens/veículos não estão disponíveis na interface. | Implementar projeção previa e vínculo de bens. |
+| UC01 | Inclusão de contratos | Parcial | Inclusão e projeção temporária funcionam, mas vínculo de bens/veículos, CSV, autenticação e tratamento de erros ainda faltam. | Implementar vínculo de bens e revisar tratamento de erros. |
 | UC02 | Consulta de contratos | Implementado | Listagem pela view existe. Filtros e tratamento de erro completo ainda faltam. | Validar filtros e tratamento de erros. |
 | UC03 | Visualização de projeção | Parcial | Consulta da projeção funciona, mas exportação, cobertura de tipos e validação financeira ainda faltam. | Validar cálculos e concluir recursos de consulta. |
 | UC04 | Exclusão física | Implementado | DELETE e confirmação existem, mas dependências e auditoria limitam o fluxo. | Documentar procedimento de dependências e validar comportamento. |
@@ -61,14 +61,16 @@ com este registro.
 - **Status:** Parcial.
 - **Entregue:** formulario web, validação de campos, validação de valores e
   datas, persistência em `financiamento.contratos` e mensagem de resultado.
-- **Pendente:** projeção previa sem persistência, download CSV, vínculo de bens
-  e veículos, autenticação e tratamento de erros sem descarte silencioso.
-- **Evidência:** `src/views/components/modal_contracts_incluir.py`,
-  `src/services/contracts.py` e `src/queries/queries_gerais.py`.
-- **Próxima ação:** definir quais recursos entram na versão 1.0 e implementar
-  o vínculo de bens.
-- **Critério de conclusão:** formulario completo, regras aprovadas, bens
-  vinculados, testes de aceite executados e erros tratados.
+- **Pendente:** download CSV, vínculo de bens e veículos, autenticação e
+  tratamento de erros sem descarte silencioso.
+- **Evidência:** `database/projection_functions.sql`,
+  `src/queries/queries_contracts.py`,
+  `src/views/components/modal_contracts_incluir.py` e
+  `src/services/contracts.py`.
+- **Próxima ação:** implementar o vínculo de bens e veículos e revisar o
+  tratamento de erros.
+- **Critério de conclusão:** formulário completo, bens vinculados, testes de
+  aceite executados e erros tratados.
 
 ### UC02 - Consulta de contratos
 

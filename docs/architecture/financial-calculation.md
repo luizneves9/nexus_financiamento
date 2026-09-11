@@ -6,6 +6,21 @@ Todos os cálculos financeiros são realizados no PostgreSQL. A aplicação
 consulta os resultados das views e matérialized views e não replica as
 fórmulas em Python.
 
+## Projeção durante a inclusão
+
+A projeção solicitada antes da inclusão definitiva será executada por uma
+função PostgreSQL parametrizada. A função receberá os dados necessários do
+contrato e retornará as parcelas calculadas, sem inserir o contrato em
+`financiamento.contratos` e sem alterar dados permanentes.
+
+O resultado será exibido no mesmo modal do formulário de inclusão. A função
+deverá reutilizar as regras financeiras aprovadas para o tipo de contrato,
+incluindo Selic, dias úteis, feriados, carência, amortização e arredondamentos,
+conforme aplicável.
+
+Os parâmetros e o formato de retorno serão definidos antes da implementação
+da função e deverão ser cobertos por testes de banco.
+
 ## Tipos de contrato
 
 - **BNDES FINAME SELIC:** utiliza taxa efetiva, Selic, dias úteis e feriados.

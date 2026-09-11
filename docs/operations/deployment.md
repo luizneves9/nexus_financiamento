@@ -21,6 +21,12 @@
 
 ## Execução com Compose
 
+Antes de iniciar a aplicação, confirme que o PostgreSQL possui o schema
+`financiamento`, suas funções auxiliares, views e materialized views. Os
+arquivos em `database/` documentam o estado do banco. O DDL exportado não deve
+ser tratado como instalador ou migração automática; as funções de projeção
+devem estar criadas no banco conforme o procedimento técnico validado.
+
 ```bash
 docker compose up --build
 ```

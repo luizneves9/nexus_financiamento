@@ -69,3 +69,13 @@ dados quando suas estruturas estiverem atualizadas.
 - Momento de atualização das matérialized views.
 - Regras para liquidação total e parcial.
 - Regras de carência e pagamento durante carência.
+
+## Validação do UC03
+
+A projeção exibida pelo UC03 foi comparada com os resultados das materialized
+views utilizadas pelo banco. Os cálculos foram considerados corretos e
+coerentes com o padrão implementado nos MVs.
+
+Essa validação cobre a equivalência do cálculo entre a consulta utilizada pela
+interface e o cálculo oficial do PostgreSQL. Novos cenários financeiros devem
+continuar sendo registrados na estratégia de testes.

@@ -40,9 +40,9 @@ com este registro.
 
 | ID | Assunto | Status atual | Motivo resumido | Próxima ação |
 | --- | --- | --- | --- | --- |
-| UC01 | Inclusão de contratos | Parcial | Inclusão e projeção temporária funcionam, mas vínculo de bens/veículos, CSV, autenticação e tratamento de erros ainda faltam. | Implementar vínculo de bens e revisar tratamento de erros. |
+| UC01 | Inclusão de contratos | Parcial | Inclusão e projeção temporária funcionam, mas vínculo de bens/veículos e autenticação ainda faltam. | Implementar vínculo de bens e veículos. |
 | UC02 | Consulta de contratos | Implementado | Listagem pela view existe. Filtros e tratamento de erro completo ainda faltam. | Validar filtros e tratamento de erros. |
-| UC03 | Visualização de projeção | Parcial | Consulta da projeção funciona, mas exportação, cobertura de tipos e validação financeira ainda faltam. | Validar cálculos e concluir recursos de consulta. |
+| UC03 | Visualização de projeção | Parcial | Consulta e cálculos estão corretos; validação específica do impacto de antecipações ainda falta. | Validar antecipações. |
 | UC04 | Exclusão física | Implementado | DELETE e confirmação existem, mas dependências e auditoria limitam o fluxo. | Documentar procedimento de dependências e validar comportamento. |
 | UC05 | Bens e veículos | Banco preparado | Tabelas e relacionamentos existem, mas não ha interface nem regras completas. | Implementar telas, validações e regras de chassi/placa. |
 | UC06 | Antecipação | Banco preparado | Trigger existe, mas não ha tela para registrar a operação. | Implementar fluxo de antecipação e refresh da projeção. |
@@ -61,14 +61,12 @@ com este registro.
 - **Status:** Parcial.
 - **Entregue:** formulario web, validação de campos, validação de valores e
   datas, persistência em `financiamento.contratos` e mensagem de resultado.
-- **Pendente:** download CSV, vínculo de bens e veículos, autenticação e
-  tratamento de erros sem descarte silencioso.
+- **Pendente:** vínculo de bens e veículos e autenticação.
 - **Evidência:** `database/projection_functions.sql`,
   `src/queries/queries_contracts.py`,
   `src/views/components/modal_contracts_incluir.py` e
   `src/services/contracts.py`.
-- **Próxima ação:** implementar o vínculo de bens e veículos e revisar o
-  tratamento de erros.
+- **Próxima ação:** implementar o vínculo de bens e veículos.
 - **Critério de conclusão:** formulário completo, bens vinculados, testes de
   aceite executados e erros tratados.
 
@@ -90,18 +88,14 @@ com este registro.
 - **Status:** Parcial.
 - **Entregue:** seleção de um contrato, consulta das matérialized views e
   exibição de parcela, vencimento e valor em modal.
-- **Pendente:** exportação CSV, validação formal dos tipos SELIC e TFC,
-  validação do impacto de antecipações, tratamento de projeção vazia e
-  aprovação dos resultados pelo financeiro.
+- **Pendente:** validação específica do impacto de antecipações.
 - **Evidência:** `src/views/contracts.py`,
   `src/services/contracts.py`,
   `src/queries/queries_contracts.py` e
   `src/views/components/modal_contracts_projecao.py`.
-- **Próxima ação:** criar testes de banco para SELIC, TFC, feriados,
-  carência e antecipação; depois decidir a exportação.
-- **Critério de conclusão:** cálculos aprovados com massa conhecida, todos os
-  tipos suportados documentados, erros tratados e recursos de consulta
-  definidos implementados.
+- **Próxima ação:** validar o impacto de antecipações.
+- **Critério de conclusão:** cenários de antecipação validados e recursos de
+  consulta implementados.
 
 ### UC04 - Exclusão física de contrato
 

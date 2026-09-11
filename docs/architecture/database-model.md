@@ -43,8 +43,10 @@ configurado no ambiente.
   fornecedores, veículos e antecipações.
 - Não existem ainda restricoes documentadas de unicidade para placa ou chassi.
 
-## Fonte de referencia
+## Fonte de referência
 
-O DDL recebido para o schema `financiamento` e a fonte técnica destá
-especificação. Alterações no banco devem ser refletidas neste documento e,
-quando aplicável, na matriz de rastreabilidade.
+O DDL versionado em [database/ddl_financiamento.sql](../../database/ddl_financiamento.sql)
+é a fonte técnica do schema `financiamento`. As funções de projeção temporária
+estão em [database/projection_functions.sql](../../database/projection_functions.sql).
+Alterações no banco devem ser refletidas neste documento e, quando aplicável,
+na matriz de rastreabilidade.

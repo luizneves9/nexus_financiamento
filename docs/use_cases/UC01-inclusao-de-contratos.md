@@ -62,7 +62,8 @@ O sistema interrompe a gravação e informa os campos que precisam ser preenchid
 
 ### FE02 - Valor ou prazo inválido
 
-O sistema rejeita valores financiados, taxas ou prazos menores ou iguais a zero, conforme as validações atuais.
+O sistema rejeita valores financiados, taxas ou prazos menores ou iguais a
+zero. O pagamento de carência pode ser zero, mas não pode ser negativo.
 
 ### FE03 - Datas inconsistentes
 
@@ -75,6 +76,16 @@ O banco rejeita a gravação quando o `número_contrato` já existir, conforme a
 ### FE05 - Falha de persistência
 
 O sistema informa a falha de comúnicação ou gravação e não deve considerar o contrato incluído.
+
+### FE06 - Banco indisponível
+
+O sistema informa que não foi possível acessar o banco de dados e não confirma
+a inclusão do contrato.
+
+### FE07 - Falha na projeção temporária
+
+O sistema informa que não foi possível calcular a projeção e mantém o contrato
+sem persistência até que o usuário confirme a inclusão.
 
 ## Regras de negócio
 

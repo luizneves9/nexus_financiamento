@@ -1,10 +1,14 @@
 # Gestão de Alterações do Banco
 
-## Principio
+## Princípio
 
-O DDL e parte do contrato da aplicação. Alterações em tabelas, funções,
-triggers, views ou matérialized views podem alterar resultados financeiros e
-devem ser tratadas como mudancas de software.
+O DDL é parte do contrato da aplicação. Alterações em tabelas, funções,
+triggers, views ou materialized views podem alterar resultados financeiros e
+devem ser tratadas como mudanças de software.
+
+Os arquivos SQL versionados do banco ficam em `database/`. O DDL completo está
+em `database/ddl_financiamento.sql`; as funções de projeção temporária estão
+em `database/projection_functions.sql`.
 
 ## Procedimento minimo
 

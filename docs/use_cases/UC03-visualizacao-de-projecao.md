@@ -35,9 +35,11 @@ O usuário visualiza parcela, data de vencimento e valor calculado para o contra
 A consulta utiliza a matérialized view correspondente ao tipo de contrato. A
 consulta atual combina os resultados retornados pelas views de projeção.
 
-### FA02 - Exportação da projeção
+### FA02 - Exportação da projeção (fora do escopo atual)
 
-A exportação para CSV está planejada, mas ainda não faz parte da interface atual.
+A exportação não faz parte deste caso de uso no escopo atual. O download será
+disponibilizado posteriormente em uma tela consolidada de projeções, com
+filtros por contrato.
 
 ## Fluxos de exceção
 
@@ -47,8 +49,9 @@ O sistema informa que exatamente um registro deve ser selecionado.
 
 ### FE02 - Projeção indisponível
 
-O sistema informa a falha de consulta ou apresenta uma projeção sem registros,
-conforme o resultado retornado pelo banco.
+O sistema informa a falha de consulta. Quando a consulta é executada sem
+retornar parcelas, o sistema informa que a projeção não foi encontrada para o
+contrato selecionado.
 
 ## Regras de negócio
 

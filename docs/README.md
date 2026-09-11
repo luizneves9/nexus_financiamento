@@ -61,6 +61,14 @@ alinhando a documentação ao estado real da aplicação e ao roadmap do projeto
 | `glossary.md` | Termos de negócio e tecnologia utilizados no projeto. |
 | `roadmap.md` | Escopo atual, versão 1.0 e evoluções posteriores. |
 
+## Banco de dados
+
+Os scripts versionados do PostgreSQL estão em [database/README.md](../database/README.md).
+O DDL completo do schema `financiamento` está em
+[database/ddl_financiamento.sql](../database/ddl_financiamento.sql), e as
+funções de projeção temporária estão em
+[database/projection_functions.sql](../database/projection_functions.sql).
+
 Para incluir uma nova funcionalidade, use o [Templaté de Rastreabilidade de
 Nova Funcionalidade](requirements/feature-traceability-templaté.md).
 

@@ -11,7 +11,7 @@ comportamento atualmente definido para o projeto.
 | RN03 | Dias úteis | Finais de semana e datas cadastradas em `financiamento.feriados` não são considerados dias úteis. | Atual |
 | RN04 | Selic do contrato | A Selic do contrato e obtida pela última taxa disponível até a data BNDES. | Atual |
 | RN05 | Selic da antecipação | A Selic da antecipação e obtida pela última taxa disponível até a data de tesouraria. | Atual |
-| RN06 | Carencia | Contratos seguem a regra inicial de possuir período de carência. | Atual; validações adicionais futuras |
+| RN06 | Carência | Contratos seguem a regra inicial de possuir período de carência. O pagamento durante a carência pode ser zero, mas nunca negativo. | Atual |
 | RN07 | Exclusão inicial | Contratos são excluídos físicamente mediante confirmação do usuário. | Atual |
 | RN08 | Integridade referencial | Contratos, bens, antecipações, empresas, bancos e fornecedores respeitam as chaves estrangeiras do banco. | Atual |
 | RN09 | Antecipação efetiva | Antecipação deve ser registrada, e não apenas simulada. | Planejada na interface |

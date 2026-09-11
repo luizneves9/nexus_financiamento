@@ -18,6 +18,7 @@ está no [Registro de Status e Pendências](requirements/status-register.md).
 - Disponibilizar liquidação total e parcial com registro.
 - Implementar autenticação e perfis.
 - Implementar filtros e detalhamento.
+- Criar tela consolidada de projeções com filtros e download de arquivos.
 - Validar cálculos com testes de banco e aceite do financeiro.
 - Definir integração da Selic por API ou job.
 

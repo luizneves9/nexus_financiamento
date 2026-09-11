@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError, OperationalError
 from database.connection import ConexaoBancoSQL
 from queries.queries_gerais import INCLUIR_CONTRATO, SELECT_CONTRATOS
 from queries.queries_contracts import (
@@ -56,7 +57,7 @@ def incluir_contrato(session_state):
         session_state['mensagem_erro'] = f'O prazo final deve ser maior que zero!'
         return
 
-    if session_state['ic_prazo_final'] < 0:
+    if session_state['ic_pagamento_carencia'] < 0:
         session_state['mensagem_erro'] = f'O pagamento de carência deve ser maior ou igual a zero!'
         return
 
@@ -73,8 +74,24 @@ def incluir_contrato(session_state):
         return
 
     # definindo e ajustando parâmetros
-    id_empresa = int(session_state['df_lista_empresas'].loc[session_state['df_lista_empresas']['razao_social'] == session_state['ic_empresas'], 'id'].iloc[0])
-    id_banco = int(session_state['df_lista_bancos'].loc[session_state['df_lista_bancos']['razao_social'] == session_state['ic_bancos'], 'id'].iloc[0])
+    empresa_selecionada = session_state['df_lista_empresas'].loc[
+        session_state['df_lista_empresas']['razao_social'] == session_state['ic_empresas'],
+        'id'
+    ]
+    if empresa_selecionada.empty:
+        session_state['mensagem_erro'] = 'A empresa selecionada não está disponível.'
+        return
+
+    banco_selecionado = session_state['df_lista_bancos'].loc[
+        session_state['df_lista_bancos']['razao_social'] == session_state['ic_bancos'],
+        'id'
+    ]
+    if banco_selecionado.empty:
+        session_state['mensagem_erro'] = 'O banco selecionado não está disponível.'
+        return
+
+    id_empresa = int(empresa_selecionada.iloc[0])
+    id_banco = int(banco_selecionado.iloc[0])
     debito_em_conta = True if session_state['ic_debito_cc'] == 'SIM' else False
 
     # definindo os parâmetros
@@ -111,8 +128,17 @@ def incluir_contrato(session_state):
             registrar_contrato(query, conn, parametro)
         st.session_state['mensagem_sucesso'] = 'Contrato incluído com sucesso!'
         st.rerun()
-    except Exception as e:
-        st.session_state['mensagem_erro'] = f'Erro ao incluir contrato. ({e})'
+    except IntegrityError as e:
+        if 'contratos_numero_contrato_key' in str(e.orig):
+            st.session_state['mensagem_erro'] = 'O número do contrato já está cadastrado.'
+        else:
+            st.session_state['mensagem_erro'] = 'Os dados do contrato violam uma regra de integridade.'
+        st.rerun()
+    except OperationalError:
+        st.session_state['mensagem_erro'] = 'Não foi possível acessar o banco de dados.'
+        st.rerun()
+    except Exception:
+        st.session_state['mensagem_erro'] = 'Não foi possível incluir o contrato.'
         st.rerun()
 
 def projetar_contrato(session_state):
@@ -178,8 +204,11 @@ def projetar_contrato(session_state):
     try:
         with engine.begin() as conn:
             return listar_projecao(text(query), conn, parametros)
-    except Exception as e:
-        session_state['mensagem_erro'] = f'Erro ao calcular a projeção. ({e})'
+    except OperationalError:
+        session_state['mensagem_erro'] = 'Não foi possível acessar o banco para calcular a projeção.'
+        return pd.DataFrame()
+    except Exception:
+        session_state['mensagem_erro'] = 'Não foi possível calcular a projeção.'
         return pd.DataFrame()
 
 def listar_contratos():
@@ -215,13 +244,17 @@ def visualizar_projecao(linha_selecionada):
     # importando dataframe
     try:
         df = listar_projecao(query, engine, parametro)
-    except:
-        df = pd.DataFrame()
+    except Exception as e:
+        st.session_state['mensagem_erro'] = f'Erro ao consultar a projeção. ({e})'
+        return
+
+    if df.empty:
+        st.session_state['mensagem_erro'] = 'Projeção não encontrada para o contrato selecionado.'
+        return
 
     # formatando data
-    if not df.empty:
-        df['Data de Vencimento'] = pd.to_datetime(df['Data de Vencimento'], format='%d/%m/%Y', errors='coerce').dt.strftime('%d/%m/%Y')
-        df['Valor'] = df['Valor'].map(transformar_float_em_str)
+    df['Data de Vencimento'] = pd.to_datetime(df['Data de Vencimento'], format='%d/%m/%Y', errors='coerce').dt.strftime('%d/%m/%Y')
+    df['Valor'] = df['Valor'].map(transformar_float_em_str)
 
     # visualizando df
     modal_projecao_valores(df, linha)

@@ -1,19 +1,40 @@
-# Requisitos Funcionais (RF)
+# Requisitos Funcionais
 
-Este documento especifica as funcionalidades necessárias para o sistema de Gestão de Financiamentos do Grupo GBS.
+## Escopo
 
-| ID | Nome | Descrição | 
-| :--- | :--- | :--- | 
-| **RF01** | Importação da Selic | O sistema deve obter/importar automaticamente os dados atualizados da taxa Selic via integração/job. | 
-| **RF02** | Inclusão Manual de Contratos | Permitir o cadastro manual de contratos atrelados a um ou mais veículos. | 
-| **RF02.1**| Interface Web de Contrato | Fornecer formulário web com validação para inclusão de contratos. | 
-| **RF02.2**| Alienação de Veículos | Permitir a inclusão/vínculo dos veículos (Chassi/Carroceria) que serão alienados ao contrato. | 
-| **RF03** | Listagem de Contratos | Exibir a lista completa dos contratos cadastrados no sistema. | 
-| **RF03.1**| Filtros de Contrato | Permitir filtrar contratos por banco, taxa, período de emissão, valor e tipo de contrato. | 
-| **RF04** | Listagem de Veículos | Exibir a lista de veículos alienados associados aos contratos. | 
-| **RF04.1**| Filtros de Veículos | Permitir filtragem de veículos por banco financiado, taxa, período, valor e situação. | 
-| **RF05** | Exclusão de Contratos | Permitir a exclusão lógica/física de contratos (respeitando travas de integridade). | 
-| **RF06** | Exclusão de Veículos | Permitir a remoção de veículos cadastrados da base. | 
-| **RF07** | Liquidação e Simulação | Permitir simulação de quitação (total ou parcial) considerando contrato, valor presente e veículos. | 
-| **RF08** | Detalhamento / Audit Trail | Exibir o histórico de auditoria e fluxo de vida do dado (inclusões, pagamentos, alterações). | 
-| **RF09** | Manutenção e Aprovação | Após a data de vencimento, permitir ao usuário incluir ajustes financeiros e aprovar o pagamento. | 
+Este documento define os comportamentos funcionais do Nexus - Gestão de
+Financiamentos. O status indica a situação da aplicação, e não apenas a
+existência de estruturas correspondentes no banco de dados.
+
+## Requisitos
+
+| ID | Requisito | Descricao | Status |
+| --- | --- | --- | --- |
+| RF01 | Disponibilização da Selic | Manter valores da Selic no banco e, futuramente, importar dados por API ou job. | Banco disponível; API planejada |
+| RF02 | Inclusão de contratos | Permitir o cadastro manual de contratos com dados da empresa, banco, valores, taxas, prazos e cobrança. | Parcialmente implementado |
+| RF02.1 | Formulario de contrato | Disponibilizar formulario web com validação dos campos obrigatórios, valores e datas. | Implementado |
+| RF02.3 | Projeção durante a inclusão | Permitir solicitar a projeção antes da gravação definitiva, exibindo o resultado no mesmo modal do formulário. | Implementado |
+| RF02.2 | Vínculo de bens e veículos | Associar bens, chassis e carrocerias a um contrato. | Planejado para a versão 1.0 |
+| RF03 | Consulta de contratos | Exibir contratos cadastrados para consulta operacional. | Implementado |
+| RF03.1 | Filtros de contratos | Filtrar contratos por banco, taxa, período, valor e tipo. | Planejado |
+| RF04 | Consulta de veículos | Exibir bens e veículos associados aos contratos. | Planejado para a versão 1.0 |
+| RF04.1 | Filtros de veículos | Filtrar veículos por banco, taxa, período, valor e situação. | Planejado |
+| RF05 | Exclusão física de contratos | Remover físicamente um contrato mediante confirmação e respeitando integridade referencial. | Implementado, sujeito a dependências |
+| RF06 | Exclusão de veículos | Remover bens ou veículos conforme regras de integridade. | Planejado |
+| RF07 | Projeção financeira | Exibir parcelas e valores calculados pelo PostgreSQL. | Parcialmente implementado |
+| RF07.1 | Antecipação | Registrar pagamento antecipado e refletir a operação na projeção. | Banco preparado; interface planejada |
+| RF07.2 | Liquidação | Simular e registrar liquidação total ou parcial. | Planejado para a versão 1.0 |
+| RF08 | Detalhamento e auditoria | Exibir detalhes do registro e histórico de alterações. | Planejado |
+| RF09 | Ajustes financeiros | Permitir registrar ajustes financeiros apos o vencimento. | Planejado |
+| RF10 | Autenticação e perfis | Controlar acesso por usuário e perfil. | Planejado para a versão 1.0 |
+
+## Critérios gerais de aceite
+
+- Cada requisito implementado deve possuir pelo menos um fluxo de caso de uso
+  e um teste correspondente.
+- Operacoes de escrita devem confirmar sucesso somente apos a transação no
+  PostgreSQL ser concluida.
+- Falhas de integridade ou comúnicação devem ser apresentadas ao usuário sem
+  confirmar a operação.
+- Requisitos planejados somente seráo considerados implementados quando houver
+  fluxo na interface, persistência validada e teste registrado.

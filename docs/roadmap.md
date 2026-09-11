@@ -1,0 +1,37 @@
+# Roadmap
+
+O detalhamento de cada pendência, sua evidência e o critério de conclusão
+está no [Registro de Status e Pendências](requirements/status-register.md).
+
+## Fase atual - Desenvolvimento
+
+- Inclusão e consulta de contratos.
+- Consulta de empresas, bancos e fornecedores.
+- Visualização parcial de projeções.
+- Exclusão física de contratos.
+- Estruturas de banco para Selic, bens, veículos e antecipação.
+
+## Versão 1.0
+
+- Completar cadastro e vínculo de bens e veículos.
+- Disponibilizar registro de antecipações.
+- Disponibilizar liquidação total e parcial com registro.
+- Implementar autenticação e perfis.
+- Implementar filtros e detalhamento.
+- Validar cálculos com testes de banco e aceite do financeiro.
+- Definir integração da Selic por API ou job.
+
+## Evolucoes posteriores
+
+- Avaliar exclusão lógica.
+- Implementar auditoria completa.
+- Definir aprovação por perfil para ajustes e baixas.
+- Formalizar backup, restauração, RTO e RPO.
+- Aprimorar regras de unicidade de chassi e placa.
+- Automatizar atualização das matérialized views apos operações relevantes.
+
+## Critério de conclusão da versão 1.0
+
+A versão 1.0 será considerada pronta quando os fluxos prioritários estiverem
+implementados na interface, persistidos corretamente, cobertos por testes,
+protegidos por acesso adequado e aprovados pelo responsável do negócio.

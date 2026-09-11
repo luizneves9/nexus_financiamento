@@ -1,6 +1,46 @@
+import pandas as pd
 import streamlit as st
 from tools.funcoes import listar_empresas, listar_bancos
-from services.contracts import incluir_contrato
+from services.contracts import incluir_contrato, projetar_contrato
+
+def formatar_projecao(df_projecao):
+    '''Formata a projeção apenas para apresentação na interface.'''
+
+    df_visual = df_projecao.copy()
+
+    if 'data_vencimento' in df_visual.columns:
+        df_visual = df_visual.rename(columns={'data_vencimento': 'data_referencia'})
+
+    colunas_data = ['dia_util', 'data_referencia', 'data_vcto']
+    for coluna in colunas_data:
+        if coluna in df_visual.columns:
+            df_visual[coluna] = pd.to_datetime(
+                df_visual[coluna],
+                errors='coerce'
+            ).dt.strftime('%d/%m/%Y')
+
+    if 'fator_juros' in df_visual.columns:
+        df_visual['fator_juros'] = df_visual['fator_juros'].map(
+            lambda valor: f'{float(valor):.6f}'.replace('.', ',')
+        )
+
+    colunas_valores = [
+        'saldo_devedor',
+        'principal',
+        'juros',
+        'total_parcela',
+        'valor_pagamento',
+    ]
+    for coluna in colunas_valores:
+        if coluna in df_visual.columns:
+            df_visual[coluna] = df_visual[coluna].map(
+                lambda valor: f'{float(valor):,.2f}'
+                .replace(',', 'v')
+                .replace('.', ',')
+                .replace('v', '.')
+            )
+
+    return df_visual
 
 def inicializar_state():
     '''Inicializar state do servidor.'''
@@ -102,15 +142,30 @@ def modal_incluir_contrato():
         c21.selectbox('Registro de cobrança', st.session_state.ic_registro_cobranca, key='ic_registro_cobranca')
 
         with st.container(horizontal=True):
+            if st.form_submit_button('Projetar'):
+                st.session_state['ic_df_projecao'] = projetar_contrato(st.session_state)
+
             if st.form_submit_button('Confirmar', type='primary'):
                 incluir_contrato(st.session_state)
 
             if st.form_submit_button('Cancelar'):
+                st.session_state.pop('ic_df_projecao', None)
                 st.rerun()
+
+        if 'ic_df_projecao' in st.session_state:
+            df_projecao = st.session_state['ic_df_projecao']
+            if not df_projecao.empty:
+                st.markdown('### Projeção temporária')
+                st.dataframe(
+                    formatar_projecao(df_projecao),
+                    hide_index=True,
+                    use_container_width=True
+                )
             
         ## notificações
         if 'mensagem_sucesso' in st.session_state:
             st.toast(st.session_state.pop('mensagem_sucesso'), icon='✅')
+            st.session_state.pop('ic_df_projecao', None)
             inicializar_state()
             st.rerun()
 

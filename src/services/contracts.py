@@ -3,7 +3,12 @@ import pandas as pd
 from sqlalchemy import text
 from database.connection import ConexaoBancoSQL
 from queries.queries_gerais import INCLUIR_CONTRATO, SELECT_CONTRATOS
-from queries.queries_contracts import SELECT_PROJECAO, DELETE_CONTRATO
+from queries.queries_contracts import (
+    DELETE_CONTRATO,
+    PROJETAR_CONTRATO_SELIC,
+    PROJETAR_CONTRATO_TFC,
+    SELECT_PROJECAO,
+)
 from repositories.include_antecipation import registrar_contrato, consultar_contratos
 from repositories.contract import listar_projecao, interacao_database
 from views.components.modal_contracts_projecao import modal_projecao_valores
@@ -109,6 +114,73 @@ def incluir_contrato(session_state):
     except Exception as e:
         st.session_state['mensagem_erro'] = f'Erro ao incluir contrato. ({e})'
         st.rerun()
+
+def projetar_contrato(session_state):
+    '''Calcula a projeção temporária sem persistir o contrato.'''
+
+    campos_obrigatorios = [
+        'ic_dt_emissao',
+        'ic_dt_bndes',
+        'ic_valor_financiado',
+        'ic_taxa_juros_efetiva',
+        'ic_prazo_carencia',
+        'ic_prazo_final',
+        'ic_pagamento_carencia',
+        'ic_registro_cobranca',
+        'ic_tipo',
+    ]
+    campos_nao_preenchidos = [
+        campo for campo in campos_obrigatorios
+        if session_state.get(campo) is None or str(session_state.get(campo)) == ''
+    ]
+
+    if campos_nao_preenchidos:
+        session_state['mensagem_erro'] = 'Preencha os campos necessários para projetar.'
+        return pd.DataFrame()
+
+    if session_state['ic_valor_financiado'] <= 0:
+        session_state['mensagem_erro'] = 'O valor financiado deve ser maior que zero!'
+        return pd.DataFrame()
+
+    if session_state['ic_taxa_juros_efetiva'] <= 0:
+        session_state['mensagem_erro'] = 'A taxa de juros efetiva deve ser maior que zero!'
+        return pd.DataFrame()
+
+    if session_state['ic_prazo_carencia'] <= 0 or session_state['ic_prazo_final'] <= 0:
+        session_state['mensagem_erro'] = 'Os prazos devem ser maiores que zero!'
+        return pd.DataFrame()
+
+    if session_state['ic_dt_bndes'] < session_state['ic_dt_emissao']:
+        session_state['mensagem_erro'] = 'A data BNDES deve ser maior ou igual à data de emissão.'
+        return pd.DataFrame()
+
+    parametros = {
+        'data_emissao': session_state['ic_dt_emissao'],
+        'data_bndes': session_state['ic_dt_bndes'],
+        'valor_financiado': session_state['ic_valor_financiado'],
+        'taxa_juros_efetiva': session_state['ic_taxa_juros_efetiva'],
+        'prazo_carencia': session_state['ic_prazo_carencia'],
+        'prazo_final': session_state['ic_prazo_final'],
+        'carencia_pagamento': session_state['ic_pagamento_carencia'],
+        'registro_cobranca': session_state['ic_registro_cobranca'],
+    }
+
+    tipo_contrato = session_state['ic_tipo']
+    if tipo_contrato == 'BNDES FINAME SELIC':
+        query = PROJETAR_CONTRATO_SELIC
+    elif tipo_contrato == 'BNDES FINAME TFC':
+        query = PROJETAR_CONTRATO_TFC
+        parametros.pop('registro_cobranca')
+    else:
+        session_state['mensagem_erro'] = f'Tipo de contrato não suportado: {tipo_contrato}'
+        return pd.DataFrame()
+
+    try:
+        with engine.begin() as conn:
+            return listar_projecao(text(query), conn, parametros)
+    except Exception as e:
+        session_state['mensagem_erro'] = f'Erro ao calcular a projeção. ({e})'
+        return pd.DataFrame()
 
 def listar_contratos():
     '''Função definida para listar todos os contratos registrados no banco de dados.'''

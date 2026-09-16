@@ -50,3 +50,13 @@ plano de rollback.
 Alterações no modelo ou nos cálculos devem ser feitas no SQL versionado,
 testadas em banco de desenvolvimento e refletidas na documentação de
 arquitetura.
+
+## Pendência conhecida
+
+A tela **Relatórios > Projeção de Pagamentos**
+(`src/queries/queries_projection.py`) consulta a view
+`financiamento.vw_agrupamento_projecao`, que ainda não está documentada em
+`ddl_financiamento.sql`. Assim que a definição da view for extraída do banco,
+ela deve ser incluída no DDL e no
+[Dicionário de Dados](../docs/architecture/data-dictionary.md). Ver
+[BL-010](../docs/requirements/status-register.md#backlog-rastreável).

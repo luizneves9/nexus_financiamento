@@ -48,6 +48,7 @@ com este registro.
 | UC06 | Antecipação | Banco preparado | Trigger existe, mas não ha tela para registrar a operação. | Implementar fluxo de antecipação e refresh da projeção. |
 | UC07 | Liquidação | Planejado | Não existe fluxo de interface nem modelo funcional fechado para liquidação. | Definir modelo e implementar registro total/parcial. |
 | UC08 | Atualização da Selic | Banco preparado | Tabela e consultas existem, mas não ha importação por API ou job. | Definir fonte e implementar integração idempotente. |
+| UC09 | Relatório de projeção de pagamentos | Implementado | Tela consolidada com a view `vw_agrupamento_projecao` existe, mas sem filtros, exportação nem a view documentada no DDL. | Adicionar filtros/exportação e documentar a view no DDL versionado. |
 | RF03.1 | Filtros de contratos | Planejado | Tela atual lista registros, mas não possui filtros funcionais. | Definir componentes e testes dos filtros. |
 | RF08 | Auditoria | Planejado | Não existe histórico de alterações ou operações. | Definir modelo de auditoria e eventos obrigatórios. |
 | RF10 | Autenticação e perfis | Planejado | Aplicação ainda não controla identidade ou permissões. | Definir perfis e implementar autenticação. |
@@ -160,6 +161,22 @@ com este registro.
 - **Critério de conclusão:** carga automática repetível, validada, observável
   e refletida nos cálculos.
 
+### UC09 - Relatório de projeção de pagamentos
+
+- **Status:** Implementado.
+- **Entregue:** página "Projeção de Pagamentos" no menu Relatórios,
+  consultando a view `financiamento.vw_agrupamento_projecao` em uma tabela
+  somente leitura, sem botões.
+- **Pendente:** filtros, exportação/download (previstos no roadmap para a
+  tela consolidada de projeções) e documentação da view no DDL versionado.
+- **Evidência:** `src/views/relatorio_projecao_pagamentos.py`,
+  `src/services/relatorio_projecao_pagamentos.py` e
+  `src/queries/queries_projection.py`.
+- **Próxima ação:** documentar `vw_agrupamento_projecao` em
+  `database/ddl_financiamento.sql` e definir os filtros da tela consolidada.
+- **Critério de conclusão:** view documentada no DDL, filtros e exportação
+  implementados, e conteúdo validado pelo financeiro.
+
 ## Backlog rastreável
 
 | ID | Pendência | Impacto | Depende de | Status |
@@ -173,6 +190,7 @@ com este registro.
 | BL-007 | Definir auditoria. | Alto | Eventos obrigatórios | Aberto |
 | BL-008 | Definir integração da Selic. | Alto | Fonte oficial | Aberto |
 | BL-009 | Criar política de backup e restauração. | Alto | Infraestrutura | Aberto |
+| BL-010 | Documentar a view `vw_agrupamento_projecao` no DDL versionado e definir filtros/exportação da tela de Relatórios. | Médio | Acesso ao banco para extrair a definição da view | Aberto |
 
 ## Regra de atualização
 

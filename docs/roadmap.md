@@ -8,6 +8,8 @@ está no [Registro de Status e Pendências](requirements/status-register.md).
 - Inclusão e consulta de contratos.
 - Consulta de empresas, bancos e fornecedores.
 - Visualização parcial de projeções.
+- Relatório consolidado de projeção de pagamentos (Relatórios > Projeção de
+  Pagamentos), ainda sem filtros nem download.
 - Exclusão física de contratos.
 - Estruturas de banco para Selic, bens, veículos e antecipação.
 
@@ -18,7 +20,8 @@ está no [Registro de Status e Pendências](requirements/status-register.md).
 - Disponibilizar liquidação total e parcial com registro.
 - Implementar autenticação e perfis.
 - Implementar filtros e detalhamento.
-- Criar tela consolidada de projeções com filtros e download de arquivos.
+- Adicionar filtros e download de arquivos à tela consolidada de projeções
+  (Relatórios > Projeção de Pagamentos).
 - Validar cálculos com testes de banco e aceite do financeiro.
 - Definir integração da Selic por API ou job.
 

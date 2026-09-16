@@ -43,6 +43,7 @@ alinhando a documentação ao estado real da aplicação e ao roadmap do projeto
 | UC06 | Registro de antecipação | Banco preparado |
 | UC07 | Liquidação de contrato | Planejado para a versão 1.0 |
 | UC08 | Atualização da Selic | Dados no banco; integração por API planejada |
+| UC09 | Relatório de projeção de pagamentos | Implementado |
 
 ## Estrutura da documentação
 

@@ -74,9 +74,11 @@ def inicializar_state():
         'ic_numero_contrato': None,
         'ic_dt_emissao': None,
         'ic_dt_bndes': None,
-        'ic_tipo': ['BNDES FINAME SELIC'],
+        'ic_tipo': 'BNDES FINAME SELIC',
+        'opcoes_tipo': ['BNDES FINAME SELIC'],
         'ic_valor_financiado': 0.00,
-        'ic_pos_fixado': ['SELIC'],
+        'ic_pos_fixado': 'SELIC',
+        'opcoes_pos_fixado': ['SELIC'],
         'ic_custo_bndes': 0.00,
         'ic_sobretaxa_bndes': 0.00,
         'ic_taxa_banco': 0.00,
@@ -88,8 +90,10 @@ def inicializar_state():
         'ic_dt_primeiro_encargo': None,
         'ic_dt_primeiro_principal': None,
         'ic_dt_ultima_parcela': None,
-        'ic_debito_cc': ['NAO', 'SIM'],
-        'ic_registro_cobranca': ['PRIMEIRO_DIA_UTIL', 'VENCIMENTO']
+        'ic_debito_cc': 'NAO',
+        'opcoes_debito_cc': ['NAO', 'SIM'],
+        'ic_registro_cobranca': 'PRIMEIRO_DIA_UTIL',
+        'opcoes_registro_cobranca': ['PRIMEIRO_DIA_UTIL', 'VENCIMENTO']
     }
 
     for key, val in default.items():
@@ -115,9 +119,9 @@ def modal_incluir_contrato():
         c5, c6, c7, c8 = st.columns([1, 1.5, 1.5, 1])
 
         c5.date_input('Data BNDES', value=st.session_state.ic_dt_bndes, format='DD/MM/YYYY', key='ic_dt_bndes')
-        c6.selectbox('Tipo', st.session_state.ic_tipo, key='ic_tipo')
+        c6.selectbox('Tipo', st.session_state.opcoes_tipo, key='ic_tipo')
         c7.number_input('Valor financiado', st.session_state.ic_valor_financiado, key='ic_valor_financiado')
-        c8.selectbox('Pós fixado', st.session_state.ic_pos_fixado, key='ic_pos_fixado')
+        c8.selectbox('Pós fixado', st.session_state.opcoes_pos_fixado, key='ic_pos_fixado')
 
         c9, c10, c11, c12 = st.columns([1, 1, 1, 1])
 
@@ -138,8 +142,8 @@ def modal_incluir_contrato():
         c17.date_input('Data primeira parcela de encargo', value=st.session_state.ic_dt_primeiro_encargo, format='DD/MM/YYYY', key='ic_dt_primeiro_encargo')
         c18.date_input('Data primeira parcela do principal', value=st.session_state.ic_dt_primeiro_principal, format='DD/MM/YYYY', key='ic_dt_primeiro_principal')
         c19.date_input('Data ultima parcela', value=st.session_state.ic_dt_ultima_parcela, format='DD/MM/YYYY', key='ic_dt_ultima_parcela')
-        c20.selectbox('Débito em cc', st.session_state.ic_debito_cc, key='ic_debito_cc')
-        c21.selectbox('Registro de cobrança', st.session_state.ic_registro_cobranca, key='ic_registro_cobranca')
+        c20.selectbox('Débito em cc', st.session_state.opcoes_debito_cc, key='ic_debito_cc')
+        c21.selectbox('Registro de cobrança', st.session_state.opcoes_registro_cobranca, key='ic_registro_cobranca')
 
         with st.container(horizontal=True):
             if st.form_submit_button('Projetar'):

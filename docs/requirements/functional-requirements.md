@@ -25,6 +25,7 @@ existência de estruturas correspondentes no banco de dados.
 | RF07.1 | Antecipação | Registrar pagamento antecipado e refletir a operação na projeção. | Banco preparado; interface planejada |
 | RF07.2 | Liquidação | Simular e registrar liquidação total ou parcial. | Planejado para a versão 1.0 |
 | RF07.3 | Relatório de projeção de pagamentos | Exibir, em Relatórios, o agrupamento consolidado da projeção de pagamentos de todos os contratos. | Implementado |
+| RF07.4 | Relatório de endividamento | Exibir, em Relatórios, a projeção de pagamentos agrupada por ano e mês em um formato de tabela consolidada (fluxo de caixa), com suporte a tema claro/escuro automático. | Implementado |
 | RF08 | Detalhamento e auditoria | Exibir detalhes do registro e histórico de alterações. | Planejado |
 | RF09 | Ajustes financeiros | Permitir registrar ajustes financeiros apos o vencimento. | Planejado |
 | RF10 | Autenticação e perfis | Controlar acesso por usuário e perfil. | Planejado para a versão 1.0 |

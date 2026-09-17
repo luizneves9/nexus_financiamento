@@ -19,6 +19,7 @@ ver o motivo de cada status, as lacunas e a próxima ação, consulte o
 | RF07.1 | RN05, RN09 | UC06 | Banco preparado | Implementar tela e validar refresh da projeção. |
 | RF07.2 | RN10 | UC07 | Planejado | Definir modelo e implementar liquidação. |
 | RF07.3 | RN02, RN03 | UC09 | Implementado | Adicionar filtros/exportação e documentar a view no DDL. |
+| RF07.4 | RN02, RN03 | UC10 | Implementado | Adicionar filtros/download e completar documentação da view no DDL. |
 | RF08 | RN12 | UC02, UC04 | Planejado | Definir auditoria e histórico. |
 | RF09 | RN11, RN12 | UC07 | Planejado | Definir ajustes e autorização. |
 | RF10 | RN11 | Todos os casos protegidos | Planejado | Implementar autenticação e perfis. |

@@ -49,6 +49,7 @@ com este registro.
 | UC07 | Liquidação | Planejado | Não existe fluxo de interface nem modelo funcional fechado para liquidação. | Definir modelo e implementar registro total/parcial. |
 | UC08 | Atualização da Selic | Banco preparado | Tabela e consultas existem, mas não ha importação por API ou job. | Definir fonte e implementar integração idempotente. |
 | UC09 | Relatório de projeção de pagamentos | Implementado | Tela consolidada com a view `vw_agrupamento_projecao` existe, mas sem filtros, exportação nem a view documentada no DDL. | Adicionar filtros/exportação e documentar a view no DDL versionado. |
+| UC10 | Relatório de endividamento | Implementado | Tela de fluxo de caixa com agrupamento por ano/mês, tema automático e botões de alternância. View ainda não documentada no DDL. | Documentar `vw_agrupamento_projecao` no DDL e adicionar filtros/download. |
 | RF03.1 | Filtros de contratos | Planejado | Tela atual lista registros, mas não possui filtros funcionais. | Definir componentes e testes dos filtros. |
 | RF08 | Auditoria | Planejado | Não existe histórico de alterações ou operações. | Definir modelo de auditoria e eventos obrigatórios. |
 | RF10 | Autenticação e perfis | Planejado | Aplicação ainda não controla identidade ou permissões. | Definir perfis e implementar autenticação. |
@@ -177,6 +178,25 @@ com este registro.
 - **Critério de conclusão:** view documentada no DDL, filtros e exportação
   implementados, e conteúdo validado pelo financeiro.
 
+### UC10 - Relatório de endividamento
+
+- **Status:** Implementado.
+- **Entregue:** página "Endividamento" no menu Relatórios, consultando query
+  que agrupa dados de `vw_agrupamento_projecao` por ano/mês em formato de
+  fluxo de caixa. Valores em milhões (3 casas decimais). Tema automático que
+  respeita `@media (prefers-color-scheme)` + 3 botões de alternância manual
+  (automático, claro, escuro).
+- **Pendente:** filtros, exportação/download (previstos no roadmap) e
+  documentação da view `vw_agrupamento_projecao` no DDL versionado.
+- **Evidência:** `src/views/relatorio_endividamento.py`,
+  `src/services/relatorio_endividamento.py` e
+  `src/queries/queries_relatorio_endividamento.py`.
+- **Próxima ação:** documentar `vw_agrupamento_projecao` em
+  `database/ddl_financiamento.sql` e adicionar filtros por ano/modalidade.
+- **Critério de conclusão:** view documentada no DDL, filtros e download
+  implementados, tema automático/manual validado em diferentes navegadores,
+  e conteúdo validado pelo financeiro.
+
 ## Backlog rastreável
 
 | ID | Pendência | Impacto | Depende de | Status |
@@ -190,7 +210,8 @@ com este registro.
 | BL-007 | Definir auditoria. | Alto | Eventos obrigatórios | Aberto |
 | BL-008 | Definir integração da Selic. | Alto | Fonte oficial | Aberto |
 | BL-009 | Criar política de backup e restauração. | Alto | Infraestrutura | Aberto |
-| BL-010 | Documentar a view `vw_agrupamento_projecao` no DDL versionado e definir filtros/exportação da tela de Relatórios. | Médio | Acesso ao banco para extrair a definição da view | Aberto |
+| BL-010 | Documentar a view `vw_agrupamento_projecao` no DDL versionado e definir filtros/exportação da tela de Projeção de Pagamentos. | Médio | Acesso ao banco para extrair a definição da view | Aberto |
+| BL-011 | Adicionar filtros (ano, modalidade) e download/exportação à tela de Relatórios > Endividamento. | Médio | Especificação dos filtros aprovada pelo financeiro | Aberto |
 
 ## Regra de atualização
 

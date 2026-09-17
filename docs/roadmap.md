@@ -10,6 +10,8 @@ está no [Registro de Status e Pendências](requirements/status-register.md).
 - Visualização parcial de projeções.
 - Relatório consolidado de projeção de pagamentos (Relatórios > Projeção de
   Pagamentos), ainda sem filtros nem download.
+- Relatório de endividamento com fluxo de caixa (Relatórios > Endividamento),
+  com tema automático/manual, ainda sem filtros nem download.
 - Exclusão física de contratos.
 - Estruturas de banco para Selic, bens, veículos e antecipação.
 

@@ -155,9 +155,12 @@ Pagamentos — UC09/RF07.3):
    com o mesmo nome de arquivo (ex. `views/x.py` ↔ `services/x.py`), query
    dedicada em `src/queries/`, reaproveitando `repositories/funcoes.py`
    quando a operação for uma leitura simples.
-4. **Validar sintaxe** dos arquivos novos/alterados
-   (`python -m py_compile <arquivos>`) antes de concluir.
-5. **Atualizar a documentação**, nesta ordem, só criando o que for
+4. **Testar a funcionalidade** no Streamlit antes de documentar (não presumir que
+   compilação Python = funcionamento correto):
+   - Para consultas ao banco: validar que os dados chegam; se a view/tabela não estiver documentada no DDL (ex. `vw_agrupamento_projecao`), registrar em `database/README.md` após confirmar que funciona.
+   - Para telas: navegar até o caminho novo e validar visualmente.
+   - Só após teste bem-sucedido e aprovação do usuário, prosseguir para documentação.
+5. **Atualizar a documentação**, nesta ordem (apenas após teste aprovado), só criando o que for
    realmente novo:
    - **RF** em `docs/requirements/functional-requirements.md` — criar um
      novo ID (ou subitem, ex. `RF07.3` de `RF07`) só se o comportamento não

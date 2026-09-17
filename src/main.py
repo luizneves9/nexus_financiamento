@@ -18,6 +18,7 @@ def main():
         ],
         'Relatórios': [
             st.Page('views/relatorio_projecao_pagamentos.py', title='Projeção de Pagamentos'),
+            st.Page('views/relatorio_endividamento.py', title='Endividamento')
         ]
     }
 

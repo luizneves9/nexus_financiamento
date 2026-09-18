@@ -45,7 +45,7 @@ com este registro.
 | UC03 | Visualização de projeção | Parcial | Consulta e cálculos estão corretos; validação específica do impacto de antecipações ainda falta. | Validar antecipações. |
 | UC04 | Exclusão física | Implementado | DELETE e confirmação existem, mas dependências e auditoria limitam o fluxo. | Documentar procedimento de dependências e validar comportamento. |
 | UC05 | Bens e veículos | Banco preparado | Tabelas e relacionamentos existem, mas não ha interface nem regras completas. | Implementar telas, validações e regras de chassi/placa. |
-| UC06 | Antecipação | Banco preparado | Trigger existe, mas não ha tela para registrar a operação. | Implementar fluxo de antecipação e refresh da projeção. |
+| UC06 | Antecipação | Parcialmente implementado | Banco completo com tipo_lancamento (ANTECIPACAO/QUITACAO) e projeção atualizada para truncar em quitação. Falta tela de registro. | Implementar fluxo UI de antecipação. |
 | UC07 | Liquidação | Planejado | Não existe fluxo de interface nem modelo funcional fechado para liquidação. | Definir modelo e implementar registro total/parcial. |
 | UC08 | Atualização da Selic | Banco preparado | Tabela e consultas existem, mas não ha importação por API ou job. | Definir fonte e implementar integração idempotente. |
 | UC09 | Relatório de projeção de pagamentos | Implementado | Tela consolidada com a view `vw_agrupamento_projecao` existe, mas sem filtros, exportação nem a view documentada no DDL. | Adicionar filtros/exportação e documentar a view no DDL versionado. |
@@ -177,6 +177,22 @@ com este registro.
   `database/ddl_financiamento.sql` e definir os filtros da tela consolidada.
 - **Critério de conclusão:** view documentada no DDL, filtros e exportação
   implementados, e conteúdo validado pelo financeiro.
+
+### UC06 - Registro de antecipação
+
+- **Status:** Parcialmente implementado (banco 100%, interface 0%).
+- **Entregue:** 
+  - Tabela `financiamento.antecipacao` com colunas: `tipo_lancamento` (ANTECIPACAO/QUITACAO), `data_pagamento`, `selic`, `valor_pago`, `valor_moeda`.
+  - View `mv_projecao_moeda` detecta e filtra quitações: CTE `parcela_quitada` trunca projeção na parcela de quitação.
+  - Query `SELECT_PROJECAO` (UC03) traz antecipações em bloco separado com tipo e valor.
+  - Suporte completo a múltiplas antecipações parciais e uma quitação final.
+- **Pendente:** Tela de registro de antecipação na aplicação; interface de listagem e edição de antecipações.
+- **Evidência:** 
+  - Banco: `financiamento.antecipacao`, triggers, `mv_projecao_moeda`, `mv_projecao_moeda_final`.
+  - Código: `src/queries/queries_contracts.py` (CTE `valores_antecipacao`).
+  - Documentação: `docs/architecture/financial-calculation.md` (seção Antecipação e Tratamento de Quitação).
+- **Próxima ação:** Implementar tela em `src/views/` para registro/listagem de antecipações com seleção de tipo (ANTECIPACAO/QUITACAO).
+- **Critério de conclusão:** Tela funcional, registro em banco confirmado, projeção recalculada corretamente após registro, testes de quitação executados.
 
 ### UC10 - Relatório de endividamento
 

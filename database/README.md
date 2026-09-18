@@ -27,8 +27,10 @@ O DDL contém:
   projeções;
 - triggers de contratos e antecipações;
 - view `vw_controle_contratos`;
-- materialized views `mv_projecao_moeda`, `mv_projecao_moeda_final` e
-  `mv_projecao_tfc`.
+- materialized views:
+  - `mv_projecao_moeda`: base de cálculo com suporte a antecipações (ANTECIPACAO/QUITACAO), filtragem de quitação via CTE `parcela_quitada`.
+  - `mv_projecao_moeda_final`: aplicação de Selic por dia de vencimento e cálculo de parcela H.
+  - `mv_projecao_tfc`: cálculo TFC com dias corridos.
 
 ## Uso do arquivo
 

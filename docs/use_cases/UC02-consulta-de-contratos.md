@@ -22,19 +22,21 @@ O usuário visualiza os contratos retornados pela view `financiamento.vw_control
 ## Fluxo principal
 
 1. O usuário acessa a página **Contratos**.
-2. O sistema consulta a view de controle de contratos.
-3. O sistema exibe identificador, empresa, banco, número, data de emissão, valor, tipo de pos-fixação, juros, prazo e vencimento final.
-4. O usuário pode selecionar um registro para executar uma operação disponível.
+2. (Opcional) O usuário preenche um ou mais filtros: Empresa, Banco ou Contrato.
+3. O usuário clica em **Filtrar** para aplicar os filtros (filtros ILIKE, busca parcial).
+4. O sistema consulta a view `vw_controle_contratos` com as cláusulas WHERE parametrizadas.
+5. O sistema exibe identificador, empresa, banco, número, data de emissão, valor, tipo de pos-fixação, juros, prazo e vencimento final.
+6. O usuário pode selecionar um registro para executar uma operação disponível (Projeção, Excluir, Novo).
 
 ## Fluxos alternativos
 
 ### FA01 - Nenhum contrato encontrado
 
-O sistema exibe uma tabela sem registros. O usuário pode retornar a consulta posteriormente.
+O sistema exibe um aviso "Nenhum contrato encontrado com os filtros aplicados." O usuário pode modificar os filtros ou limpar o formulário para voltar a listar todos os registros.
 
-### FA02 - Filtragem de contratos
+### FA02 - Sem filtros
 
-Filtros por banco, taxa, período, valor e tipo de contrato fazem parte da evolução planejada.
+Quando nenhum filtro é preenchido, o sistema lista todos os contratos cadastrados ordenados por identificador.
 
 ## Fluxos de exceção
 

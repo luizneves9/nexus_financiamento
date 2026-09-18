@@ -11,7 +11,7 @@ from queries.queries_contracts import (
     SELECT_PROJECAO,
 )
 from repositories.include_antecipation import registrar_contrato, consultar_contratos
-from repositories.contract import listar_projecao, interacao_database
+from repositories.contract import listar_projecao, interacao_database, listar_contratos as ler_contratos_banco
 from views.components.modal_contracts_projecao import modal_projecao_valores
 from tools.funcoes import transformar_float_em_str
 
@@ -211,15 +211,19 @@ def projetar_contrato(session_state):
         session_state['mensagem_erro'] = 'Não foi possível calcular a projeção.'
         return pd.DataFrame()
 
-def listar_contratos():
-    '''Função definida para listar todos os contratos registrados no banco de dados.'''
+def listar_contratos(empresa=None, banco=None, contrato=None):
+    '''Função definida para listar contratos registrados no banco de dados com filtros opcionais.'''
 
     df = pd.DataFrame()
-    query = SELECT_CONTRATOS
+    parametros = {
+        'empresa': f"%{empresa}%" if empresa else None,
+        'banco': f"%{banco}%" if banco else None,
+        'contrato': f"%{contrato}%" if contrato else None
+    }
 
     try:
         with engine.begin() as conn:
-            df = consultar_contratos(query, conn)
+            df = ler_contratos_banco(text(SELECT_CONTRATOS), conn, parametros)
     except:
         pass
 

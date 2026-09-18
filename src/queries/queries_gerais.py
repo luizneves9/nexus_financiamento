@@ -13,5 +13,8 @@ INCLUIR_CONTRATO = '''
 
 SELECT_CONTRATOS = '''
     SELECT * FROM financiamento.vw_controle_contratos
+    WHERE (:empresa IS NULL OR "Empresa" ILIKE :empresa)
+    AND (:banco IS NULL OR "Banco" ILIKE :banco)
+    AND (:contrato IS NULL OR "Contrato" ILIKE :contrato)
     ORDER BY "Id"
 '''

@@ -30,11 +30,12 @@ continua sendo a fonte normativa para tipos, nulidade, indices e restricoes.
 | Campo | Significado |
 | --- | --- |
 | `id_contrato` | Contrato da antecipação. |
-| `data_pagamento` | Data do pagamento. |
+| `data_pagamento` | Data do pagamento antecipado. |
 | `data_tesouraria` | Data usada para localizar Selic. |
-| `selic` | Taxa aplicada a antecipação. |
+| `selic` | Taxa Selic aplicada a antecipação. |
 | `valor_pago` | Valor financeiro pago. |
-| `valor_moeda` | Valor calculado pela taxa aplicável. |
+| `valor_moeda` | Valor calculado pela taxa Selic aplicável. |
+| `tipo_lancamento` | Classificação do lançamento: 'ANTECIPACAO' (pagamento parcial) ou 'QUITACAO' (liquidação total do contrato). |
 
 ## Bem e veiculo
 

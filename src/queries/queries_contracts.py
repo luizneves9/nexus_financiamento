@@ -8,6 +8,7 @@ SELECT_PROJECAO = '''
 	valores_moeda AS (
 		SELECT
 			parcela AS "Parcela",
+            'Parcela' AS "Tipo",
 			data_vcto AS "Data de Vencimento",
 			ROUND(COALESCE(valor_pagamento, total_parcela * s.valor), 2) AS "Valor"
 		FROM financiamento.mv_projecao_moeda_final
@@ -17,14 +18,27 @@ SELECT_PROJECAO = '''
 	valores_tfc AS (
 		SELECT 
 			parcela AS "Parcela",
+            'Parcela' AS "Tipo",
 			data_vcto AS "Data de Vencimento",
 			total_parcela AS "Valor"
 		FROM financiamento.mv_projecao_tfc
 		WHERE id_contrato = :id
+	),
+	valores_antecipacao AS (
+		SELECT
+			0 AS "Parcela",
+			INITCAP(tipo_lancamento) AS "Tipo",
+			data_pagamento AS "Data de Vencimento",
+			ROUND(valor_pago, 2) AS "Valor"
+		FROM financiamento.antecipacao
+		WHERE id_contrato = :id
 	)
-	SELECT "Parcela", "Data de Vencimento", "Valor" FROM valores_moeda
+	SELECT "Parcela", "Tipo", "Data de Vencimento", "Valor" FROM valores_moeda
 	UNION ALL
-	SELECT "Parcela", "Data de Vencimento", "Valor" FROM valores_tfc
+	SELECT "Parcela", "Tipo", "Data de Vencimento", "Valor" FROM valores_tfc
+	UNION ALL
+	SELECT "Parcela", "Tipo", "Data de Vencimento", "Valor" FROM valores_antecipacao
+	ORDER BY "Data de Vencimento"
 '''
 
 PROJETAR_CONTRATO_SELIC = '''

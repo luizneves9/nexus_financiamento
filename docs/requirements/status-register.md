@@ -41,7 +41,7 @@ com este registro.
 | ID | Assunto | Status atual | Motivo resumido | Próxima ação |
 | --- | --- | --- | --- | --- |
 | UC01 | Inclusão de contratos | Parcial | Inclusão e projeção temporária funcionam, mas vínculo de bens/veículos e autenticação ainda faltam. | Implementar vínculo de bens e veículos. |
-| UC02 | Consulta de contratos | Implementado | Listagem pela view existe. Filtros e tratamento de erro completo ainda faltam. | Validar filtros e tratamento de erros. |
+| UC02 | Consulta de contratos | Implementado | Listagem, filtros por Empresa/Banco/Contrato e validação de vazio implementados. Tratamento de erro e desempenho sob análise. | Validar cenários e otimizar desempenho. |
 | UC03 | Visualização de projeção | Parcial | Consulta e cálculos estão corretos; validação específica do impacto de antecipações ainda falta. | Validar antecipações. |
 | UC04 | Exclusão física | Implementado | DELETE e confirmação existem, mas dependências e auditoria limitam o fluxo. | Documentar procedimento de dependências e validar comportamento. |
 | UC05 | Bens e veículos | Banco preparado | Tabelas e relacionamentos existem, mas não ha interface nem regras completas. | Implementar telas, validações e regras de chassi/placa. |
@@ -75,15 +75,15 @@ com este registro.
 ### UC02 - Consulta de contratos
 
 - **Status:** Implementado.
-- **Entregue:** listagem da view `financiamento.vw_controle_contratos` e
-  seleção de registro.
-- **Pendente:** filtros de negócio, tratamento de erro padronizado e validação
-  de desempenho.
-- **Evidência:** `src/views/contracts.py`, `src/services/contracts.py` e
-  `src/queries/queries_gerais.py`.
-- **Próxima ação:** implementar filtros e registrar cenários de consulta.
-- **Critério de conclusão:** filtros aprovados, testes executados e falhas
-  apresentadas sem ocultação.
+- **Entregue:** 
+  - Listagem da view `financiamento.vw_controle_contratos` com ordenação por Id.
+  - Filtros parametrizados por Empresa, Banco e Contrato (busca ILIKE, parcial).
+  - Validação de dataframe vazio com aviso ao usuário.
+  - Seleção de registro para operações (Projeção, Excluir, Novo).
+- **Pendente:** tratamento de erro padronizado em caso de falha de conexão e validação de desempenho com muitos registros.
+- **Evidência:** `src/views/contracts.py`, `src/services/contracts.py`, `src/repositories/contract.py` e `src/queries/queries_gerais.py`.
+- **Próxima ação:** validar filtros com cenários completos (vazio, um campo, múltiplos campos) e otimizar desempenho se necessário.
+- **Critério de conclusão:** filtros funcionais, testes de cenário completos, tratamento de erro consistente e desempenho aceitável.
 
 ### UC03 - Visualização de projeção
 

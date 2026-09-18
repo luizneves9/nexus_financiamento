@@ -38,12 +38,43 @@ def main():
         unsafe_allow_html=True
     )
 
-    # listando contratos
-    df_contratos = listar_contratos()
+    # inicializar session_states dos filtros (FC = Filtro Contratos)
+    if 'fc_empresa' not in st.session_state:
+        st.session_state['fc_empresa'] = None
+    if 'fc_banco' not in st.session_state:
+        st.session_state['fc_banco'] = None
+    if 'fc_contrato' not in st.session_state:
+        st.session_state['fc_contrato'] = None
+
+    # lista de filtros
+    with st.form('gestao_contratos_filtro'):
+        with st.container(horizontal=True, vertical_alignment='bottom'):
+            empresa = st.text_input('Empresa', value=st.session_state.get('fc_empresa') or '')
+            banco = st.text_input('Banco', value=st.session_state.get('fc_banco') or '')
+            contrato = st.text_input('Contrato', value=st.session_state.get('fc_contrato') or '')
+            submitido = st.form_submit_button('Filtrar', use_container_width=True)
+
+        if submitido:
+            st.session_state['fc_empresa'] = empresa if empresa else None
+            st.session_state['fc_banco'] = banco if banco else None
+            st.session_state['fc_contrato'] = contrato if contrato else None
+
+    # listando contratos com filtros
+    df_contratos = listar_contratos(
+        empresa=st.session_state.get('fc_empresa'),
+        banco=st.session_state.get('fc_banco'),
+        contrato=st.session_state.get('fc_contrato')
+    )
+
+    if df_contratos.empty:
+        st.warning('Nenhum contrato encontrado com os filtros aplicados.')
+        return
 
     # definindo formato
-    df_contratos['Juros'] = df_contratos['Juros'].astype(str).str.replace('.', ',').str.ljust(4, '0') + '%'
-    df_contratos['Valor'] = df_contratos['Valor'].map(transformar_float_em_str)
+    if 'Juros' in df_contratos.columns:
+        df_contratos['Juros'] = df_contratos['Juros'].astype(str).str.replace('.', ',').str.ljust(4, '0') + '%'
+    if 'Valor' in df_contratos.columns:
+        df_contratos['Valor'] = df_contratos['Valor'].map(transformar_float_em_str)
 
     # inclusão da opção de seleção
     df_contratos.insert(0, 'sel', False)

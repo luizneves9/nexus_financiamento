@@ -16,7 +16,7 @@ existência de estruturas correspondentes no banco de dados.
 | RF02.3 | Projeção durante a inclusão | Permitir solicitar a projeção antes da gravação definitiva, exibindo o resultado no mesmo modal do formulário. | Implementado |
 | RF02.2 | Vínculo de bens e veículos | Associar bens, chassis e carrocerias a um contrato. | Planejado para a versão 1.0 |
 | RF03 | Consulta de contratos | Exibir contratos cadastrados para consulta operacional. | Implementado |
-| RF03.1 | Filtros de contratos | Filtrar contratos por banco, taxa, período, valor e tipo. | Planejado |
+| RF03.1 | Filtros de contratos | Filtrar contratos por empresa, banco e número (busca parcial). Filtros adicionais (taxa, período, valor, tipo) planejados para evolução. | Parcialmente implementado |
 | RF04 | Consulta de veículos | Exibir bens e veículos associados aos contratos. | Planejado para a versão 1.0 |
 | RF04.1 | Filtros de veículos | Filtrar veículos por banco, taxa, período, valor e situação. | Planejado |
 | RF05 | Exclusão física de contratos | Remover físicamente um contrato mediante confirmação e respeitando integridade referencial. | Implementado, sujeito a dependências |

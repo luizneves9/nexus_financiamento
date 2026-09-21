@@ -25,7 +25,9 @@ O DDL contém:
   feriados, Selic e antecipações;
 - funções de dias úteis, Selic, data de referência e atualização das
   projeções;
-- triggers de contratos e antecipações;
+- triggers de contratos e antecipações, incluindo `trg_after_insert_contratos`
+  e `trg_after_insert_antecipacao`, que acionam `refresh_views_contratos()`
+  após a inclusão de contrato ou de antecipação/quitação, respectivamente;
 - view `vw_controle_contratos`;
 - materialized views:
   - `mv_projecao_moeda`: base de cálculo com suporte a antecipações (ANTECIPACAO/QUITACAO), filtragem de quitação via CTE `parcela_quitada`.
@@ -63,3 +65,4 @@ arquitetura.
    definição da view for extraída do banco, ela deve ser incluída no DDL e no
    [Dicionário de Dados](../docs/architecture/data-dictionary.md). Ver
    [BL-010](../docs/requirements/status-register.md#backlog-rastreável).
+

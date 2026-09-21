@@ -40,8 +40,8 @@ alinhando a documentação ao estado real da aplicação e ao roadmap do projeto
 | UC03 | Visualização de projeção | Parcialmente implementado |
 | UC04 | Exclusão física de contrato | Implementado |
 | UC05 | Cadastro de bens e veículos | Banco preparado |
-| UC06 | Registro de antecipação | Banco preparado |
-| UC07 | Liquidação de contrato | Planejado para a versão 1.0 |
+| UC06 | Antecipação e liquidação antecipada de contrato | Implementado (BNDES FINAME SELIC) |
+| UC07 | Liquidação de contrato | Consolidado em UC06 |
 | UC08 | Atualização da Selic | Dados no banco; integração por API planejada |
 | UC09 | Relatório de projeção de pagamentos | Implementado |
 | UC10 | Relatório de endividamento | Implementado |

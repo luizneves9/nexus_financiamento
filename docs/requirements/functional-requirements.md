@@ -22,8 +22,8 @@ existência de estruturas correspondentes no banco de dados.
 | RF05 | Exclusão física de contratos | Remover físicamente um contrato mediante confirmação e respeitando integridade referencial. | Implementado, sujeito a dependências |
 | RF06 | Exclusão de veículos | Remover bens ou veículos conforme regras de integridade. | Planejado |
 | RF07 | Projeção financeira | Exibir parcelas e valores calculados pelo PostgreSQL. | Parcialmente implementado |
-| RF07.1 | Antecipação | Registrar pagamento antecipado e refletir a operação na projeção. | Banco preparado; interface planejada |
-| RF07.2 | Liquidação | Simular e registrar liquidação total ou parcial. | Planejado para a versão 1.0 |
+| RF07.1 | Antecipação e liquidação antecipada de contrato | Registrar, em um único fluxo, a antecipação (pagamento parcial) ou a quitação total de um contrato, calculando saldo devedor e Selic da data informada antes da confirmação e refletindo a operação na projeção. | Implementado para contratos BNDES FINAME SELIC |
+| RF07.2 | Liquidação | Consolidado em RF07.1: a quitação total é registrada como um tipo de lançamento (`QUITACAO`) na mesma tela de antecipação, sem fluxo ou estrutura de dados próprios. Ver UC06. | Consolidado em RF07.1 |
 | RF07.3 | Relatório de projeção de pagamentos | Exibir, em Relatórios, o agrupamento consolidado da projeção de pagamentos de todos os contratos. | Implementado |
 | RF07.4 | Relatório de endividamento | Exibir, em Relatórios, a projeção de pagamentos agrupada por ano e mês em um formato de tabela consolidada (fluxo de caixa), com suporte a tema claro/escuro automático. | Implementado |
 | RF08 | Detalhamento e auditoria | Exibir detalhes do registro e histórico de alterações. | Planejado |

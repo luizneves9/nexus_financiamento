@@ -305,6 +305,8 @@ CREATE TABLE financiamento.antecipacao (
 	selic numeric(10, 6) NULL,
 	valor_pago numeric(15, 2) NOT NULL,
 	valor_moeda numeric(15, 2) NULL,
+	tipo_lancamento varchar(125) NULL,
+	data_compensacao date NULL,
 	CONSTRAINT antecipacao_pkey PRIMARY KEY (id),
 	CONSTRAINT antecipacao_id_contrato_fkey FOREIGN KEY (id_contrato) REFERENCES financiamento.contratos(id)
 );
@@ -317,6 +319,10 @@ insert
 update
     on
     financiamento.antecipacao for each row execute function financiamento.processar_dados_antecipacao();
+create trigger trg_after_insert_antecipacao after
+insert
+    on
+    financiamento.antecipacao for each statement execute function financiamento.refresh_views_contratos();
 
 -- Permissions
 

@@ -2,6 +2,7 @@ import streamlit as st
 from services.contracts import listar_contratos, visualizar_projecao
 from views.components.modal_contracts_incluir import modal_incluir_contrato
 from views.components.modal_contracts_excluir import modal_excluir_contrato
+from views.components.modal_liquidacao_antecipacao import modal_liquidacao_antecipacao
 
 def excluir_contrato(linha_selecionada):
     '''Funcionalidade de controle para excluir um contrato do banco de dados.'''
@@ -16,6 +17,20 @@ def excluir_contrato(linha_selecionada):
 
     # abrindo o modal de confirmação
     modal_excluir_contrato(linha)
+
+def abrir_modal_antecipacao(linha_selecionada):
+    '''Funcionalidade para abrir o modal de antecipação/liquidação.'''
+
+    # validando quantidade selecionada (deve ser um)
+    if len(linha_selecionada) != 1:
+        st.session_state['mensagem_erro'] = 'Selecione um registro!'
+        return
+
+    # selecionando registro
+    linha = linha_selecionada.iloc[0].copy()
+
+    # abrindo o modal de antecipação/liquidação
+    modal_liquidacao_antecipacao(linha)
 
 def transformar_float_em_str(valor):
     '''Função para transformar valores em formato brasileiro.'''
@@ -94,6 +109,7 @@ def main():
     with st.container(horizontal=True):
         if st.button('Novo'): modal_incluir_contrato()
         if st.button('Projeção'): visualizar_projecao(df_visual[df_visual['sel'] == True])
+        if st.button('Liquidar'): abrir_modal_antecipacao(df_visual[df_visual['sel'] == True])
         if st.button('Excluir'): excluir_contrato(df_visual[df_visual['sel'] == True])
 
     if 'mensagem_sucesso' in st.session_state:

@@ -14,16 +14,19 @@ comportamento atualmente definido para o projeto.
 | RN06 | Carência | Contratos seguem a regra inicial de possuir período de carência. O pagamento durante a carência pode ser zero, mas nunca negativo. | Atual |
 | RN07 | Exclusão inicial | Contratos são excluídos físicamente mediante confirmação do usuário. | Atual |
 | RN08 | Integridade referencial | Contratos, bens, antecipações, empresas, bancos e fornecedores respeitam as chaves estrangeiras do banco. | Atual |
-| RN09 | Antecipação efetiva | Antecipação deve ser registrada, e não apenas simulada. | Planejada na interface |
-| RN10 | Liquidação | Liquidacoes totais ou parciais devem ser registradas no banco. | Planejada |
+| RN09 | Antecipação efetiva | Antecipação deve ser registrada pela tela de Antecipação/Liquidação, e não apenas simulada. | Atual |
+| RN10 | Liquidação | A quitação total do contrato é registrada como um lançamento de antecipação com `tipo_lancamento = QUITACAO`, sem estrutura de dados própria. | Atual |
 | RN11 | Autorização | Autenticação, perfis e autorizações formais seráo implementados na versão 1.0. | Planejada |
 | RN12 | Auditoria | Historico de inclusões, alterações e exclusões será avaliado em evolução futura. | Planejada |
+| RN13 | Quitação única por contrato | Um contrato não pode ter mais de um lançamento do tipo QUITACAO; o sistema bloqueia o registro de uma nova quitação quando já existe uma para o contrato. | Atual |
+| RN14 | Ordem das datas de antecipação/liquidação | Na tela de Antecipação/Liquidação, a data de compensação deve ser maior ou igual à data de tesouraria, que deve ser maior ou igual à data de pagamento. | Atual |
+| RN15 | Escopo de cálculo por modalidade | O cálculo de saldo devedor e Selic exibido na tela de Antecipação/Liquidação antes da confirmação usa `mv_projecao_moeda`, que só contém projeção para contratos do tipo BNDES FINAME SELIC. Demais modalidades não são suportadas nesta versão. | Atual, limitação conhecida |
 
 ## Regras ainda não formalizadas
 
 - Unicidade de chassi e placa.
 - Comportamento de bens duplicados em contratos ativos.
 - Politica para Selic ausente em uma data de cálculo.
-- Atualização das matérialized views apos cada tipo de operação.
+- Atualização das matérialized views apos cada tipo de operação (formalizada para inclusão de contrato e para antecipação/quitação; demais operações, como exclusão, ainda não cobertas por trigger).
 - Regras de ajuste apos vencimento.
 - Retencao e aprovação de histórico.

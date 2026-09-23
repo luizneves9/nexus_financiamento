@@ -13,13 +13,15 @@ está no [Registro de Status e Pendências](requirements/status-register.md).
 - Relatório de endividamento com fluxo de caixa (Relatórios > Endividamento),
   com tema automático/manual, ainda sem filtros nem download.
 - Exclusão física de contratos.
-- Estruturas de banco para Selic, bens, veículos e antecipação.
+- Estruturas de banco para Selic, bens e veículos.
+- Antecipação e liquidação antecipada de contrato (UC06), para contratos
+  BNDES FINAME SELIC.
 
 ## Versão 1.0
 
 - Completar cadastro e vínculo de bens e veículos.
-- Disponibilizar registro de antecipações.
-- Disponibilizar liquidação total e parcial com registro.
+- Suportar, na antecipação/liquidação antecipada, contratos de modalidades
+  além de BNDES FINAME SELIC.
 - Implementar autenticação e perfis.
 - Implementar filtros e detalhamento.
 - Adicionar filtros e download de arquivos à tela consolidada de projeções

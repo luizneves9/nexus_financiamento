@@ -45,8 +45,8 @@ com este registro.
 | UC03 | Visualização de projeção | Parcial | Consulta e cálculos estão corretos; validação específica do impacto de antecipações ainda falta. | Validar antecipações. |
 | UC04 | Exclusão física | Implementado | DELETE e confirmação existem, mas dependências e auditoria limitam o fluxo. | Documentar procedimento de dependências e validar comportamento. |
 | UC05 | Bens e veículos | Banco preparado | Tabelas e relacionamentos existem, mas não ha interface nem regras completas. | Implementar telas, validações e regras de chassi/placa. |
-| UC06 | Antecipação | Parcialmente implementado | Banco completo com tipo_lancamento (ANTECIPACAO/QUITACAO) e projeção atualizada para truncar em quitação. Falta tela de registro. | Implementar fluxo UI de antecipação. |
-| UC07 | Liquidação | Planejado | Não existe fluxo de interface nem modelo funcional fechado para liquidação. | Definir modelo e implementar registro total/parcial. |
+| UC06 | Antecipação e liquidação antecipada | Implementado (BNDES FINAME SELIC) | Tela única consolida antecipação e quitação (tipo_lancamento), com cálculo de saldo devedor/Selic pré-confirmação e validações. Não suporta outras modalidades de contrato. | Validar cálculo com o financeiro e avaliar suporte a outras modalidades. |
+| UC07 | Liquidação | Consolidado em UC06 | Funcionalidade absorvida por UC06 — quitação é um tipo de lançamento no mesmo fluxo de antecipação. | Nenhuma. |
 | UC08 | Atualização da Selic | Banco preparado | Tabela e consultas existem, mas não ha importação por API ou job. | Definir fonte e implementar integração idempotente. |
 | UC09 | Relatório de projeção de pagamentos | Implementado | Tela consolidada com a view `vw_agrupamento_projecao` existe, mas sem filtros, exportação nem a view documentada no DDL. | Adicionar filtros/exportação e documentar a view no DDL versionado. |
 | UC10 | Relatório de endividamento | Implementado | Tela de fluxo de caixa com agrupamento por ano/mês, tema automático e botões de alternância. View ainda não documentada no DDL. | Documentar `vw_agrupamento_projecao` no DDL e adicionar filtros/download. |
@@ -125,30 +125,48 @@ com este registro.
 - **Critério de conclusão:** cadastro, vínculo, consulta, validações e testes
   disponíveis na aplicação.
 
-### UC06 - Registro de antecipação
+### UC06 - Antecipação e liquidação antecipada de contrato
 
-- **Status:** Banco preparado.
-- **Entregue:** tabela `antecipacao` e trigger
-  `processar_dados_antecipacao`.
-- **Pendente:** tela, service, repository, query, confirmação e atualização
-  verificável da projeção.
-- **Evidência:** DDL, `src/views/include_antecipation.py` e
+- **Status:** Implementado para contratos BNDES FINAME SELIC.
+- **Entregue:**
+  - Botão **Liquidar** na tela de Gestão de Contratos, exigindo seleção de
+    exatamente um contrato.
+  - Modal único (`modal_liquidacao_antecipacao.py`) que consolida
+    antecipação parcial e quitação total, diferenciadas pelo campo
+    `tipo_lancamento`.
+  - Cálculo, sob demanda (botão "Calcular Saldo Devedor"), da parcela mais
+    próxima da data de pagamento em `mv_projecao_moeda`, da Selic exata ou
+    próxima disponível (com fallback para a mais recente do banco) e do
+    saldo devedor em moeda.
+  - Validações: campos obrigatórios, quitação única por contrato (RN13),
+    ordem das datas de pagamento/tesouraria/compensação (RN14).
+  - Persistência em `financiamento.antecipacao`; trigger
+    `trg_processar_dados_antecipacao` calcula Selic/valor_moeda; trigger
+    `trg_after_insert_antecipacao` aciona `refresh_views_contratos()`.
+- **Pendente:** suportar contratos de modalidades além de BNDES FINAME
+  SELIC; validar o cálculo do saldo devedor com o financeiro.
+- **Evidência:** `src/views/contracts.py`,
+  `src/views/components/modal_liquidacao_antecipacao.py`,
+  `src/services/liquidacao_antecipacao.py`,
+  `src/queries/queries_antecipacao.py`,
+  `database/ddl_financiamento.sql` e
   `docs/architecture/financial-calculation.md`.
-- **Próxima ação:** substituir o placeholder da tela e testar o trigger.
-- **Critério de conclusão:** registro completo pela interface, resultado
-  financeiro validado e fluxo de erro coberto.
+- **Próxima ação:** avaliar suporte a outras modalidades de contrato.
+- **Critério de conclusão:** cálculo validado pelo financeiro para todas as
+  modalidades relevantes.
 
-### UC07 - Liquidação de contrato
+### UC07 - Liquidação de contrato (consolidado em UC06)
 
-- **Status:** Planejado.
-- **Entregue:** conceito funcional documentado.
-- **Pendente:** modelo de dados, regras de liquidação, interface, persistência,
-  recálculo, testes e permissão.
-- **Evidência:** `docs/use_cases/UC07-liquidacao-de-contrato.md`.
-- **Próxima ação:** definir se liquidação usará `antecipacao` ou estrutura
-  própria e aprovar as regras com o financeiro.
-- **Critério de conclusão:** liquidação total e parcial registradas, saldo
-  recalculado e testes aprovados.
+- **Status:** Consolidado em UC06.
+- **Entregue:** a quitação total de contrato é registrada no mesmo fluxo de
+  UC06, com `tipo_lancamento = QUITACAO`, sem modelo de dados ou interface
+  próprios.
+- **Pendente:** nenhuma pendência própria — acompanhar as pendências de
+  UC06.
+- **Evidência:** `docs/use_cases/UC07-liquidacao-de-contrato.md` (aponta
+  para UC06).
+- **Próxima ação:** nenhuma.
+- **Critério de conclusão:** já atendido via UC06.
 
 ### UC08 - Atualização da Selic
 
@@ -178,22 +196,6 @@ com este registro.
 - **Critério de conclusão:** view documentada no DDL, filtros e exportação
   implementados, e conteúdo validado pelo financeiro.
 
-### UC06 - Registro de antecipação
-
-- **Status:** Parcialmente implementado (banco 100%, interface 0%).
-- **Entregue:** 
-  - Tabela `financiamento.antecipacao` com colunas: `tipo_lancamento` (ANTECIPACAO/QUITACAO), `data_pagamento`, `selic`, `valor_pago`, `valor_moeda`.
-  - View `mv_projecao_moeda` detecta e filtra quitações: CTE `parcela_quitada` trunca projeção na parcela de quitação.
-  - Query `SELECT_PROJECAO` (UC03) traz antecipações em bloco separado com tipo e valor.
-  - Suporte completo a múltiplas antecipações parciais e uma quitação final.
-- **Pendente:** Tela de registro de antecipação na aplicação; interface de listagem e edição de antecipações.
-- **Evidência:** 
-  - Banco: `financiamento.antecipacao`, triggers, `mv_projecao_moeda`, `mv_projecao_moeda_final`.
-  - Código: `src/queries/queries_contracts.py` (CTE `valores_antecipacao`).
-  - Documentação: `docs/architecture/financial-calculation.md` (seção Antecipação e Tratamento de Quitação).
-- **Próxima ação:** Implementar tela em `src/views/` para registro/listagem de antecipações com seleção de tipo (ANTECIPACAO/QUITACAO).
-- **Critério de conclusão:** Tela funcional, registro em banco confirmado, projeção recalculada corretamente após registro, testes de quitação executados.
-
 ### UC10 - Relatório de endividamento
 
 - **Status:** Implementado.
@@ -218,9 +220,9 @@ com este registro.
 | ID | Pendência | Impacto | Depende de | Status |
 | --- | --- | --- | --- | --- |
 | BL-001 | Definir e implementar vínculo de bens e veículos. | Alto | Regras de chassi e placa | Aberto |
-| BL-002 | Implementar registro de antecipação na interface. | Alto | Validação financeira | Aberto |
+| BL-002 | Implementar registro de antecipação na interface. | Alto | Validação financeira | Concluído (UC06) |
 | BL-003 | Validar cálculos SELIC e TFC com massa conhecida. | Alto | Dados de teste aprovados | Aberto |
-| BL-004 | Definir e implementar liquidação total/parcial. | Alto | Modelo de dados | Aberto |
+| BL-004 | Definir e implementar liquidação total/parcial. | Alto | Modelo de dados | Concluído (consolidado em UC06 como tipo QUITACAO) |
 | BL-005 | Implementar autenticação e perfis. | Alto | Matriz de permissões | Aberto |
 | BL-006 | Implementar filtros de contratos e veículos. | Médio | Campos e critérios de busca | Aberto |
 | BL-007 | Definir auditoria. | Alto | Eventos obrigatórios | Aberto |
@@ -228,6 +230,8 @@ com este registro.
 | BL-009 | Criar política de backup e restauração. | Alto | Infraestrutura | Aberto |
 | BL-010 | Documentar a view `vw_agrupamento_projecao` no DDL versionado e definir filtros/exportação da tela de Projeção de Pagamentos. | Médio | Acesso ao banco para extrair a definição da view | Aberto |
 | BL-011 | Adicionar filtros (ano, modalidade) e download/exportação à tela de Relatórios > Endividamento. | Médio | Especificação dos filtros aprovada pelo financeiro | Aberto |
+| BL-012 | Sincronizar no DDL versionado a trigger `trg_after_insert_antecipacao` (`AFTER INSERT` em `financiamento.antecipacao`, aciona `refresh_views_contratos()`) e as colunas `tipo_lancamento`/`data_compensacao`. | Médio | Acesso ao banco para extrair a definição da trigger | Concluído |
+| BL-013 | Avaliar suporte, em UC06, a contratos de modalidades além de BNDES FINAME SELIC (hoje única presente em `mv_projecao_moeda`). | Médio | Definição de regra de cálculo para as demais modalidades | Aberto |
 
 ## Regra de atualização
 

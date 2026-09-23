@@ -16,12 +16,12 @@ ver o motivo de cada status, as lacunas e a próxima ação, consulte o
 | RF05 | RN07, RN08 | UC04 | Parcial | Formalizar dependências e procedimento operacional. |
 | RF06 | RN08 | UC05 | Planejado | Definir e implementar exclusão de veículos. |
 | RF07 | RN02, RN03 | UC03 | Parcial | Validar cálculos e completar recursos de consulta. |
-| RF07.1 | RN05, RN09 | UC06 | Banco preparado | Implementar tela e validar refresh da projeção. |
-| RF07.2 | RN10 | UC07 | Planejado | Definir modelo e implementar liquidação. |
+| RF07.1 | RN02, RN05, RN09, RN13, RN14, RN15 | UC06 | Implementado | Suportar modalidades além de BNDES FINAME SELIC; validar cálculo com o financeiro. |
+| RF07.2 | RN10 | UC07 | Consolidado em RF07.1/UC06 | Nenhuma — funcionalidade absorvida por UC06. |
 | RF07.3 | RN02, RN03 | UC09 | Implementado | Adicionar filtros/exportação e documentar a view no DDL. |
 | RF07.4 | RN02, RN03 | UC10 | Implementado | Adicionar filtros/download e completar documentação da view no DDL. |
 | RF08 | RN12 | UC02, UC04 | Planejado | Definir auditoria e histórico. |
-| RF09 | RN11, RN12 | UC07 | Planejado | Definir ajustes e autorização. |
+| RF09 | RN11, RN12 | A definir | Planejado | Definir Use Case, ajustes e autorização. |
 | RF10 | RN11 | Todos os casos protegidos | Planejado | Implementar autenticação e perfis. |
 | RNF01-RNF03 | - | Todos | Atual | Manter padrão arquitetural e configuração segura. |
 | RNF04-RNF05 | RN11 | Todos | Planejado | Implementar controle de acesso e segredos operacionais. |

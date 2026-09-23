@@ -75,12 +75,20 @@ A consulta `SELECT_PROJECAO` (UC03) retorna três blocos:
 2. **Projeção TFC**: dados da view TFC quando aplicável.
 3. **Antecipações**: registros de `financiamento.antecipacao` com tipo e valor pago.
 
+O registro de antecipação/quitação pela interface (UC06) exibe, antes da
+confirmação, um saldo devedor pré-calculado: busca em `mv_projecao_moeda` a
+parcela com vencimento mais próximo da data de pagamento informada, busca a
+Selic exata dessa data (ou a próxima disponível, com fallback para a mais
+recente cadastrada) e multiplica o saldo devedor da parcela pela Selic
+encontrada. Como `mv_projecao_moeda` só é populada para contratos do tipo
+`BNDES FINAME SELIC`, esse cálculo pré-confirmação não está disponível para
+outras modalidades.
+
 ## Pontos para validação do negócio
 
 - Arredondamentos e casas decimais.
 - Politica quando não existe Selic para uma data.
 - Momento de atualização das matérialized views.
-- Regras para liquidação total e parcial.
 - Regras de carência e pagamento durante carência.
 
 ## Tratamento de Quitação na Projeção

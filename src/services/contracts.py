@@ -24,7 +24,7 @@ def incluir_contrato(session_state):
     # validando preenchimento das colunas
     campos_nao_preenchidos = []
     for key, val in session_state.items():
-        if val is None or str(val) == '':
+        if 'ic_' in key and (val is None or str(val) == ''):
             key = f'{key}'.replace('ic_', '').replace('_', ' ').title()
             campos_nao_preenchidos.append(key)
 

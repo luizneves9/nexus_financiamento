@@ -78,3 +78,24 @@ INSERIR_ANTECIPACAO = '''
 		:data_compensacao
 	)
 '''
+
+SELECT_ANTECIPACOES = '''
+	SELECT
+		a.id,
+		e.razao_social AS nome_empresa,
+		b.razao_social AS banco,
+		c.numero_contrato,
+		a.data_pagamento,
+		a.valor_pago,
+		a.tipo_lancamento
+	FROM financiamento.antecipacao a
+	INNER JOIN financiamento.contratos c ON a.id_contrato = c.id
+	INNER JOIN financiamento.empresas e ON c.id_empresa = e.id
+	INNER JOIN financiamento.bancos b ON c.id_banco = b.id
+	WHERE (:empresa IS NULL OR e.razao_social ILIKE :empresa)
+	AND (:banco IS NULL OR b.razao_social ILIKE :banco)
+	AND (:contrato IS NULL OR c.numero_contrato ILIKE :contrato)
+	AND (:data_pagamento_ini IS NULL OR a.data_pagamento >= :data_pagamento_ini)
+	AND (:data_pagamento_fim IS NULL OR a.data_pagamento <= :data_pagamento_fim)
+	ORDER BY a.id
+'''

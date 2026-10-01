@@ -6,6 +6,8 @@
 | --- | --- |
 | `ddl_financiamento.sql` | Retrato documental do schema PostgreSQL `financiamento` existente no banco, incluindo tabelas, funções, triggers, views e materialized views. |
 | `projection_functions.sql` | Funções parametrizadas para projeção temporária durante a inclusão de contratos. |
+| `usuarios.sql` | Script de criação da tabela `usuarios` (autenticação, UC12) e comandos do desenvolvedor: criar usuário, resetar senha, bloquear e conferir. Já executado em desenvolvimento. |
+| `log_auditoria.sql` | Script de criação da tabela `log_auditoria`, índices, função `log_auditoria_imutavel` e triggers que bloqueiam UPDATE/DELETE/TRUNCATE (DA06), mais consultas úteis de auditoria. Executar depois de `usuarios.sql`. Já executado em desenvolvimento. |
 
 ## Finalidade
 
@@ -16,6 +18,10 @@ neste momento, uma migração ou um instalador completo do banco.
 Da mesma forma, `projection_functions.sql` documenta as funções de projeção
 criadas para a funcionalidade de inclusão de contratos e deve permanecer
 versionado junto ao código.
+
+Diferente do DDL, `usuarios.sql` e `log_auditoria.sql` **são scripts de
+criação**: devem ser executados uma única vez em cada ambiente (primeiro
+`usuarios.sql`, depois `log_auditoria.sql`).
 
 ## Objetos principais
 
@@ -66,3 +72,8 @@ arquitetura.
    [Dicionário de Dados](../docs/architecture/data-dictionary.md). Ver
    [BL-010](../docs/requirements/status-register.md#backlog-rastreável).
 
+2. **Tabelas `usuarios` e `log_auditoria`** — criadas por `usuarios.sql` e
+   `log_auditoria.sql`, ainda não refletidas em `ddl_financiamento.sql`
+   (tabelas, índices, função `log_auditoria_imutavel` e os triggers
+   `trg_log_auditoria_imutavel` / `trg_log_auditoria_sem_truncate`). Ver
+   [BL-019](../docs/requirements/status-register.md#backlog-rastreável).

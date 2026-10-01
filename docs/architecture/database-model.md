@@ -18,6 +18,8 @@ configurado no ambiente.
 | `selic` | Historico de Selic | Consultada por contratos e antecipações |
 | `feriados` | Calendario de dias não úteis | Consultada pelos cálculos |
 | `antecipacao` | Pagamentos antecipados | Referencia contrato |
+| `usuarios` | Usuários do sistema (login, hash da senha, ativo) | Referenciada por `log_auditoria` |
+| `log_auditoria` | Log de auditoria das interações (somente inserção) | Referencia `usuarios`; `entidade`/`id_registro` apontam para o registro afetado sem chave estrangeira |
 
 ## Views e cálculos
 
@@ -34,6 +36,9 @@ configurado no ambiente.
 - `set_data_referencia_contrato`: calcula a data de referencia.
 - `processar_dados_antecipacao`: preenche Selic e valor em moeda.
 - `refresh_views_contratos`: atualiza matérialized views apos inclusão de contrato.
+- `log_auditoria_imutavel`: usada pelos triggers `trg_log_auditoria_imutavel`
+  (UPDATE/DELETE) e `trg_log_auditoria_sem_truncate` (TRUNCATE) para manter o
+  log somente inserção.
 
 ## Integridade atual
 
@@ -48,5 +53,9 @@ configurado no ambiente.
 O DDL versionado em [database/ddl_financiamento.sql](../../database/ddl_financiamento.sql)
 é a fonte técnica do schema `financiamento`. As funções de projeção temporária
 estão em [database/projection_functions.sql](../../database/projection_functions.sql).
+As tabelas de autenticação e auditoria estão em
+[database/usuarios.sql](../../database/usuarios.sql) e
+[database/log_auditoria.sql](../../database/log_auditoria.sql) (ainda não
+sincronizadas no DDL — BL-019).
 Alterações no banco devem ser refletidas neste documento e, quando aplicável,
 na matriz de rastreabilidade.

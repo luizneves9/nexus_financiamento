@@ -9,7 +9,12 @@ está no [Registro de Status e Pendências](requirements/status-register.md).
 - Consulta de empresas, bancos e fornecedores.
 - Visualização parcial de projeções.
 - Relatório consolidado de projeção de pagamentos (Relatórios > Projeção de
-  Pagamentos), ainda sem filtros nem download.
+  Pagamentos), com filtros e resumo, ainda sem download.
+- Consulta de antecipações e quitações (Operacional > Antecipação), com
+  filtros e resumo.
+- Autenticação: login, cadastro de senha no primeiro acesso, sessão de 30
+  minutos e Sair (UC12).
+- Log de auditoria de escritas e eventos de acesso (RF08.1).
 - Relatório de endividamento com fluxo de caixa (Relatórios > Endividamento),
   com tema automático/manual, ainda sem filtros nem download.
 - Exclusão física de contratos.
@@ -22,17 +27,22 @@ está no [Registro de Status e Pendências](requirements/status-register.md).
 - Completar cadastro e vínculo de bens e veículos.
 - Suportar, na antecipação/liquidação antecipada, contratos de modalidades
   além de BNDES FINAME SELIC.
-- Implementar autenticação e perfis.
+- Resolver as pendências de segurança da autenticação: `.env` fora do Git e
+  segredos rotacionados (BL-014), HTTPS (BL-015), limite de tentativas
+  (BL-016) e invalidação de sessões (BL-017).
+- Implementar perfis e permissões por aba e ação (BL-005), registrando
+  `ACESSO_NEGADO` no log.
 - Implementar filtros e detalhamento.
-- Adicionar filtros e download de arquivos à tela consolidada de projeções
-  (Relatórios > Projeção de Pagamentos).
+- Adicionar download de arquivos à tela consolidada de projeções
+  (Relatórios > Projeção de Pagamentos); filtros já entregues.
 - Validar cálculos com testes de banco e aceite do financeiro.
 - Definir integração da Selic por API ou job.
 
 ## Evolucoes posteriores
 
 - Avaliar exclusão lógica.
-- Implementar auditoria completa.
+- Tela de consulta do histórico de auditoria (BL-021) e política de
+  retenção do log (BL-022).
 - Definir aprovação por perfil para ajustes e baixas.
 - Formalizar backup, restauração, RTO e RPO.
 - Aprimorar regras de unicidade de chassi e placa.

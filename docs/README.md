@@ -45,6 +45,8 @@ alinhando a documentação ao estado real da aplicação e ao roadmap do projeto
 | UC08 | Atualização da Selic | Dados no banco; integração por API planejada |
 | UC09 | Relatório de projeção de pagamentos | Implementado |
 | UC10 | Relatório de endividamento | Implementado |
+| UC11 | Consulta de antecipações | Implementado |
+| UC12 | Autenticação de usuário | Implementado (perfis planejados) |
 
 ## Estrutura da documentação
 
@@ -69,7 +71,10 @@ Os scripts versionados do PostgreSQL estão em [database/README.md](../database/
 O DDL completo do schema `financiamento` está em
 [database/ddl_financiamento.sql](../database/ddl_financiamento.sql), e as
 funções de projeção temporária estão em
-[database/projection_functions.sql](../database/projection_functions.sql).
+[database/projection_functions.sql](../database/projection_functions.sql). As
+tabelas de autenticação e auditoria são criadas por
+[database/usuarios.sql](../database/usuarios.sql) e
+[database/log_auditoria.sql](../database/log_auditoria.sql).
 
 Para incluir uma nova funcionalidade, use o [Templaté de Rastreabilidade de
 Nova Funcionalidade](requirements/feature-traceability-templaté.md).

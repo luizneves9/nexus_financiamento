@@ -97,3 +97,7 @@ sem persistência até que o usuário confirme a inclusão.
 ## Dados persistidos
 
 Empresa, banco, número do contrato, datas, tipo, valor financiado, Selic, taxas, prazos, parâmetros de cobrança e debito em conta corrente.
+
+## Auditoria
+
+A inclusão registra `CONTRATO_INCLUIR` em `financiamento.log_auditoria` na mesma transação do contrato (número, empresa, banco, tipo, valor e emissão em `detalhes`). Falhas, como número duplicado, são registradas com `sucesso = false` e o erro (RF08.1, RN12).

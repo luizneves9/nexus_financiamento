@@ -57,3 +57,7 @@ A aplicação informa o erro e a transação não deve ser considerada concluida
 - A exclusão lógica será avaliada posteriormente.
 - Auditoria e registro do usuário que excluiu estão planejados para evolução
 	futura.
+
+## Auditoria
+
+A exclusão registra `CONTRATO_EXCLUIR` em `financiamento.log_auditoria` na mesma transação do `DELETE`, com a cópia completa do contrato excluído em `detalhes` (`DELETE ... RETURNING *`). Exclusões bloqueadas pelo banco, como contrato com antecipação, são registradas com `sucesso = false` e o motivo; na tela a mensagem ainda é genérica (BL-023) (RF08.1, RN12).

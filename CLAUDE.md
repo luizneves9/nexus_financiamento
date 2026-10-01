@@ -15,9 +15,11 @@ segurança e testes, e por
 que é a fonte de consulta rápida sobre o que está implementado, parcial,
 "banco preparado" ou planejado.
 
-Não trate o estado atual como pronto para produção sem controle de acesso:
-autenticação e perfis são escopo da v1.0 (ver
-`docs/architecture/decisions.md`, DA04).
+Autenticação (login, primeiro acesso, sessão de 30 min) e log de auditoria já
+estão implementados; **perfis/permissões ainda não** (ver
+`docs/architecture/decisions.md`, DA04 e DA06). Não trate o estado atual como
+pronto para produção sem resolver as pendências de segurança do backlog
+(`BL-014` a `BL-018` em `docs/requirements/status-register.md`).
 
 ## Comandos
 
@@ -28,7 +30,8 @@ suíte de testes automatizados neste repositório no momento.
 
 Rodar a aplicação localmente (requer Python com as dependências acima
 instaladas e um `.env` com `DB_USER`, `DB_PASS`, `DB_HOST`, `DB_PORT`,
-`DB_NAME`):
+`DB_NAME` e `AUTH_SECRET` — chave que assina o cookie de login; sem ela o
+login funciona, mas não persiste ao fechar o navegador):
 
 ```bash
 cd src
@@ -55,9 +58,20 @@ cálculos):
 views (Streamlit) → services → repositories/queries → PostgreSQL (schema financiamento)
 ```
 
-- `src/main.py` — entrypoint Streamlit; define a navegação (`st.navigation`)
-  em três grupos: *Operacional* (Contratos, Antecipação), *Cadastros*
-  (Empresas, Bancos, Fornecedor) e *Relatórios* (Projeção de Pagamentos).
+- `src/main.py` — entrypoint Streamlit. Sem usuário logado, registra só a
+  página de login (`st.navigation(..., position='hidden')`); logado, renova a
+  sessão, mostra usuário/**Sair** na sidebar e define a navegação em três
+  grupos: *Operacional* (Contratos, Antecipação), *Cadastros* (Empresas,
+  Bancos, Fornecedor) e *Relatórios* (Projeção de Pagamentos, Endividamento).
+- Autenticação — `views/login.py` + `services/login.py`: usuários em
+  `financiamento.usuarios` (criados só pelo desenvolvedor, ver
+  `database/usuarios.sql`); primeiro acesso com senha vazia leva ao cadastro
+  de senha; senha guardada só como hash `scrypt`; cookie `nexus_sessao`
+  assinado com HMAC (`AUTH_SECRET`), 30 min deslizantes.
+- Log de auditoria — `services/log.py` (`registrar_log`,
+  `registrar_log_falha` e o catálogo de ações) grava em
+  `financiamento.log_auditoria` (somente inserção, ver
+  `database/log_auditoria.sql`).
 - `src/views/` — telas e componentes de interface (`views/components/` tem os
   modais, ex. inclusão/exclusão/projeção de contrato). Views chamam services;
   não devem conter SQL. Telas de relatório somente leitura (sem botões/ações)
@@ -108,6 +122,21 @@ Toda tela que exibe datas ou valores monetários em `st.dataframe`/
   nomes reais das colunas de data/valor** antes de escrever a formatação —
   não adivinhe.
 
+### Filtros de tela (padrão de views/relatorio_projecao_pagamentos.py)
+
+- `st.form` com os campos em `st.container(horizontal=True, vertical_alignment='bottom')`
+  e botão **Filtrar**; filtragem sempre no banco (query com
+  `(:param IS NULL OR coluna ILIKE :param)` e intervalos de data `de/até`).
+- `session_state` exclusivo da página com prefixo próprio (`fp_` Projeção,
+  `fa_` Antecipação, `fc_` Contratos) guardando o filtro aplicado.
+- Cada widget usa `key='<prefixo>_<campo>_input'` inicializada a partir do
+  filtro salvo — **nunca** `value=st.session_state...`: um `value` que muda
+  recria o widget e descarta o que o usuário digitou (bug corrigido na
+  Projeção; `views/contracts.py` ainda tem o padrão antigo, ver `BL-020`).
+- Resumo abaixo da tabela: uma única `st.caption` com os itens separados por
+  `&nbsp;&nbsp;|&nbsp;&nbsp;`, calculado no service **antes** da formatação
+  dos valores.
+
 ### Banco de dados
 
 - `database/ddl_financiamento.sql` é um retrato documental do schema
@@ -116,6 +145,9 @@ Toda tela que exibe datas ou valores monetários em `st.dataframe`/
   projeção; triggers; a view `vw_controle_contratos`; e as materialized views
   `mv_projecao_moeda`, `mv_projecao_moeda_final`, `mv_projecao_tfc`). **Não é
   um instalador/migração** — não execute em produção.
+- `database/usuarios.sql` e `database/log_auditoria.sql` são scripts de
+  criação (já executados em desenvolvimento) das tabelas de autenticação e
+  auditoria; ainda não refletidos no `ddl_financiamento.sql` (`BL-019`).
 - `database/projection_functions.sql` documenta as funções PostgreSQL de
   projeção temporária usadas na inclusão de contratos (DA05: a projeção roda
   via função no banco, sem persistir o contrato, para evitar efeitos
@@ -138,6 +170,35 @@ Toda tela que exibe datas ou valores monetários em `st.dataframe`/
 - Uma funcionalidade com tabela/trigger já existente no banco não deve ser
   considerada entregue só por isso — distinguir "banco preparado" de
   "implementado" (ver status em `docs/requirements/status-register.md`).
+- **Avaliar log de auditoria em toda funcionalidade nova** (ver seção
+  "Log de auditoria" abaixo).
+
+## Log de auditoria
+
+Ao finalizar qualquer funcionalidade nova, **avalie se ela precisa gravar
+log** em `financiamento.log_auditoria` e informe o usuário da decisão (com o
+motivo) antes de considerar a entrega concluída.
+
+- **Precisa de log:** toda operação que grava/altera/exclui dados (inclusão,
+  exclusão, antecipação, cadastro de senha...), eventos de acesso (login,
+  falha, logout, sessão encerrada) e, quando existirem, negativas de
+  permissão. Consultas e relatórios somente leitura **não** são registrados
+  (decisão atual, para não gerar volume sem valor).
+- **Como registrar:**
+  - Escrita: chamar `registrar_log(ACAO, entidade, id_registro, detalhes=..., conn=conn)`
+    **dentro do mesmo `with engine.begin() as conn:`** da operação — se o log
+    falhar, a operação é desfeita. Use `RETURNING id` (inclusão) ou
+    `RETURNING *` (exclusão, para guardar a cópia do registro) na query.
+  - Falha da operação: `registrar_log_falha(ACAO, erro, entidade, ...)` nos
+    `except` (transação própria; não esconde a mensagem original).
+  - Ação nova: criar a constante no catálogo de `services/log.py` e
+    documentá-la no comentário da coluna `acao` em
+    `database/log_auditoria.sql` e na lista de ações de
+    `docs/architecture/decisions.md` (DA06).
+- **Nunca** gravar senha, hash, token/cookie ou segredos em `detalhes`.
+- O log é somente inserção (trigger bloqueia UPDATE/DELETE/TRUNCATE): para
+  testar escritas no banco de desenvolvimento sem deixar registros, rode o
+  teste dentro de uma transação desfeita no final (savepoints + rollback).
 
 ## Fluxo de trabalho para novas funcionalidades
 
@@ -155,12 +216,14 @@ Pagamentos — UC09/RF07.3):
    com o mesmo nome de arquivo (ex. `views/x.py` ↔ `services/x.py`), query
    dedicada em `src/queries/`, reaproveitando `repositories/funcoes.py`
    quando a operação for uma leitura simples.
-4. **Testar a funcionalidade** no Streamlit antes de documentar (não presumir que
+4. **Avaliar o log de auditoria** da funcionalidade (seção "Log de
+   auditoria") e implementá-lo quando necessário.
+5. **Testar a funcionalidade** no Streamlit antes de documentar (não presumir que
    compilação Python = funcionamento correto):
    - Para consultas ao banco: validar que os dados chegam; se a view/tabela não estiver documentada no DDL (ex. `vw_agrupamento_projecao`), registrar em `database/README.md` após confirmar que funciona.
    - Para telas: navegar até o caminho novo e validar visualmente.
    - Só após teste bem-sucedido e aprovação do usuário, prosseguir para documentação.
-5. **Atualizar a documentação**, nesta ordem (apenas após teste aprovado), só criando o que for
+6. **Atualizar a documentação**, nesta ordem (apenas após teste aprovado), só criando o que for
    realmente novo:
    - **RF** em `docs/requirements/functional-requirements.md` — criar um
      novo ID (ou subitem, ex. `RF07.3` de `RF07`) só se o comportamento não

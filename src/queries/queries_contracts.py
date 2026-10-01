@@ -73,4 +73,5 @@ PROJETAR_CONTRATO_TFC = '''
 DELETE_CONTRATO = '''
 	DELETE FROM financiamento.contratos
 	WHERE id = :id
+	RETURNING *
 '''

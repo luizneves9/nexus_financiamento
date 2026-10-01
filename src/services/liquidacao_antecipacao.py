@@ -12,6 +12,7 @@ from queries.queries_antecipacao import (
 	INSERIR_ANTECIPACAO
 )
 from repositories.include_antecipation import registrar_contrato
+from services.log import registrar_log, registrar_log_falha, ANTECIPACAO_INCLUIR, QUITACAO_INCLUIR
 
 connect = ConexaoBancoSQL()
 engine = connect.conexao_banco()
@@ -158,10 +159,14 @@ def registrar_antecipacao(session_state):
 
 	query = text(INSERIR_ANTECIPACAO)
 
-	# Inserir no banco de dados
+	# ação do log conforme o tipo de lançamento
+	acao_log = QUITACAO_INCLUIR if parametro['tipo_lancamento'] == 'QUITACAO' else ANTECIPACAO_INCLUIR
+
+	# Inserir no banco de dados (lançamento e log na mesma transação)
 	try:
 		with engine.begin() as conn:
-			registrar_contrato(query, conn, parametro)
+			id_antecipacao = registrar_contrato(query, conn, parametro).scalar_one()
+			registrar_log(acao_log, 'antecipacao', id_antecipacao, detalhes=parametro, conn=conn)
 
 		# Limpar session_state
 		campos_para_limpar = campos_obrigatorios + [
@@ -181,10 +186,13 @@ def registrar_antecipacao(session_state):
 			session_state['mensagem_erro'] = 'Contrato não encontrado.'
 		else:
 			session_state['mensagem_erro'] = 'Os dados violam uma regra de integridade.'
+		registrar_log_falha(acao_log, e.orig, 'antecipacao', detalhes=parametro)
 		st.rerun()
-	except OperationalError:
+	except OperationalError as e:
 		session_state['mensagem_erro'] = 'Não foi possível acessar o banco de dados.'
+		registrar_log_falha(acao_log, e.orig, 'antecipacao', detalhes=parametro)
 		st.rerun()
 	except Exception as e:
 		session_state['mensagem_erro'] = f'Erro ao registrar antecipação: {str(e)}'
+		registrar_log_falha(acao_log, e, 'antecipacao', detalhes=parametro)
 		st.rerun()

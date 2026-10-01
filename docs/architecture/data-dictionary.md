@@ -37,6 +37,32 @@ continua sendo a fonte normativa para tipos, nulidade, indices e restricoes.
 | `valor_moeda` | Valor calculado pela taxa Selic aplicável. |
 | `tipo_lancamento` | Classificação do lançamento: 'ANTECIPACAO' (pagamento parcial) ou 'QUITACAO' (liquidação total do contrato). |
 
+## Usuários
+
+| Campo | Significado |
+| --- | --- |
+| `id` | Identificador do usuário. |
+| `usuario` | Login (único), criado pelo desenvolvedor. |
+| `senha_hash` | Hash `scrypt$n$r$p$salt$hash` da senha; `NULL` até o primeiro acesso (ou após reset). |
+| `ativo` | `false` bloqueia login e derruba sessões abertas. |
+| `criado_em` | Data/hora de criação do usuário. |
+| `senha_definida_em` | Data/hora do cadastro da senha. |
+
+## Log de auditoria
+
+| Campo | Significado |
+| --- | --- |
+| `id` | Sequencial do registro (bigint). |
+| `data_hora` | Data/hora da ação, com fuso horário. |
+| `id_usuario` | Usuário autenticado; `NULL` em falha de login de usuário inexistente. |
+| `usuario` | Nome do usuário no momento da ação (ou o nome digitado na falha de login). |
+| `acao` | Ação do catálogo (DA06), ex.: `LOGIN`, `CONTRATO_EXCLUIR`. |
+| `entidade` | Tabela afetada (`contratos`, `antecipacao`, `usuarios`). |
+| `id_registro` | Id do registro afetado, sem chave estrangeira (o registro pode ter sido excluído). |
+| `sucesso` | `false` quando a operação falhou. |
+| `detalhes` | JSON com os dados da ação (cópia do contrato excluído, valores, motivo da falha). Nunca contém senha, hash ou token. |
+| `ip` | IP de origem identificado pelo Streamlit (atrás de proxy pode ser o IP do proxy). |
+
 ## Bem e veiculo
 
 `bem` armazena fornecedor, contrato, descricao, marca, modelo, anos, placa,

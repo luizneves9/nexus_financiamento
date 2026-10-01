@@ -17,12 +17,15 @@
 | `DB_HOST` | Host do PostgreSQL. |
 | `DB_PORT` | Porta do PostgreSQL. |
 | `DB_NAME` | Nome do banco. |
+| `AUTH_SECRET` | Chave que assina o cookie de login (valor aleatório longo, ex.: `python -c "import secrets; print(secrets.token_hex(32))"`). Sem ela, o login não persiste ao fechar o navegador. Trocar a chave derruba todas as sessões. |
 | `TZ` | Fuso horario do container; atualmente `America/Sao_Paulo`. |
 
 ## Execução com Compose
 
 Antes de iniciar a aplicação, confirme que o PostgreSQL possui o schema
-`financiamento`, suas funções auxiliares, views e materialized views. Os
+`financiamento`, suas funções auxiliares, views e materialized views, e as
+tabelas `usuarios` e `log_auditoria` (scripts `database/usuarios.sql` e
+`database/log_auditoria.sql`, nessa ordem), com ao menos um usuário criado. Os
 arquivos em `database/` documentam o estado do banco. O DDL exportado não deve
 ser tratado como instalador ou migração automática; as funções de projeção
 devem estar criadas no banco conforme o procedimento técnico validado.
@@ -45,7 +48,9 @@ existir antes da inicialização quando essa configuração for mantida.
 ## Verificacoes pos-implantação
 
 1. Confirmar que o container iniciou sem erro.
-2. Acessar a porta 8502.
+2. Acessar a porta 8502 e fazer login (primeiro acesso: senha vazia e
+   cadastro da senha).
+2.1. Conferir o registro `LOGIN` em `financiamento.log_auditoria`.
 3. Consultar empresas, bancos e fornecedores.
 4. Consultar contratos.
 5. Testar inclusão em ambiente controlado.
@@ -54,5 +59,6 @@ existir antes da inicialização quando essa configuração for mantida.
 
 ## Promocao
 
-A implantação em producao depende de autenticação, backup, observabilidade,
-validação do DDL e aprovação dos testes de cálculo.
+A implantação em producao depende de: resolver BL-014 (segredos fora do
+Git e rotacionados) e BL-015 (HTTPS), perfis de acesso, backup,
+observabilidade, validação do DDL e aprovação dos testes de cálculo.

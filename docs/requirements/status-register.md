@@ -48,11 +48,13 @@ com este registro.
 | UC06 | Antecipação e liquidação antecipada | Implementado (BNDES FINAME SELIC) | Tela única consolida antecipação e quitação (tipo_lancamento), com cálculo de saldo devedor/Selic pré-confirmação e validações. Não suporta outras modalidades de contrato. | Validar cálculo com o financeiro e avaliar suporte a outras modalidades. |
 | UC07 | Liquidação | Consolidado em UC06 | Funcionalidade absorvida por UC06 — quitação é um tipo de lançamento no mesmo fluxo de antecipação. | Nenhuma. |
 | UC08 | Atualização da Selic | Banco preparado | Tabela e consultas existem, mas não ha importação por API ou job. | Definir fonte e implementar integração idempotente. |
-| UC09 | Relatório de projeção de pagamentos | Implementado | Tela consolidada com a view `vw_agrupamento_projecao` existe, mas sem filtros, exportação nem a view documentada no DDL. | Adicionar filtros/exportação e documentar a view no DDL versionado. |
+| UC09 | Relatório de projeção de pagamentos | Implementado | Tela consolidada com filtros (Empresa, Banco, Contrato, Data Vcto de/até) no banco e resumo; sem exportação e view não documentada no DDL. | Adicionar exportação e documentar a view no DDL versionado. |
 | UC10 | Relatório de endividamento | Implementado | Tela de fluxo de caixa com agrupamento por ano/mês, tema automático e botões de alternância. View ainda não documentada no DDL. | Documentar `vw_agrupamento_projecao` no DDL e adicionar filtros/download. |
+| UC11 | Consulta de antecipações | Implementado | Aba Antecipação lista todas as antecipações/quitações com filtros no banco e resumo. | Validar com o financeiro. |
+| UC12 | Autenticação de usuário | Implementado | Login, primeiro acesso com cadastro de senha (hash scrypt), sessão de 30 min e Sair; eventos registrados no log. Perfis ainda não existem. | Resolver pendências de segurança BL-014 a BL-018. |
 | RF03.1 | Filtros de contratos | Planejado | Tela atual lista registros, mas não possui filtros funcionais. | Definir componentes e testes dos filtros. |
-| RF08 | Auditoria | Planejado | Não existe histórico de alterações ou operações. | Definir modelo de auditoria e eventos obrigatórios. |
-| RF10 | Autenticação e perfis | Planejado | Aplicação ainda não controla identidade ou permissões. | Definir perfis e implementar autenticação. |
+| RF08 | Auditoria | Parcial | Log de auditoria grava todas as escritas e eventos de acesso (RF08.1); não há tela de consulta (RF08.2). | Definir a tela de histórico (BL-021). |
+| RF10 | Autenticação e perfis | Parcial | Autenticação implementada (UC12); perfis e permissões por aba/ação não existem. | Definir matriz de perfis e permissões (BL-005). |
 | RNF07 | Logs e observabilidade | Parcial | Existem mensagens de erro, mas ha exceções silenciosas e falta padrão de logs. | Definir política de logs e substituir tratamentos silenciosos. |
 | RNF11 | Backup e restauração | Planejado | Não ha procedimento operacional aprovado. | Definir RTO, RPO, retenção e teste de restauração. |
 
@@ -183,18 +185,24 @@ com este registro.
 ### UC09 - Relatório de projeção de pagamentos
 
 - **Status:** Implementado.
-- **Entregue:** página "Projeção de Pagamentos" no menu Relatórios,
-  consultando a view `financiamento.vw_agrupamento_projecao` em uma tabela
-  somente leitura, sem botões.
-- **Pendente:** filtros, exportação/download (previstos no roadmap para a
-  tela consolidada de projeções) e documentação da view no DDL versionado.
+- **Entregue:**
+  - Página "Projeção de Pagamentos" no menu Relatórios, consultando a view
+    `financiamento.vw_agrupamento_projecao` em uma tabela somente leitura.
+  - Filtros por Empresa (`nome_empresa`), Banco (`banco`), Contrato
+    (`numero_contrato`) — busca parcial ILIKE — e intervalo de Data de
+    Vencimento (`data_vcto` de/até), aplicados na query (no banco).
+  - Filtros guardados em `session_state` exclusivo da página (prefixo `fp_`),
+    mantidos ao trocar de aba.
+  - Resumo abaixo da tabela: quantidade de empresas, bancos e contratos e
+    total das parcelas (`total_parcela`), conforme os filtros aplicados.
+- **Pendente:** exportação/download e documentação da view no DDL versionado.
 - **Evidência:** `src/views/relatorio_projecao_pagamentos.py`,
-  `src/services/relatorio_projecao_pagamentos.py` e
-  `src/queries/queries_projection.py`.
+  `src/services/relatorio_projecao_pagamentos.py`,
+  `src/queries/queries_projection.py` e `src/repositories/funcoes.py`.
 - **Próxima ação:** documentar `vw_agrupamento_projecao` em
-  `database/ddl_financiamento.sql` e definir os filtros da tela consolidada.
-- **Critério de conclusão:** view documentada no DDL, filtros e exportação
-  implementados, e conteúdo validado pelo financeiro.
+  `database/ddl_financiamento.sql` e definir a exportação.
+- **Critério de conclusão:** view documentada no DDL, exportação
+  implementada e conteúdo validado pelo financeiro.
 
 ### UC10 - Relatório de endividamento
 
@@ -215,6 +223,82 @@ com este registro.
   implementados, tema automático/manual validado em diferentes navegadores,
   e conteúdo validado pelo financeiro.
 
+### UC11 - Consulta de antecipações
+
+- **Status:** Implementado.
+- **Entregue:**
+  - Aba Operacional > **Antecipação** (antes um placeholder "em
+    desenvolvimento") lista todas as antecipações e quitações de
+    `financiamento.antecipacao`, com empresa e banco (razão social) e número
+    do contrato obtidos por join com `contratos`, `empresas` e `bancos`.
+  - Colunas: `id`, `nome_empresa`, `banco`, `numero_contrato`,
+    `data_pagamento`, `valor_pago`, `tipo_lancamento`.
+  - Filtros por Empresa, Banco, Contrato (busca parcial) e intervalo de Data
+    de Pagamento, aplicados no banco; `session_state` exclusivo (prefixo `fa_`).
+  - Resumo abaixo da tabela: quantidade de empresas, bancos e contratos e
+    total pago.
+- **Pendente:** validação com o financeiro; exportação (se necessária).
+- **Evidência:** `src/views/include_antecipation.py`,
+  `src/services/include_antecipation.py` e `src/queries/queries_antecipacao.py`
+  (`SELECT_ANTECIPACOES`).
+- **Próxima ação:** validar conteúdo e filtros com o financeiro.
+- **Critério de conclusão:** tela validada pelo financeiro.
+
+### UC12 - Autenticação de usuário
+
+- **Status:** Implementado (sem perfis).
+- **Entregue:**
+  - Tela de login (Usuário, Senha, Entrar) antes de qualquer outra tela; sem
+    login, nenhuma aba é registrada na navegação.
+  - Usuários em `financiamento.usuarios`, criados somente pelo desenvolvedor
+    (`database/usuarios.sql`).
+  - Primeiro acesso: senha vazia leva ao cadastro de senha (mínimo 8
+    caracteres + confirmação); grava só o hash `scrypt` (N=2^14, r=8, p=1,
+    salt de 16 bytes).
+  - Erros por notificação genérica, sem revelar se o usuário existe.
+  - Sessão: cookie `nexus_sessao` assinado (HMAC-SHA256, `AUTH_SECRET`),
+    válido por 30 min após o último uso; a restauração confere no banco se o
+    usuário continua ativo e com senha; conferência repetida a cada
+    renovação (no máximo a cada 5 min).
+  - **Sair** registra o logout, apaga o cookie e recarrega a página
+    (zerando filtros e estado).
+  - Eventos `LOGIN`, `LOGIN_FALHA` (com motivo), `CADASTRO_SENHA`, `LOGOUT`
+    e `SESSAO_ENCERRADA` registrados no log de auditoria.
+- **Pendente:** perfis e permissões (RF10.4) e pendências de segurança
+  BL-014 a BL-018.
+- **Evidência:** `src/main.py`, `src/views/login.py`,
+  `src/services/login.py`, `src/queries/queries_login.py`,
+  `src/repositories/login.py`, `src/config/settings.py` e
+  `database/usuarios.sql`.
+- **Próxima ação:** BL-014 (remover `.env` do Git e rotacionar segredos).
+- **Critério de conclusão:** pendências de segurança resolvidas, perfis
+  implementados e acesso validado em produção via HTTPS.
+
+### RF08.1 - Log de auditoria
+
+- **Status:** Implementado.
+- **Entregue:**
+  - Tabela `financiamento.log_auditoria` (usuário, data/hora, ação,
+    entidade, registro, sucesso, detalhes JSON, IP), somente inserção:
+    triggers bloqueiam UPDATE, DELETE e TRUNCATE.
+  - `services/log.py` com `registrar_log` (na mesma transação da operação)
+    e `registrar_log_falha` (transação própria, sem esconder o erro original).
+  - Ações registradas: `LOGIN`, `LOGIN_FALHA`, `LOGOUT`, `SESSAO_ENCERRADA`,
+    `CADASTRO_SENHA`, `CONTRATO_INCLUIR`, `CONTRATO_EXCLUIR` (com cópia do
+    contrato excluído via `DELETE ... RETURNING *`), `ANTECIPACAO_INCLUIR` e
+    `QUITACAO_INCLUIR`.
+  - Validado em banco de desenvolvimento dentro de transação desfeita
+    (sucessos, falhas de integridade e bloqueio de UPDATE/DELETE).
+- **Pendente:** tela de consulta (RF08.2/BL-021), política de retenção e
+  usuário de banco somente-inserção (BL-022).
+- **Evidência:** `src/services/log.py`, `src/queries/queries_log.py`,
+  `src/repositories/log.py`, `src/services/contracts.py`,
+  `src/services/liquidacao_antecipacao.py`, `src/services/login.py` e
+  `database/log_auditoria.sql`.
+- **Próxima ação:** definir a tela de histórico.
+- **Critério de conclusão:** histórico consultável na interface e política
+  de retenção aprovada.
+
 ## Backlog rastreável
 
 | ID | Pendência | Impacto | Depende de | Status |
@@ -223,15 +307,25 @@ com este registro.
 | BL-002 | Implementar registro de antecipação na interface. | Alto | Validação financeira | Concluído (UC06) |
 | BL-003 | Validar cálculos SELIC e TFC com massa conhecida. | Alto | Dados de teste aprovados | Aberto |
 | BL-004 | Definir e implementar liquidação total/parcial. | Alto | Modelo de dados | Concluído (consolidado em UC06 como tipo QUITACAO) |
-| BL-005 | Implementar autenticação e perfis. | Alto | Matriz de permissões | Aberto |
+| BL-005 | Implementar perfis e permissões por aba e ação (autenticação já entregue em UC12). | Alto | Matriz de permissões | Aberto |
 | BL-006 | Implementar filtros de contratos e veículos. | Médio | Campos e critérios de busca | Aberto |
-| BL-007 | Definir auditoria. | Alto | Eventos obrigatórios | Aberto |
+| BL-007 | Definir auditoria. | Alto | Eventos obrigatórios | Concluído (RF08.1 — `log_auditoria`) |
 | BL-008 | Definir integração da Selic. | Alto | Fonte oficial | Aberto |
 | BL-009 | Criar política de backup e restauração. | Alto | Infraestrutura | Aberto |
-| BL-010 | Documentar a view `vw_agrupamento_projecao` no DDL versionado e definir filtros/exportação da tela de Projeção de Pagamentos. | Médio | Acesso ao banco para extrair a definição da view | Aberto |
+| BL-010 | Documentar a view `vw_agrupamento_projecao` no DDL versionado e definir a exportação da tela de Projeção de Pagamentos (filtros já entregues). | Médio | Acesso ao banco para extrair a definição da view | Aberto |
 | BL-011 | Adicionar filtros (ano, modalidade) e download/exportação à tela de Relatórios > Endividamento. | Médio | Especificação dos filtros aprovada pelo financeiro | Aberto |
 | BL-012 | Sincronizar no DDL versionado a trigger `trg_after_insert_antecipacao` (`AFTER INSERT` em `financiamento.antecipacao`, aciona `refresh_views_contratos()`) e as colunas `tipo_lancamento`/`data_compensacao`. | Médio | Acesso ao banco para extrair a definição da trigger | Concluído |
 | BL-013 | Avaliar suporte, em UC06, a contratos de modalidades além de BNDES FINAME SELIC (hoje única presente em `mv_projecao_moeda`). | Médio | Definição de regra de cálculo para as demais modalidades | Aberto |
+| BL-014 | **Segurança:** remover `.env` do Git (`git rm --cached` + `.gitignore`), criar `.dockerignore` (hoje `.env` e `.git` vão para a imagem), **trocar a senha do banco** (já está no histórico do repositório remoto) e gerar novo `AUTH_SECRET`. Com o `AUTH_SECRET` exposto, é possível fabricar cookie de login de qualquer usuário. | Crítico | Acesso ao banco e ao servidor Git | Aberto |
+| BL-015 | **Segurança:** garantir HTTPS no proxy (`rede-proxy`) e incluir `Secure` no cookie de sessão; sem HTTPS, senha e cookie trafegam em texto puro. | Alto | Infraestrutura do proxy | Aberto |
+| BL-016 | **Segurança:** limitar tentativas de login (ex.: 5 falhas em 15 min bloqueiam), usando os registros `LOGIN_FALHA` do log. | Alto | — | Aberto |
+| BL-017 | **Segurança:** invalidar cookies antigos ao trocar senha, bloquear ou clicar em Sair (versão de sessão no token) e definir tempo máximo absoluto de sessão. | Médio | Coluna nova em `usuarios` | Aberto |
+| BL-018 | **Segurança:** avaliar scrypt N=2^15 (135 ms, 32 MiB) com rehash no login; igualar o tempo de resposta do caso "senha não cadastrada"; avaliar bloqueio de senhas óbvias. | Baixo | — | Aberto |
+| BL-019 | Sincronizar `database/ddl_financiamento.sql` com as tabelas `usuarios` e `log_auditoria`, a função `log_auditoria_imutavel` e seus triggers. | Médio | Extração do DDL do banco | Aberto |
+| BL-020 | Corrigir os filtros de `views/contracts.py`: usam `value=st.session_state...`, o que descarta a primeira alteração do usuário (mesmo bug corrigido em Projeção de Pagamentos com `key` própria). | Médio | — | Aberto |
+| BL-021 | Tela de consulta do histórico de operações (RF08.2) a partir de `log_auditoria`. | Médio | Perfis (acesso restrito) | Aberto |
+| BL-022 | Definir retenção do log de auditoria e avaliar usuário de banco da aplicação apenas com INSERT no log (hoje `fin` é dono da tabela e poderia remover o trigger). | Médio | Administração do PostgreSQL | Aberto |
+| BL-023 | Exibir mensagem clara ao tentar excluir contrato com antecipação (hoje "Erro ao excluir contrato!"; o motivo só fica no log). | Baixo | — | Aberto |
 
 ## Regra de atualização
 

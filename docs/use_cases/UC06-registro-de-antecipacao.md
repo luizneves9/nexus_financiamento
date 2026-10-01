@@ -117,6 +117,10 @@ O sistema informa o erro e não confirma o registro.
 - O cálculo de saldo devedor pré-confirmação está limitado a contratos
   BNDES FINAME SELIC (RN15).
 
+## Auditoria
+
+O registro grava `ANTECIPACAO_INCLUIR` ou `QUITACAO_INCLUIR` (conforme o tipo de lançamento) em `financiamento.log_auditoria` na mesma transação do lançamento, com contrato, datas, valor e tipo em `detalhes`. Falhas são registradas com `sucesso = false` e o erro (RF08.1, RN12).
+
 ## Evidência
 
 - `src/views/contracts.py` (botão **Liquidar**).

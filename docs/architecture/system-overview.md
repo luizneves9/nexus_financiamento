@@ -18,7 +18,8 @@ graph LR
 
 ### Aplicação
 
-- `src/main.py`: configura a navegação e inicia o Streamlit.
+- `src/main.py`: configura a navegação e inicia o Streamlit; sem usuário
+  autenticado, exibe somente a tela de login (UC12).
 - `src/views`: telas e componentes de interação.
 - `src/services`: regras de orquestração e chamadas de persistência.
 - `src/repositories`: leitura e escrita no banco.
@@ -46,7 +47,15 @@ A aplicação e responsável por apresentação, validações de entrada, transa
 de acesso e mensagens. O banco e responsável por integridade referencial,
 triggers, cálculos financeiros e matérialized views.
 
+## Autenticação e auditoria
+
+- Login com usuários de `financiamento.usuarios`, senha em hash `scrypt` e
+  sessão em cookie assinado (DA04, UC12).
+- Toda escrita e todo evento de acesso gravam em
+  `financiamento.log_auditoria`, na mesma transação da operação (DA06).
+
 ## Estado de maturidade
 
-Autenticação, autorização, auditoria, filtros completos, API da Selic e telas
-de bens, veículos e antecipação ainda fazem parte do desenvolvimento futuro.
+Perfis e permissões, consulta do histórico de auditoria, filtros completos,
+API da Selic e telas de bens e veículos ainda fazem parte do desenvolvimento
+futuro.

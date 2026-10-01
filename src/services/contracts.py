@@ -14,6 +14,7 @@ from repositories.include_antecipation import registrar_contrato, consultar_cont
 from repositories.contract import listar_projecao, interacao_database, listar_contratos as ler_contratos_banco
 from views.components.modal_contracts_projecao import modal_projecao_valores
 from tools.funcoes import transformar_float_em_str
+from services.log import registrar_log, registrar_log_falha, CONTRATO_INCLUIR, CONTRATO_EXCLUIR
 
 connect = ConexaoBancoSQL()
 engine = connect.conexao_banco()
@@ -122,10 +123,21 @@ def incluir_contrato(session_state):
     # definindo a query
     query = text(INCLUIR_CONTRATO)
 
-    # conexão com o banco de dados
+    # dados do contrato para o log de auditoria
+    detalhes_log = {
+        'numero_contrato': parametro['contrato'],
+        'empresa': session_state['ic_empresas'],
+        'banco': session_state['ic_bancos'],
+        'tipo_contrato': parametro['tipo'],
+        'valor_financiado': parametro['valor'],
+        'data_emissao': parametro['data_emissao']
+    }
+
+    # conexão com o banco de dados (contrato e log na mesma transação)
     try:
         with engine.begin() as conn:
-            registrar_contrato(query, conn, parametro)
+            id_contrato = registrar_contrato(query, conn, parametro).scalar_one()
+            registrar_log(CONTRATO_INCLUIR, 'contratos', id_contrato, detalhes=detalhes_log, conn=conn)
         st.session_state['mensagem_sucesso'] = 'Contrato incluído com sucesso!'
         st.rerun()
     except IntegrityError as e:
@@ -133,12 +145,15 @@ def incluir_contrato(session_state):
             st.session_state['mensagem_erro'] = 'O número do contrato já está cadastrado.'
         else:
             st.session_state['mensagem_erro'] = 'Os dados do contrato violam uma regra de integridade.'
+        registrar_log_falha(CONTRATO_INCLUIR, e.orig, 'contratos', detalhes=detalhes_log)
         st.rerun()
-    except OperationalError:
+    except OperationalError as e:
         st.session_state['mensagem_erro'] = 'Não foi possível acessar o banco de dados.'
+        registrar_log_falha(CONTRATO_INCLUIR, e.orig, 'contratos', detalhes=detalhes_log)
         st.rerun()
-    except Exception:
+    except Exception as e:
         st.session_state['mensagem_erro'] = 'Não foi possível incluir o contrato.'
+        registrar_log_falha(CONTRATO_INCLUIR, e, 'contratos', detalhes=detalhes_log)
         st.rerun()
 
 def projetar_contrato(session_state):
@@ -274,11 +289,17 @@ def deletar_contrato_banco(id_contrato):
         parametro = {'id': id_contrato}
 
         # iniciando engine e chaando a função de interação com banco de dados
+        # (o DELETE ... RETURNING devolve o contrato excluído, gravado no log na mesma transação)
         with engine.begin() as conn:
-            interacao_database(query, conn, parametro)
+            contrato_excluido = interacao_database(query, conn, parametro).mappings().first()
+            registrar_log(CONTRATO_EXCLUIR, 'contratos', id_contrato,
+                          sucesso=contrato_excluido is not None,
+                          detalhes=dict(contrato_excluido) if contrato_excluido else {'erro': 'contrato não encontrado'},
+                          conn=conn)
 
         # registrando notificação e encerrando
         st.session_state['mensagem_sucesso'] = 'Contrato excluído com sucesso!'
 
-    except:
+    except Exception as e:
+        registrar_log_falha(CONTRATO_EXCLUIR, getattr(e, 'orig', e), 'contratos', id_contrato)
         raise ValueError('Erro ao excluir contrato!')

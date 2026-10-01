@@ -16,11 +16,14 @@ comportamento atualmente definido para o projeto.
 | RN08 | Integridade referencial | Contratos, bens, antecipações, empresas, bancos e fornecedores respeitam as chaves estrangeiras do banco. | Atual |
 | RN09 | Antecipação efetiva | Antecipação deve ser registrada pela tela de Antecipação/Liquidação, e não apenas simulada. | Atual |
 | RN10 | Liquidação | A quitação total do contrato é registrada como um lançamento de antecipação com `tipo_lancamento = QUITACAO`, sem estrutura de dados própria. | Atual |
-| RN11 | Autorização | Autenticação, perfis e autorizações formais seráo implementados na versão 1.0. | Planejada |
-| RN12 | Auditoria | Historico de inclusões, alterações e exclusões será avaliado em evolução futura. | Planejada |
+| RN11 | Autorização | O acesso exige autenticação (RN16 a RN18). Perfis e autorizações por aba/ação seráo implementados na versão 1.0. | Parcial (autenticação atual; perfis planejados) |
+| RN12 | Auditoria | Toda operação de escrita e todo evento de acesso são registrados em `financiamento.log_auditoria`. O log de uma escrita é gravado na mesma transação da operação (sem log, sem operação); falhas são registradas com `sucesso = false`. O log é somente inserção e nunca contém senha, hash ou token. Consultas somente leitura não são registradas. | Atual |
 | RN13 | Quitação única por contrato | Um contrato não pode ter mais de um lançamento do tipo QUITACAO; o sistema bloqueia o registro de uma nova quitação quando já existe uma para o contrato. | Atual |
 | RN14 | Ordem das datas de antecipação/liquidação | Na tela de Antecipação/Liquidação, a data de compensação deve ser maior ou igual à data de tesouraria, que deve ser maior ou igual à data de pagamento. | Atual |
 | RN15 | Escopo de cálculo por modalidade | O cálculo de saldo devedor e Selic exibido na tela de Antecipação/Liquidação antes da confirmação usa `mv_projecao_moeda`, que só contém projeção para contratos do tipo BNDES FINAME SELIC. Demais modalidades não são suportadas nesta versão. | Atual, limitação conhecida |
+| RN16 | Criação de usuários | Usuários são criados somente pelo desenvolvedor, diretamente no banco, sem senha. No primeiro acesso o usuário entra com a senha vazia e cadastra a própria senha. Reset de senha = voltar `senha_hash` para nulo; bloqueio = `ativo = false`. | Atual |
+| RN17 | Senha | A senha deve ter no mínimo 8 caracteres, ser confirmada no cadastro e é armazenada somente como hash `scrypt` com salt aleatório por usuário; ninguém (nem o desenvolvedor) consegue ler a senha. | Atual |
+| RN18 | Sessão | O login permanece válido por 30 minutos após o último uso (cookie assinado), inclusive após fechar o navegador. **Sair** encerra a sessão imediatamente. Usuário bloqueado ou com senha resetada perde o acesso no próximo login ou em até 5 minutos se estiver com a sessão aberta. | Atual |
 
 ## Regras ainda não formalizadas
 
@@ -29,4 +32,5 @@ comportamento atualmente definido para o projeto.
 - Politica para Selic ausente em uma data de cálculo.
 - Atualização das matérialized views apos cada tipo de operação (formalizada para inclusão de contrato e para antecipação/quitação; demais operações, como exclusão, ainda não cobertas por trigger).
 - Regras de ajuste apos vencimento.
-- Retencao e aprovação de histórico.
+- Retenção e expurgo do log de auditoria (hoje o log é mantido indefinidamente).
+- Limite de tentativas de login e bloqueio temporário (ver BL-016).

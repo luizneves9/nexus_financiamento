@@ -49,6 +49,22 @@ representativos, verificando resultado funcional e mensagens.
 | T12 | Falha de banco | Operação não e confirmada e erro e informado. |
 | T13 | Banco indisponível durante inclusão | Mensagem funcional exibida e contrato não persistido. |
 | T14 | Falha na projeção temporária | Mensagem funcional exibida e formulário permanece disponível. |
+| T15 | Filtrar Projeção de Pagamentos (cada filtro, combinados, Vcto só de/só até) | Tabela e resumo refletem os filtros; filtro mantido ao trocar de aba; alterar/limpar um filtro aplica na primeira tentativa. |
+| T16 | Filtrar Antecipações | Tabela e resumo refletem os filtros (validado contra o banco: 19 lançamentos sem filtro). |
+| T17 | Login com usuário inexistente, bloqueado ou senha errada | Notificação "Usuário ou senha incorretos." e `LOGIN_FALHA` com o motivo no log. |
+| T18 | Primeiro acesso (senha vazia) | Cadastro de senha exibido; senha curta ou confirmação diferente rejeitadas; banco guarda só `scrypt$...`; `CADASTRO_SENHA` no log. |
+| T19 | Sessão | Fechar e reabrir o navegador em até 30 min entra direto (`LOGIN` com origem cookie); **Sair** recarrega a página no login; usuário bloqueado perde o acesso. |
+| T20 | Cookie adulterado ou expirado | Recusado; login exigido. |
+| T21 | Log das operações de escrita | Inclusão, exclusão (com cópia do contrato) e antecipação registradas na mesma transação; falhas com `sucesso = false`. |
+| T22 | Imutabilidade do log | UPDATE, DELETE e TRUNCATE em `log_auditoria` bloqueados pelo trigger. |
+
+## Testes que escrevem no banco
+
+O log de auditoria não pode ser apagado e prende o usuário pela chave
+estrangeira. Testes de escrita no banco de desenvolvimento devem usar uma
+conexão com transação externa, transformar cada `engine.begin()` dos services
+em savepoint e terminar com `ROLLBACK` (padrão usado na validação de T17 a
+T22), para não deixar usuários, contratos ou logs de teste.
 
 ## Dados de teste
 

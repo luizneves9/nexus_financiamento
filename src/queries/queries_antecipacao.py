@@ -77,6 +77,7 @@ INSERIR_ANTECIPACAO = '''
 		:tipo_lancamento,
 		:data_compensacao
 	)
+	RETURNING id
 '''
 
 SELECT_ANTECIPACOES = '''

@@ -10,6 +10,7 @@ from config.settings import ImportacaoENV
 from database.connection import ConexaoBancoSQL
 from queries.queries_login import SELECT_USUARIO, CADASTRAR_SENHA
 from repositories.login import buscar_usuario, atualizar_usuario
+from services.log import registrar_log, LOGIN, LOGIN_FALHA, LOGOUT, SESSAO_ENCERRADA, CADASTRO_SENHA
 
 connect = ConexaoBancoSQL()
 engine = connect.conexao_banco()
@@ -94,10 +95,11 @@ def _gravar_cookie(valor, max_age):
         unsafe_allow_javascript=True
     )
 
-def _registrar_login(usuario):
+def _registrar_login(usuario, id_usuario):
     '''Registra o usuário autenticado na sessão.'''
 
     st.session_state['auth_usuario'] = usuario
+    st.session_state['auth_id_usuario'] = id_usuario
     st.session_state['auth_cookie_em'] = 0
     st.session_state.pop('auth_saiu', None)
     st.session_state.pop('auth_primeiro_acesso', None)
@@ -116,29 +118,41 @@ def autenticar(usuario, senha):
 
     try:
         registro = consultar_usuario(usuario)
-    except OperationalError as e:
-        st.session_state['mensagem_login'] = f'Erro ao conectar ao banco de dados. ({e.orig})'
+
+        if registro is None or not registro['ativo']:
+            verificar_senha(senha, _HASH_FICTICIO)
+            motivo = 'usuario_inexistente' if registro is None else 'usuario_inativo'
+            _falha_login(usuario, registro, motivo)
+            return False
+
+        # primeiro acesso: sem senha cadastrada e senha vazia -> cadastrar senha
+        if registro['senha_hash'] is None:
+            if senha:
+                _falha_login(usuario, registro, 'senha_nao_cadastrada')
+            else:
+                st.session_state['auth_primeiro_acesso'] = {'id': registro['id'], 'usuario': registro['usuario']}
+            return False
+
+        if not senha or not verificar_senha(senha, registro['senha_hash']):
+            _falha_login(usuario, registro, 'senha_incorreta')
+            return False
+
+        registrar_log(LOGIN, 'usuarios', registro['id'], detalhes={'origem': 'senha'},
+                      usuario=registro['usuario'], id_usuario=registro['id'])
+
+    except OperationalError:
+        st.session_state['mensagem_login'] = 'Não foi possível acessar o banco de dados.'
         return False
 
-    if registro is None or not registro['ativo']:
-        verificar_senha(senha, _HASH_FICTICIO)
-        st.session_state['mensagem_login'] = MENSAGEM_DADOS_INCORRETOS
-        return False
-
-    # primeiro acesso: sem senha cadastrada e senha vazia -> cadastrar senha
-    if registro['senha_hash'] is None:
-        if senha:
-            st.session_state['mensagem_login'] = MENSAGEM_DADOS_INCORRETOS
-        else:
-            st.session_state['auth_primeiro_acesso'] = {'id': registro['id'], 'usuario': registro['usuario']}
-        return False
-
-    if not senha or not verificar_senha(senha, registro['senha_hash']):
-        st.session_state['mensagem_login'] = MENSAGEM_DADOS_INCORRETOS
-        return False
-
-    _registrar_login(registro['usuario'])
+    _registrar_login(registro['usuario'], registro['id'])
     return True
+
+def _falha_login(usuario, registro, motivo):
+    '''Registra a falha de login no log e define a mensagem genérica da tela.'''
+
+    st.session_state['mensagem_login'] = MENSAGEM_DADOS_INCORRETOS
+    registrar_log(LOGIN_FALHA, 'usuarios', registro['id'] if registro else None, sucesso=False,
+                  detalhes={'motivo': motivo}, usuario=usuario, id_usuario=registro['id'] if registro else None)
 
 def cadastrar_senha(nova_senha, confirmacao):
     '''Cadastra a senha no primeiro acesso (grava somente o hash) e faz o login.'''
@@ -160,8 +174,12 @@ def cadastrar_senha(nova_senha, confirmacao):
     try:
         with engine.begin() as conn:
             linhas = atualizar_usuario(text(CADASTRAR_SENHA), conn, parametros)
-    except OperationalError as e:
-        st.session_state['mensagem_login'] = f'Erro ao conectar ao banco de dados. ({e.orig})'
+            # log na mesma transação do cadastro (sem a senha/hash)
+            if linhas == 1:
+                registrar_log(CADASTRO_SENHA, 'usuarios', primeiro_acesso['id'], conn=conn,
+                              usuario=primeiro_acesso['usuario'], id_usuario=primeiro_acesso['id'])
+    except OperationalError:
+        st.session_state['mensagem_login'] = 'Não foi possível acessar o banco de dados.'
         return False
 
     # a senha já foi cadastrada (ou o usuário foi bloqueado) entre o login e o cadastro
@@ -170,7 +188,7 @@ def cadastrar_senha(nova_senha, confirmacao):
         st.session_state['mensagem_login'] = 'Não foi possível cadastrar a senha. Faça o login novamente.'
         return False
 
-    _registrar_login(primeiro_acesso['usuario'])
+    _registrar_login(primeiro_acesso['usuario'], primeiro_acesso['id'])
     st.session_state['mensagem_sucesso'] = 'Senha cadastrada com sucesso!'
     return True
 
@@ -180,14 +198,17 @@ def cancelar_primeiro_acesso():
     st.session_state.pop('auth_primeiro_acesso', None)
 
 def usuario_ativo(usuario):
-    '''Confere no banco se o usuário ainda existe, está ativo e com senha cadastrada.'''
+    '''Retorna o registro do usuário se ele ainda existe, está ativo e com senha cadastrada (senão None).'''
 
     try:
         registro = consultar_usuario(usuario)
     except OperationalError:
-        return False
+        return None
 
-    return registro is not None and registro['ativo'] and registro['senha_hash'] is not None
+    if registro is not None and registro['ativo'] and registro['senha_hash'] is not None:
+        return registro
+
+    return None
 
 def usuario_logado():
     '''Retorna o usuário logado, restaurando a sessão pelo cookie quando possível.'''
@@ -200,13 +221,19 @@ def usuario_logado():
         return None
 
     usuario = ler_token(st.context.cookies.get(COOKIE_SESSAO))
-    if usuario and not usuario_ativo(usuario):
-        usuario = None
-    if usuario:
-        st.session_state['auth_usuario'] = usuario
-        st.session_state['auth_cookie_em'] = 0
+    registro = usuario_ativo(usuario) if usuario else None
+    if registro is None:
+        return None
 
-    return usuario
+    try:
+        registrar_log(LOGIN, 'usuarios', registro['id'], detalhes={'origem': 'cookie'},
+                      usuario=registro['usuario'], id_usuario=registro['id'])
+    except OperationalError:
+        return None
+
+    _registrar_login(registro['usuario'], registro['id'])
+
+    return registro['usuario']
 
 def renovar_sessao():
     '''Regrava o cookie com nova expiração de 30 minutos (sessão deslizante).
@@ -219,18 +246,27 @@ def renovar_sessao():
     if agora - st.session_state.get('auth_cookie_em', 0) < INTERVALO_RENOVACAO:
         return
 
-    if not usuario_ativo(st.session_state['auth_usuario']):
-        sair()
+    if usuario_ativo(st.session_state['auth_usuario']) is None:
+        sair(SESSAO_ENCERRADA)
         st.rerun()
 
     if CHAVE_SESSAO:
         _gravar_cookie(gerar_token(st.session_state['auth_usuario']), DURACAO_SESSAO)
     st.session_state['auth_cookie_em'] = agora
 
-def sair():
-    '''Encerra a sessão do usuário; o cookie é apagado na próxima renderização da tela de login.'''
+def sair(acao=LOGOUT):
+    '''Encerra a sessão do usuário; o cookie é apagado na próxima renderização da tela de login.
+
+    `acao`: LOGOUT (clique em Sair) ou SESSAO_ENCERRADA (usuário bloqueado/senha resetada).
+    '''
+
+    try:
+        registrar_log(acao, 'usuarios', st.session_state.get('auth_id_usuario'))
+    except Exception as e:
+        print(f'[log_auditoria] falha ao registrar {acao}: {e}')
 
     st.session_state.pop('auth_usuario', None)
+    st.session_state.pop('auth_id_usuario', None)
     st.session_state.pop('auth_cookie_em', None)
     st.session_state['auth_saiu'] = True
 

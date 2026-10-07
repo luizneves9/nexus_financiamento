@@ -28,7 +28,7 @@ Cadastrar um contrato de financiamento com seus dados cadastrais e financeiros, 
 1. O usuário abre a tela de contratos.
 2. O usuário seleciona **Novo**.
 3. O sistema apresenta o formulario de inclusão.
-4. O usuário informa empresa, banco, número do contrato, datas, tipo, valor, taxas, prazos e parâmetros de cobrança.
+4. O usuário informa empresa, banco, número do contrato, datas, tipo, valor, taxas, prazos e parâmetros de cobrança. A taxa de juros efetiva aceita até 6 casas decimais (ex.: 13,125974).
 5. O usuário confirma a inclusão.
 6. A aplicação valida campos obrigatórios, valores positivos e ordem das datas.
 7. A aplicação grava o contrato no PostgreSQL.
@@ -93,6 +93,9 @@ sem persistência até que o usuário confirme a inclusão.
 - A exclusão lógica não faz parte destá fase.
 - O cálculo financeiro e executado pelo banco de dados.
 - O vínculo de bens e veículos está previsto para a versão 1.0.
+- A taxa de juros efetiva é informada com até 6 casas decimais e usada assim
+  na projeção temporária (FA01); a coluna `contratos.taxa_juros_efetiva`
+  (`numeric(10, 5)`) ainda grava só 5 casas e arredonda a sexta (`BL-024`).
 
 ## Dados persistidos
 

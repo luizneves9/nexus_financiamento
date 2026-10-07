@@ -65,7 +65,9 @@ com este registro.
 - **Status:** Parcial.
 - **Entregue:** formulario web, validação de campos, validação de valores e
   datas, persistência em `financiamento.contratos` e mensagem de resultado.
-- **Pendente:** vínculo de bens e veículos e autenticação.
+  Taxa de juros efetiva com até 6 casas decimais na tela.
+- **Pendente:** vínculo de bens e veículos e autenticação; ampliar a precisão
+  de `contratos.taxa_juros_efetiva` para 6 casas (`BL-024`).
 - **Evidência:** `database/projection_functions.sql`,
   `src/queries/queries_contracts.py`,
   `src/views/components/modal_contracts_incluir.py` e
@@ -326,6 +328,7 @@ com este registro.
 | BL-021 | Tela de consulta do histórico de operações (RF08.2) a partir de `log_auditoria`. | Médio | Perfis (acesso restrito) | Aberto |
 | BL-022 | Definir retenção do log de auditoria e avaliar usuário de banco da aplicação apenas com INSERT no log (hoje `fin` é dono da tabela e poderia remover o trigger). | Médio | Administração do PostgreSQL | Aberto |
 | BL-023 | Exibir mensagem clara ao tentar excluir contrato com antecipação (hoje "Erro ao excluir contrato!"; o motivo só fica no log). | Baixo | — | Aberto |
+| BL-024 | Ampliar `financiamento.contratos.taxa_juros_efetiva` de `numeric(10, 5)` para 6 casas decimais (script versionado em `database/` + DDL), alinhando a gravação com a tela e a projeção temporária, que já usam 6 casas. Verificar views/materialized views dependentes antes do `ALTER COLUMN TYPE`. | Médio | Acesso ao banco de desenvolvimento | Aberto |
 
 ## Regra de atualização
 

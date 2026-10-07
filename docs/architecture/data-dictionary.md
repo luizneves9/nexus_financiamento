@@ -17,7 +17,7 @@ continua sendo a fonte normativa para tipos, nulidade, indices e restricoes.
 | `tipo_contrato` | Tipo de cálculo, como SELIC ou TFC. |
 | `valor_financiado` | Valor principal financiado. |
 | `pos_fixado` | Indicador/modalidade pos-fixada. |
-| `taxa_juros_efetiva` | Taxa efetiva usada na projeção. |
+| `taxa_juros_efetiva` | Taxa efetiva usada na projeção, em % (`numeric(10, 5)`; a tela aceita 6 casas decimais, ver `BL-024`). |
 | `prazo_total` | Prazo total informado. |
 | `prazo_carencia` | Prazo de carência. |
 | `prazo_final` | Prazo de amortização final. |

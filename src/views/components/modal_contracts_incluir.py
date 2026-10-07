@@ -75,10 +75,10 @@ def inicializar_state():
         'ic_dt_emissao': None,
         'ic_dt_bndes': None,
         'ic_tipo': 'BNDES FINAME SELIC',
-        'opcoes_tipo': ['BNDES FINAME SELIC'],
+        'opcoes_tipo': ['BNDES FINAME SELIC', 'BNDES FINAME TFC'],
         'ic_valor_financiado': 0.00,
         'ic_pos_fixado': 'SELIC',
-        'opcoes_pos_fixado': ['SELIC'],
+        'opcoes_pos_fixado': ['SELIC', 'NAO'],
         'ic_custo_bndes': 0.00,
         'ic_sobretaxa_bndes': 0.00,
         'ic_taxa_banco': 0.00,
@@ -128,7 +128,7 @@ def modal_incluir_contrato():
         c9.number_input('Custo bndes (%)', st.session_state.ic_custo_bndes, key='ic_custo_bndes')
         c10.number_input('Sobretaxa bndes (%)', st.session_state.ic_sobretaxa_bndes, key='ic_sobretaxa_bndes')
         c11.number_input('Taxa banco (%)', st.session_state.ic_taxa_banco, key='ic_taxa_banco')
-        c12.number_input('Taxa juros efetiva (%)', st.session_state.ic_taxa_juros_efetiva, key='ic_taxa_juros_efetiva')
+        c12.number_input('Taxa juros efetiva (%)', st.session_state.ic_taxa_juros_efetiva, step=0.000001, format='%.6f', key='ic_taxa_juros_efetiva')
 
         c13, c14, c15, c16 = st.columns([1, 1, 1, 1])
         

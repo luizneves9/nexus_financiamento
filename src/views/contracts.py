@@ -3,6 +3,7 @@ from services.contracts import listar_contratos, visualizar_projecao
 from views.components.modal_contracts_incluir import modal_incluir_contrato
 from views.components.modal_contracts_excluir import modal_excluir_contrato
 from views.components.modal_liquidacao_antecipacao import modal_liquidacao_antecipacao
+from views.components.cabecalho import cabecalho
 
 def excluir_contrato(linha_selecionada):
     '''Funcionalidade de controle para excluir um contrato do banco de dados.'''
@@ -43,15 +44,8 @@ def transformar_float_em_str(valor):
 
 def main():
 
-    # definindo o título da página
-    st.markdown('''
-        <h2 style='margin-bottom: 0px;'>Gestão de Contratos</h2>
-        <p style='margin-top: -15px; color: #666; font-style: italic;'>
-            Controle detalhado dos contratos de financiamento.
-        </p>
-        ''',
-        unsafe_allow_html=True
-    )
+    # cabeçalho padrão da tela (ícone do grupo no menu)
+    cabecalho('Gestão de Contratos', 'Controle detalhado dos contratos de financiamento.', 'request_quote')
 
     # inicializar session_states dos filtros (FC = Filtro Contratos)
     if 'fc_empresa' not in st.session_state:
@@ -75,11 +69,12 @@ def main():
             st.session_state['fc_contrato'] = contrato if contrato else None
 
     # listando contratos com filtros
-    df_contratos = listar_contratos(
-        empresa=st.session_state.get('fc_empresa'),
-        banco=st.session_state.get('fc_banco'),
-        contrato=st.session_state.get('fc_contrato')
-    )
+    with st.spinner('Consultando contratos...'):
+        df_contratos = listar_contratos(
+            empresa=st.session_state.get('fc_empresa'),
+            banco=st.session_state.get('fc_banco'),
+            contrato=st.session_state.get('fc_contrato')
+        )
 
     if df_contratos.empty:
         st.warning('Nenhum contrato encontrado com os filtros aplicados.')

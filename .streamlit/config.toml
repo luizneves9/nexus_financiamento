@@ -1,0 +1,9 @@
+# Só a cor de destaque, no índigo da logo (#6366F1), no lugar do vermelho padrão do Streamlit.
+# Fundo, texto e menu continuam os padrões claro e escuro. Definido nas duas seções para o usuário
+# continuar trocando o tema em ⋮ > Settings. Só é lido na inicialização do Streamlit.
+
+[theme.light]
+primaryColor = "#6366F1"
+
+[theme.dark]
+primaryColor = "#6366F1"

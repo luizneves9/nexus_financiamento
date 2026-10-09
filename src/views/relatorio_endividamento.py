@@ -1,8 +1,7 @@
 import streamlit as st
 import pandas as pd
 from services.relatorio_endividamento import listar_projecao_endividamento, transformar_dados_para_relatorio
-
-st.set_page_config(layout="wide", page_title="Endividamento Bancário")
+from views.components.cabecalho import cabecalho
 
 MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
 
@@ -165,8 +164,12 @@ def build_html(saldo, saldo_total_grupo, anos, tema):
 # RENDER ----------------------------------------------------------
 # ------------------------------------------------------------------
 
+# cabeçalho padrão da tela (ícone do grupo no menu)
+cabecalho('Endividamento Bancário', 'Projeção dos pagamentos do endividamento bancário por ano e modalidade.', 'bar_chart')
+
 # Buscar dados do banco
-df_raw = listar_projecao_endividamento()
+with st.spinner('Consultando endividamento...'):
+    df_raw = listar_projecao_endividamento()
 
 if not df_raw.empty:
     saldo, saldo_total_grupo, anos = transformar_dados_para_relatorio(df_raw)

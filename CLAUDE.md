@@ -34,9 +34,12 @@ instaladas e um `.env` com `DB_USER`, `DB_PASS`, `DB_HOST`, `DB_PORT`,
 login funciona, mas não persiste ao fechar o navegador):
 
 ```bash
-cd src
-streamlit run main.py
+streamlit run src/main.py --client.toolbarMode=viewer
 ```
+
+Rodar sempre a partir da **raiz** do repositório: é de lá que o Streamlit lê
+`.streamlit/config.toml` (cor de destaque índigo da identidade visual), igual
+ao Docker (`WORKDIR /app`). O `config.toml` só é lido na inicialização.
 
 Rodar via Docker (como em produção, porta 8502):
 
@@ -121,6 +124,21 @@ Toda tela que exibe datas ou valores monetários em `st.dataframe`/
   `vw_agrupamento_projecao`, ver `database/README.md`), **peça ao usuário os
   nomes reais das colunas de data/valor** antes de escrever a formatação —
   não adivinhe.
+
+### Identidade visual (mesma do Nexus Extrato, CSS feito para o Streamlit 1.63.0)
+
+- Cor de destaque em `.streamlit/config.toml` (índigo `#6366F1`); CSS geral,
+  logo (`src/assets/`) e rodapé do menu (`sb_rodape`) em `src/main.py`.
+- Toda tela começa com `cabecalho('Título', 'Subtítulo.', 'icone')`
+  (`views/components/cabecalho.py`), com o ícone Material do grupo no menu
+  (`request_quote` Operacional, `folder_open` Cadastros, `bar_chart`
+  Relatórios) — não usar `<h2>` em HTML nem `st.title`.
+- A ação principal de cada tela/modal usa `type='primary'`
+  (`views/components/botao_principal.py`); não estilizar botão por botão.
+  Filtrar e a linha de ações das telas (ex. Novo/Projeção/Liquidar/Excluir
+  em Contratos) ficam como botões normais; o destaque fica no Confirmar dos
+  modais e no Entrar/Cadastrar senha do login.
+- Consultas que podem demorar em `with st.spinner('Consultando ...'):`.
 
 ### Filtros de tela (padrão de views/relatorio_projecao_pagamentos.py)
 

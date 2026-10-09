@@ -26,15 +26,17 @@ auditoria.
 
 ## Pos-condicoes
 
-- Usuário autenticado vê o menu completo, seu nome e o botão **Sair** na
-  barra lateral.
+- Usuário autenticado vê o menu completo, seu nome e o botão **Sair** fixos
+  no rodapé da barra lateral.
 - Cookie `nexus_sessao` assinado grava o login no navegador por 30 minutos.
 - O evento é registrado em `financiamento.log_auditoria`.
 
 ## Fluxo principal - Login
 
 1. O usuário acessa o sistema; sem sessão válida, apenas a tela de login é
-   exibida (nenhuma aba é registrada na navegação).
+   exibida (nenhuma aba é registrada na navegação), com a logo do sistema
+   acima do formulário e, abaixo, a orientação "Esqueceu a senha ou ainda
+   não tem acesso? Fale com o administrador do sistema.".
 2. O usuário informa **Usuário** e **Senha** e aciona **Entrar**.
 3. O sistema busca o usuário em `financiamento.usuarios` e confere a senha
    contra o hash gravado.
@@ -143,7 +145,8 @@ Comandos em `database/usuarios.sql`:
 
 ## Evidência
 
-- `src/main.py` (bloqueio da navegação sem login, barra lateral com Sair).
+- `src/main.py` (bloqueio da navegação sem login, rodapé da barra lateral com
+  usuário e Sair).
 - `src/views/login.py` (tela de login e cadastro de senha).
 - `src/services/login.py` (hash, autenticação, sessão e cookie).
 - `src/queries/queries_login.py` e `src/repositories/login.py`.

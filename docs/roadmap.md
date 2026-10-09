@@ -19,6 +19,7 @@ está no [Registro de Status e Pendências](requirements/status-register.md).
   com tema automático/manual, ainda sem filtros nem download.
 - Exclusão física de contratos.
 - Estruturas de banco para Selic, bens e veículos.
+- Identidade visual compartilhada com o Nexus Extrato (DA07/RNF15).
 - Antecipação e liquidação antecipada de contrato (UC06), para contratos
   BNDES FINAME SELIC.
 

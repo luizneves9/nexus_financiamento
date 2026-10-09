@@ -92,3 +92,32 @@ que nenhuma operação fique sem registro.
 desenvolvimento devem rodar dentro de transação desfeita, pois o log não pode
 ser apagado. O usuário `fin` é dono da tabela e poderia remover o trigger;
 retenção e usuário somente-inserção estão em BL-022.
+
+## DA07 - Identidade visual compartilhada com o Nexus Extrato
+
+**Status:** Aceita
+**Decisão:** A interface segue a mesma identidade visual do Nexus Extrato,
+aplicada só na camada de apresentação, sem alterar regras, banco ou
+autenticação:
+
+- `.streamlit/config.toml` na raiz define apenas a cor de destaque
+  (`primaryColor = "#6366F1"`) nos temas claro e escuro; o usuário continua
+  trocando o tema em ⋮ > Settings;
+- `src/main.py` aplica, depois do login, o ícone da aba, o About, a logo no
+  menu lateral (`src/assets/`), o CSS geral (realce índigo em botões, links
+  e campos; recuo do menu) e o rodapé fixo com usuário e **Sair**; os grupos
+  do menu têm ícone Material e começam recolhidos, menos o da página atual;
+- componentes em `src/views/components/`: `cabecalho.py` (título de toda
+  tela, com o ícone do grupo do menu), `botao_principal.py` (estilo de
+  `type='primary'`, usado só na ação principal: Entrar/Cadastrar senha e
+  Confirmar dos modais) e `cartao_clicavel.py` (para telas em cartões);
+- a barra do topo roda em `--client.toolbarMode=viewer` (sem Deploy e opções
+  de desenvolvedor).
+
+**Motivo:** Padronizar a experiência entre os sistemas Nexus do Grupo GBS e
+remover estilos fixos por tela (ex.: cinza `#666`, pouco legível no tema
+escuro).
+**Consequência:** Os seletores CSS dependem da estrutura interna do Streamlit
+1.63.0; atualizar o Streamlit exige revalidar o visual. O Streamlit deve ser
+executado a partir da raiz do repositório para ler o `config.toml` (local e
+Docker). Confirmar a versão da imagem `fin-base:1.0` está em BL-025.

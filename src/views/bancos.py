@@ -1,17 +1,11 @@
 import streamlit as st
 from services.bancos import listar_bancos
+from views.components.cabecalho import cabecalho
 
 def main():
 
-    # definindo o título da página
-    st.markdown('''
-        <h2 style='margin-bottom: 0px;'>Gestão de Bancos</h2>
-        <p style='margin-top: -15px; color: #666; font-style: italic;'>
-            Lista dos bancos cadastrados no sistema.
-        </p>
-        ''',
-        unsafe_allow_html=True
-    )
+    # cabeçalho padrão da tela (ícone do grupo no menu)
+    cabecalho('Gestão de Bancos', 'Lista dos bancos cadastrados no sistema.', 'folder_open')
 
     # listando contratos
     df_bancos = listar_bancos()

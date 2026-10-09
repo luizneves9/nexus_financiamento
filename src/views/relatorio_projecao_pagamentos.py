@@ -1,18 +1,12 @@
 import streamlit as st
 from services.relatorio_projecao_pagamentos import listar_projecao_pagamentos, resumir_projecao_pagamentos
 from tools.funcoes import transformar_float_em_str
+from views.components.cabecalho import cabecalho
 
 def main():
 
-    # definindo o título da página
-    st.markdown('''
-        <h2 style='margin-bottom: 0px;'>Projeção de Pagamentos</h2>
-        <p style='margin-top: -15px; color: #666; font-style: italic;'>
-            Agrupamento da projeção de pagamentos dos contratos.
-        </p>
-        ''',
-        unsafe_allow_html=True
-    )
+    # cabeçalho padrão da tela (ícone do grupo no menu)
+    cabecalho('Projeção de Pagamentos', 'Agrupamento da projeção de pagamentos dos contratos.', 'bar_chart')
 
     # inicializar session_states dos filtros (FP = Filtro Projeção)
     if 'fp_empresa' not in st.session_state:
@@ -57,13 +51,14 @@ def main():
             st.session_state['fp_data_vcto_fim'] = data_vcto_fim
 
     # listando projeção de pagamentos com filtros
-    df_projecao = listar_projecao_pagamentos(
-        empresa=st.session_state.get('fp_empresa'),
-        banco=st.session_state.get('fp_banco'),
-        contrato=st.session_state.get('fp_contrato'),
-        data_vcto_ini=st.session_state.get('fp_data_vcto_ini'),
-        data_vcto_fim=st.session_state.get('fp_data_vcto_fim')
-    )
+    with st.spinner('Consultando projeção de pagamentos...'):
+        df_projecao = listar_projecao_pagamentos(
+            empresa=st.session_state.get('fp_empresa'),
+            banco=st.session_state.get('fp_banco'),
+            contrato=st.session_state.get('fp_contrato'),
+            data_vcto_ini=st.session_state.get('fp_data_vcto_ini'),
+            data_vcto_fim=st.session_state.get('fp_data_vcto_fim')
+        )
 
     if df_projecao.empty:
         st.warning('Nenhuma projeção encontrada com os filtros aplicados.')

@@ -89,7 +89,7 @@ Nenhum dado é persistido ou alterado por esta funcionalidade — é somente lei
 
 - Localização: **Relatórios > Endividamento**
 - Componentes:
-  - Título e descrição
+  - Cabeçalho padrão (`cabecalho`, ícone do grupo Relatórios; DA07)
   - 3 botões de alternância de tema (🔄 Automático, ☀️ Claro, 🌙 Escuro)
   - Tabela HTML com CSS responsivo (`@media prefers-color-scheme`)
   - Notificações de sucesso/erro (se aplicável)

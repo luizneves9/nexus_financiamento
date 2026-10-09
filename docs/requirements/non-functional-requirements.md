@@ -20,6 +20,7 @@ sistema. Os itens sem implementação atual representam critérios para a versã
 | RNF12 | Manutenibilidade | Codigo, SQL e documentação devem permanecer versionados e rastreaveis. | Atual |
 | RNF13 | Privacidade | Dados cadastrais e financeiros devem observar políticas internas e requisitos aplicaveis da LGPD. | A definir |
 | RNF14 | Compatibilidade | A interface deve funcionar em navegador suportado pelo ambiente corporativo. | A validar |
+| RNF15 | Usabilidade | A interface deve seguir a identidade visual dos sistemas Nexus (mesma do Nexus Extrato): logo, cor de destaque índigo `#6366F1`, cabeçalho padrão das telas, ação principal destacada e legibilidade nos temas claro e escuro (DA07). | Implementado (CSS dependente do Streamlit 1.63.0; confirmar a versão da imagem base em BL-025) |
 
 ## Critérios de aceite
 

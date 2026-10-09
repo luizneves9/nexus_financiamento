@@ -19,8 +19,12 @@ graph LR
 ### Aplicação
 
 - `src/main.py`: configura a navegação e inicia o Streamlit; sem usuário
-  autenticado, exibe somente a tela de login (UC12).
-- `src/views`: telas e componentes de interação.
+  autenticado, exibe somente a tela de login (UC12). Aplica também a
+  identidade visual (logo, CSS geral, rodapé do menu; DA07).
+- `src/views`: telas e componentes de interação (`views/components/`
+  inclui o cabeçalho padrão e o estilo do botão principal).
+- `src/assets`: logos do sistema.
+- `.streamlit/config.toml`: cor de destaque do tema.
 - `src/services`: regras de orquestração e chamadas de persistência.
 - `src/repositories`: leitura e escrita no banco.
 - `src/queries`: SQL utilizado pela aplicação.

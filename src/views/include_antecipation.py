@@ -1,18 +1,12 @@
 import streamlit as st
 from services.include_antecipation import listar_antecipacoes, resumir_antecipacoes
 from tools.funcoes import transformar_float_em_str
+from views.components.cabecalho import cabecalho
 
 def main():
 
-    # definindo o título da página
-    st.markdown('''
-        <h2 style='margin-bottom: 0px;'>Antecipações</h2>
-        <p style='margin-top: -15px; color: #666; font-style: italic;'>
-            Visualização das antecipações e quitações registradas nos contratos.
-        </p>
-        ''',
-        unsafe_allow_html=True
-    )
+    # cabeçalho padrão da tela (ícone do grupo no menu)
+    cabecalho('Antecipações', 'Visualização das antecipações e quitações registradas nos contratos.', 'request_quote')
 
     # inicializar session_states dos filtros (FA = Filtro Antecipação)
     if 'fa_empresa' not in st.session_state:
@@ -57,13 +51,14 @@ def main():
             st.session_state['fa_data_pagamento_fim'] = data_pagamento_fim
 
     # listando antecipações com filtros
-    df_antecipacoes = listar_antecipacoes(
-        empresa=st.session_state.get('fa_empresa'),
-        banco=st.session_state.get('fa_banco'),
-        contrato=st.session_state.get('fa_contrato'),
-        data_pagamento_ini=st.session_state.get('fa_data_pagamento_ini'),
-        data_pagamento_fim=st.session_state.get('fa_data_pagamento_fim')
-    )
+    with st.spinner('Consultando antecipações...'):
+        df_antecipacoes = listar_antecipacoes(
+            empresa=st.session_state.get('fa_empresa'),
+            banco=st.session_state.get('fa_banco'),
+            contrato=st.session_state.get('fa_contrato'),
+            data_pagamento_ini=st.session_state.get('fa_data_pagamento_ini'),
+            data_pagamento_fim=st.session_state.get('fa_data_pagamento_fim')
+        )
 
     if df_antecipacoes.empty:
         st.warning('Nenhuma antecipação encontrada com os filtros aplicados.')

@@ -25,6 +25,21 @@
   transação desfeita no final, pois o log de auditoria não pode ser apagado.
 - Filtros de tela: widgets com `key` própria inicializada do filtro salvo,
   nunca `value=st.session_state...` (ver CLAUDE.md, "Filtros de tela").
+- Identidade visual (DA07): toda tela começa com
+  `cabecalho('Título', 'Subtítulo.', 'icone_do_grupo')`
+  (`views/components/cabecalho.py`), sem `<h2>` em HTML nem `st.title`;
+  `type='primary'` só na ação principal (Entrar/Cadastrar senha e Confirmar
+  dos modais), sem estilizar botão por botão; consultas demoradas em
+  `st.spinner('Consultando ...')` e resultado vazio em `st.warning(...)`.
+
+## Execução local
+
+Rodar a partir da **raiz** do repositório (é de lá que o Streamlit lê
+`.streamlit/config.toml`, só na inicialização):
+
+```bash
+streamlit run src/main.py --client.toolbarMode=viewer
+```
 
 ## Fluxo de alteração
 

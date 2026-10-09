@@ -1,17 +1,11 @@
 import streamlit as st
 from services.empresas import listar_empresas
+from views.components.cabecalho import cabecalho
 
 def main():
 
-    # definindo o título da página
-    st.markdown('''
-        <h2 style='margin-bottom: 0px;'>Gestão de Empresas</h2>
-        <p style='margin-top: -15px; color: #666; font-style: italic;'>
-            Lista das empresas cadastradas no sistema.
-        </p>
-        ''',
-        unsafe_allow_html=True
-    )
+    # cabeçalho padrão da tela (ícone do grupo no menu)
+    cabecalho('Gestão de Empresas', 'Lista das empresas cadastradas no sistema.', 'folder_open')
 
     # listando contratos
     df_empresas = listar_empresas()

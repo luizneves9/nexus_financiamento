@@ -1,17 +1,11 @@
 import streamlit as st
 from services.fornecedor import listar_fornecedores
+from views.components.cabecalho import cabecalho
 
 def main():
 
-    # definindo o título da página
-    st.markdown('''
-        <h2 style='margin-bottom: 0px;'>Gestão de Fornecedores</h2>
-        <p style='margin-top: -15px; color: #666; font-style: italic;'>
-            Lista dos fornecedores cadastrados no sistema.
-        </p>
-        ''',
-        unsafe_allow_html=True
-    )
+    # cabeçalho padrão da tela (ícone do grupo no menu)
+    cabecalho('Gestão de Fornecedores', 'Lista dos fornecedores cadastrados no sistema.', 'folder_open')
 
     # listando contratos
     df_fornecedores = listar_fornecedores()

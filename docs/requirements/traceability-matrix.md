@@ -31,6 +31,7 @@ ver o motivo de cada status, as lacunas e a próxima ação, consulte o
 | RNF01-RNF03 | - | Todos | Atual | Manter padrão arquitetural e configuração segura. |
 | RNF04-RNF05 | RN11, RN17 | Todos | Parcial | Perfis pendentes; remover `.env` do Git e rotacionar segredos (BL-014). |
 | RNF06-RNF12 | RN02, RN08, RN12 | UC01, UC03, UC04, UC06 | Parcial | Auditoria registrada; completar logs técnicos, consulta do histórico e recuperação. |
+| RNF15 | - | Todos | Implementado | Confirmar Streamlit 1.63.0 na imagem `fin-base:1.0` (BL-025). |
 
 ## Critério de cobertura
 

@@ -57,6 +57,7 @@ com este registro.
 | RF10 | Autenticação e perfis | Parcial | Autenticação implementada (UC12); perfis e permissões por aba/ação não existem. | Definir matriz de perfis e permissões (BL-005). |
 | RNF07 | Logs e observabilidade | Parcial | Existem mensagens de erro, mas ha exceções silenciosas e falta padrão de logs. | Definir política de logs e substituir tratamentos silenciosos. |
 | RNF11 | Backup e restauração | Planejado | Não ha procedimento operacional aprovado. | Definir RTO, RPO, retenção e teste de restauração. |
+| RNF15 | Identidade visual | Implementado | Mesma identidade do Nexus Extrato (DA07): logo, destaque índigo, cabeçalho padrão, menu com ícones e rodapé fixo; testado no Streamlit 1.63.0 local. | Confirmar a versão do Streamlit na imagem `fin-base:1.0` (BL-025). |
 
 ## Detalhamento por Use Case
 
@@ -329,6 +330,7 @@ com este registro.
 | BL-022 | Definir retenção do log de auditoria e avaliar usuário de banco da aplicação apenas com INSERT no log (hoje `fin` é dono da tabela e poderia remover o trigger). | Médio | Administração do PostgreSQL | Aberto |
 | BL-023 | Exibir mensagem clara ao tentar excluir contrato com antecipação (hoje "Erro ao excluir contrato!"; o motivo só fica no log). | Baixo | — | Aberto |
 | BL-024 | Ampliar `financiamento.contratos.taxa_juros_efetiva` de `numeric(10, 5)` para 6 casas decimais (script versionado em `database/` + DDL), alinhando a gravação com a tela e a projeção temporária, que já usam 6 casas. Verificar views/materialized views dependentes antes do `ALTER COLUMN TYPE`. | Médio | Acesso ao banco de desenvolvimento | Aberto |
+| BL-025 | Confirmar que a imagem `fin-base:1.0` tem Streamlit 1.63.0 (o CSS da identidade visual, DA07, depende da estrutura interna dessa versão); se não tiver, atualizar a imagem base ou fixar `streamlit==1.63.0`. | Médio | Acesso ao servidor Docker | Aberto |
 
 ## Regra de atualização
 

@@ -3,7 +3,9 @@
 ## Requisitos
 
 - Docker e Docker Compose.
-- Imagem base `fin-base:1.0` disponível no ambiente.
+- Imagem base `fin-base:1.0` disponível no ambiente, com Streamlit 1.63.0
+  (o CSS da identidade visual depende dessa versão, DA07/BL-025):
+  `docker run --rm --entrypoint python fin-base:1.0 -c "import streamlit; print(streamlit.__version__)"`.
 - PostgreSQL acessivel pela rede do container.
 - DDL e objetos do schema `financiamento` criados no banco.
 - Arquivo `.env` configurado fora do controle de versão.
@@ -37,8 +39,12 @@ docker compose up --build
 A aplicação e publicada na porta `8502` e executa:
 
 ```bash
-streamlit run src/main.py --server.port=8502 --server.address=0.0.0.0
+streamlit run src/main.py --server.port=8502 --server.address=0.0.0.0 --client.toolbarMode=viewer
 ```
+
+O comando roda a partir de `/app` (raiz do repositório), de onde o Streamlit
+lê `.streamlit/config.toml`. Alterações nesse arquivo exigem novo build e
+reinício do container.
 
 ## Rede
 
@@ -56,6 +62,8 @@ existir antes da inicialização quando essa configuração for mantida.
 5. Testar inclusão em ambiente controlado.
 6. Testar projeção de um contrato conhecido.
 7. Confirmar conectividade e logs do banco.
+8. Conferir a identidade visual (DA07) nos temas claro e escuro: logo no
+   login e no menu, destaque índigo e menu ⋮ só com Settings, Print e About.
 
 ## Promocao
 

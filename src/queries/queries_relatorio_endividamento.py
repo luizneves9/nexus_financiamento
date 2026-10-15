@@ -7,14 +7,6 @@ SELECT_PROJECAO_ENDIVIDAMENTO = '''
             ROUND(SUM(total_parcela) / 1000000, 3) AS valor
         FROM financiamento.vw_agrupamento_projecao
         GROUP BY EXTRACT(YEAR from data_vcto), EXTRACT(MONTH from data_vcto)
-        UNION ALL
-        SELECT
-            EXTRACT(YEAR from data_pagamento) AS ano,
-            EXTRACT(MONTH from data_pagamento) AS mes,
-            'Financiamento' AS categoria,
-            ROUND(SUM(valor_pago) / 1000000, 3) AS valor
-        FROM financiamento.antecipacao
-        GROUP BY EXTRACT(YEAR FROM data_pagamento), EXTRACT(MONTH FROM data_pagamento)
         )
         SELECT
             ano,

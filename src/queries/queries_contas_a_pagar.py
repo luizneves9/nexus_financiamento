@@ -175,8 +175,8 @@ CTE_POSICAO_DATA_BASE = '''
 SELECT_CONTAS_A_PAGAR = CTE_POSICAO_DATA_BASE + '''
 	SELECT *
 	FROM posicao
-	WHERE (:empresa IS NULL OR nome_empresa ILIKE :empresa)
-	AND (:banco IS NULL OR banco ILIKE :banco)
+	WHERE (:empresa IS NULL OR nome_empresa = :empresa)
+	AND (:banco IS NULL OR banco = :banco)
 	AND (:contrato IS NULL OR numero_contrato ILIKE :contrato)
 	AND (:data_vcto_ini IS NULL OR vencimento_util >= :data_vcto_ini)
 	AND (:data_vcto_fim IS NULL OR vencimento_util <= :data_vcto_fim)

@@ -48,8 +48,8 @@ def listar_parcelas_liquidacao(empresa=None, banco=None, contrato=None, data_vct
     df = pd.DataFrame()
     query = text(SELECT_PARCELAS_LIQUIDACAO)
     parametros = {
-        'empresa': f"%{empresa}%" if empresa else None,
-        'banco': f"%{banco}%" if banco else None,
+        'empresa': empresa or None,      # valor exato do selectbox (razão social)
+        'banco': banco or None,
         'contrato': f"%{contrato}%" if contrato else None,
         'data_vcto_ini': data_vcto_ini,
         'data_vcto_fim': data_vcto_fim,

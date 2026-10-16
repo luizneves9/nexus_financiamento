@@ -202,6 +202,11 @@ Toda tela que exibe datas ou valores monetários em `st.dataframe`/
 - Cada widget usa `key='<prefixo>_<campo>_input'` inicializada a partir do
   filtro salvo — **nunca** `value=st.session_state...`: um `value` que muda
   recria o widget e descarta o que o usuário digitou.
+- Empresa e Banco são `st.selectbox` com `['Todos'] + razao_social` dos
+  cadastros (`listar_empresas`/`listar_bancos` de `tools.funcoes`, cache em
+  `df_lista_empresas`/`df_lista_bancos`); `Todos` grava `None` e a query
+  compara por igualdade (`coluna = :empresa`), não `ILIKE`. Se o valor salvo
+  sair da lista, o widget volta para `Todos`.
 - Resumo abaixo da tabela: uma única `st.caption` com os itens separados por
   `&nbsp;&nbsp;|&nbsp;&nbsp;`, calculado no service **antes** da formatação
   dos valores.

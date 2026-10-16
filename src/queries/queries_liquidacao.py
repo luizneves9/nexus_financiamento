@@ -20,8 +20,8 @@ SELECT_PARCELAS_LIQUIDACAO = '''
 	INNER JOIN financiamento.bancos b ON b.id = c.id_banco
 	LEFT JOIN financiamento.liquidacao l ON l.id_parcela = p.id AND NOT l.estornado
 	WHERE p.situacao <> 'CANCELADA_QUITACAO'
-	AND (:empresa IS NULL OR e.razao_social ILIKE :empresa)
-	AND (:banco IS NULL OR b.razao_social ILIKE :banco)
+	AND (:empresa IS NULL OR e.razao_social = :empresa)
+	AND (:banco IS NULL OR b.razao_social = :banco)
 	AND (:contrato IS NULL OR c.numero_contrato ILIKE :contrato)
 	AND (:data_vcto_ini IS NULL OR p.data_vcto >= :data_vcto_ini)
 	AND (:data_vcto_fim IS NULL OR p.data_vcto <= :data_vcto_fim)

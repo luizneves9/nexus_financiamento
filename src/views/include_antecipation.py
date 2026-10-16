@@ -1,6 +1,8 @@
+import calendar
+from datetime import date
 import streamlit as st
 from services.include_antecipation import listar_antecipacoes, resumir_antecipacoes
-from tools.funcoes import transformar_float_em_str
+from tools.funcoes import transformar_float_em_str, listar_empresas, listar_bancos
 from views.components.cabecalho import cabecalho
 from views.components.modal_antecipacao_excluir import modal_excluir_antecipacao
 
@@ -30,17 +32,30 @@ def main():
         st.session_state['fa_banco'] = None
     if 'fa_contrato' not in st.session_state:
         st.session_state['fa_contrato'] = None
+    # período de pagamento começa no mês atual
+    hoje = date.today()
     if 'fa_data_pagamento_ini' not in st.session_state:
-        st.session_state['fa_data_pagamento_ini'] = None
+        st.session_state['fa_data_pagamento_ini'] = hoje.replace(day=1)
     if 'fa_data_pagamento_fim' not in st.session_state:
-        st.session_state['fa_data_pagamento_fim'] = None
+        st.session_state['fa_data_pagamento_fim'] = hoje.replace(day=calendar.monthrange(hoje.year, hoje.month)[1])
+
+    # opções dos filtros de seleção (mesmo cache de cadastros usado no modal de inclusão de contrato)
+    if st.session_state.get('df_lista_empresas') is None:
+        st.session_state['df_lista_empresas'] = listar_empresas()
+    if st.session_state.get('df_lista_bancos') is None:
+        st.session_state['df_lista_bancos'] = listar_bancos()
+
+    df_empresas = st.session_state['df_lista_empresas']
+    df_bancos = st.session_state['df_lista_bancos']
+    opcoes_empresas = ['Todos'] + (df_empresas['razao_social'].to_list() if df_empresas is not None and 'razao_social' in df_empresas else [])
+    opcoes_bancos = ['Todos'] + (df_bancos['razao_social'].to_list() if df_bancos is not None and 'razao_social' in df_bancos else [])
 
     # inicializar session_states dos widgets a partir dos filtros salvos
     # (o widget usa key própria; passar value= dinâmico recria o widget e descarta o que foi digitado)
-    if 'fa_empresa_input' not in st.session_state:
-        st.session_state['fa_empresa_input'] = st.session_state['fa_empresa'] or ''
-    if 'fa_banco_input' not in st.session_state:
-        st.session_state['fa_banco_input'] = st.session_state['fa_banco'] or ''
+    if st.session_state.get('fa_empresa_input') not in opcoes_empresas:
+        st.session_state['fa_empresa_input'] = st.session_state['fa_empresa'] if st.session_state['fa_empresa'] in opcoes_empresas else 'Todos'
+    if st.session_state.get('fa_banco_input') not in opcoes_bancos:
+        st.session_state['fa_banco_input'] = st.session_state['fa_banco'] if st.session_state['fa_banco'] in opcoes_bancos else 'Todos'
     if 'fa_contrato_input' not in st.session_state:
         st.session_state['fa_contrato_input'] = st.session_state['fa_contrato'] or ''
     if 'fa_data_pagamento_ini_input' not in st.session_state:
@@ -51,16 +66,16 @@ def main():
     # lista de filtros
     with st.form('antecipacoes_filtro'):
         with st.container(horizontal=True, vertical_alignment='bottom'):
-            empresa = st.text_input('Empresa', key='fa_empresa_input')
-            banco = st.text_input('Banco', key='fa_banco_input')
+            empresa = st.selectbox('Empresa', opcoes_empresas, key='fa_empresa_input')
+            banco = st.selectbox('Banco', opcoes_bancos, key='fa_banco_input')
             contrato = st.text_input('Contrato', key='fa_contrato_input')
             data_pagamento_ini = st.date_input('Pagamento de', key='fa_data_pagamento_ini_input', format='DD/MM/YYYY')
             data_pagamento_fim = st.date_input('Pagamento até', key='fa_data_pagamento_fim_input', format='DD/MM/YYYY')
             submitido = st.form_submit_button('Filtrar', use_container_width=True)
 
         if submitido:
-            st.session_state['fa_empresa'] = empresa if empresa else None
-            st.session_state['fa_banco'] = banco if banco else None
+            st.session_state['fa_empresa'] = None if empresa == 'Todos' else empresa
+            st.session_state['fa_banco'] = None if banco == 'Todos' else banco
             st.session_state['fa_contrato'] = contrato if contrato else None
             st.session_state['fa_data_pagamento_ini'] = data_pagamento_ini
             st.session_state['fa_data_pagamento_fim'] = data_pagamento_fim

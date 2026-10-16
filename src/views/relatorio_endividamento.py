@@ -3,6 +3,7 @@ import pandas as pd
 from datetime import date
 from services.relatorio_endividamento import listar_projecao_endividamento, transformar_dados_para_relatorio
 from views.components.cabecalho import cabecalho
+from tools.funcoes import listar_empresas, listar_bancos
 
 MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
 
@@ -251,24 +252,36 @@ if 'fe_data_base_input' not in st.session_state:
     st.session_state['fe_data_base_input'] = st.session_state['fe_data_base']
 if 'fe_data_corte_input' not in st.session_state:
     st.session_state['fe_data_corte_input'] = st.session_state['fe_data_corte']
-if 'fe_empresa_input' not in st.session_state:
-    st.session_state['fe_empresa_input'] = st.session_state['fe_empresa'] or ''
-if 'fe_banco_input' not in st.session_state:
-    st.session_state['fe_banco_input'] = st.session_state['fe_banco'] or ''
+
+# opções dos filtros de seleção (mesmo cache de cadastros usado no modal de inclusão de contrato)
+if st.session_state.get('df_lista_empresas') is None:
+    st.session_state['df_lista_empresas'] = listar_empresas()
+if st.session_state.get('df_lista_bancos') is None:
+    st.session_state['df_lista_bancos'] = listar_bancos()
+
+df_empresas = st.session_state['df_lista_empresas']
+df_bancos = st.session_state['df_lista_bancos']
+opcoes_empresas = ['Todos'] + (df_empresas['razao_social'].to_list() if df_empresas is not None and 'razao_social' in df_empresas else [])
+opcoes_bancos = ['Todos'] + (df_bancos['razao_social'].to_list() if df_bancos is not None and 'razao_social' in df_bancos else [])
+
+if st.session_state.get('fe_empresa_input') not in opcoes_empresas:
+    st.session_state['fe_empresa_input'] = st.session_state['fe_empresa'] if st.session_state['fe_empresa'] in opcoes_empresas else 'Todos'
+if st.session_state.get('fe_banco_input') not in opcoes_bancos:
+    st.session_state['fe_banco_input'] = st.session_state['fe_banco'] if st.session_state['fe_banco'] in opcoes_bancos else 'Todos'
 
 with st.form('endividamento_filtro'):
     with st.container(horizontal=True, vertical_alignment='bottom'):
         data_base = st.date_input('Data base', key='fe_data_base_input', format='DD/MM/YYYY')
         data_corte = st.date_input('Vencimentos a partir do mês de', key='fe_data_corte_input', format='DD/MM/YYYY')
-        empresa = st.text_input('Empresa', key='fe_empresa_input')
-        banco = st.text_input('Banco', key='fe_banco_input')
+        empresa = st.selectbox('Empresa', opcoes_empresas, key='fe_empresa_input')
+        banco = st.selectbox('Banco', opcoes_bancos, key='fe_banco_input')
         submitido = st.form_submit_button('Filtrar')
 
     if submitido:
         st.session_state['fe_data_base'] = data_base or date.today()
         st.session_state['fe_data_corte'] = data_corte
-        st.session_state['fe_empresa'] = empresa if empresa else None
-        st.session_state['fe_banco'] = banco if banco else None
+        st.session_state['fe_empresa'] = None if empresa == 'Todos' else empresa
+        st.session_state['fe_banco'] = None if banco == 'Todos' else banco
 
 # Buscar dados do banco (mesma regra do Contas a Pagar: pago até a data base, projetado depois)
 data_base = st.session_state['fe_data_base']

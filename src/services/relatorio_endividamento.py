@@ -16,8 +16,8 @@ def listar_projecao_endividamento(data_base, data_corte=None, empresa=None, banc
     parametros = {
         'data_base': data_base,
         'data_corte': data_corte,
-        'empresa': f"%{empresa}%" if empresa else None,
-        'banco': f"%{banco}%" if banco else None
+        'empresa': empresa or None,      # valor exato do selectbox (razão social)
+        'banco': banco or None
     }
 
     try:

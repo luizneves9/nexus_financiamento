@@ -16,8 +16,8 @@ def listar_antecipacoes(empresa=None, banco=None, contrato=None, data_pagamento_
     df = pd.DataFrame()
     query = text(SELECT_ANTECIPACOES)
     parametros = {
-        'empresa': f"%{empresa}%" if empresa else None,
-        'banco': f"%{banco}%" if banco else None,
+        'empresa': empresa or None,      # valor exato do selectbox (razão social)
+        'banco': banco or None,
         'contrato': f"%{contrato}%" if contrato else None,
         'data_pagamento_ini': data_pagamento_ini,
         'data_pagamento_fim': data_pagamento_fim

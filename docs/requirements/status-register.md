@@ -84,7 +84,10 @@ com este registro.
 - **Status:** Implementado.
 - **Entregue:**
   - Listagem da view `financiamento.vw_controle_contratos` com ordenação por Id.
-  - Filtros parametrizados por Empresa, Banco e Contrato (busca ILIKE, parcial).
+  - Filtros parametrizados: Empresa e Banco por seleção entre os cadastros
+    (opção **Todos**; comparação exata pela razão social, mesmo padrão em
+    Antecipação, Liquidação, Contas a Pagar e Endividamento) e Contrato
+    (busca ILIKE, parcial).
   - Validação de dataframe vazio com aviso ao usuário.
   - Seleção de registro para operações (Projeção, Excluir, Novo).
 - **Pendente:** tratamento de erro padronizado em caso de falha de conexão e validação de desempenho com muitos registros.
@@ -259,8 +262,9 @@ com este registro.
     do contrato obtidos por join com `contratos`, `empresas` e `bancos`.
   - Colunas: `id`, `nome_empresa`, `banco`, `numero_contrato`,
     `data_pagamento`, `valor_pago`, `tipo_lancamento`.
-  - Filtros por Empresa, Banco, Contrato (busca parcial) e intervalo de Data
-    de Pagamento, aplicados no banco; `session_state` exclusivo (prefixo `fa_`).
+  - Filtros por Empresa e Banco (seleção entre os cadastros, com **Todos**),
+    Contrato (busca parcial) e intervalo de Data de Pagamento (padrão: mês
+    atual), aplicados no banco; `session_state` exclusivo (prefixo `fa_`).
   - Resumo abaixo da tabela: quantidade de empresas, bancos e contratos e
     total pago.
 - **Pendente:** validação com o financeiro; exportação (se necessária).

@@ -16,8 +16,8 @@ SELECT_PROJECAO_ENDIVIDAMENTO = CTE_POSICAO_DATA_BASE + '''
 		bool_or(situacao = 'Liquidado') AS mes_com_pagamento                                  -- antecipação/quitação não marcam
 	FROM posicao
 	WHERE (CAST(:data_corte AS date) IS NULL OR vencimento_util >= date_trunc('month', CAST(:data_corte AS date))::date)   -- a partir do mês da data de corte
-	AND (:empresa IS NULL OR nome_empresa ILIKE :empresa)
-	AND (:banco IS NULL OR banco ILIKE :banco)
+	AND (:empresa IS NULL OR nome_empresa = :empresa)
+	AND (:banco IS NULL OR banco = :banco)
 	GROUP BY 1, 2
 	ORDER BY 1, 2
 '''

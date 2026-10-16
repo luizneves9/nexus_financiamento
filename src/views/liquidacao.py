@@ -3,7 +3,7 @@ import pandas as pd
 import streamlit as st
 from datetime import date
 from services.liquidacao import listar_parcelas_liquidacao, resumir_parcelas_liquidacao
-from tools.funcoes import transformar_float_em_str
+from tools.funcoes import transformar_float_em_str, listar_empresas, listar_bancos
 from views.components.cabecalho import cabecalho
 from views.components.modal_liquidacao_manual import modal_liquidacao_manual
 from views.components.modal_liquidacao_estornar import modal_liquidacao_estornar
@@ -69,12 +69,23 @@ def main():
     if 'fl_situacao' not in st.session_state:
         st.session_state['fl_situacao'] = 'Todas'
 
+    # opções dos filtros de seleção (mesmo cache de cadastros usado no modal de inclusão de contrato)
+    if st.session_state.get('df_lista_empresas') is None:
+        st.session_state['df_lista_empresas'] = listar_empresas()
+    if st.session_state.get('df_lista_bancos') is None:
+        st.session_state['df_lista_bancos'] = listar_bancos()
+
+    df_empresas = st.session_state['df_lista_empresas']
+    df_bancos = st.session_state['df_lista_bancos']
+    opcoes_empresas = ['Todos'] + (df_empresas['razao_social'].to_list() if df_empresas is not None and 'razao_social' in df_empresas else [])
+    opcoes_bancos = ['Todos'] + (df_bancos['razao_social'].to_list() if df_bancos is not None and 'razao_social' in df_bancos else [])
+
     # inicializar session_states dos widgets a partir dos filtros salvos
     # (o widget usa key própria; passar value= dinâmico recria o widget e descarta o que foi digitado)
-    if 'fl_empresa_input' not in st.session_state:
-        st.session_state['fl_empresa_input'] = st.session_state['fl_empresa'] or ''
-    if 'fl_banco_input' not in st.session_state:
-        st.session_state['fl_banco_input'] = st.session_state['fl_banco'] or ''
+    if st.session_state.get('fl_empresa_input') not in opcoes_empresas:
+        st.session_state['fl_empresa_input'] = st.session_state['fl_empresa'] if st.session_state['fl_empresa'] in opcoes_empresas else 'Todos'
+    if st.session_state.get('fl_banco_input') not in opcoes_bancos:
+        st.session_state['fl_banco_input'] = st.session_state['fl_banco'] if st.session_state['fl_banco'] in opcoes_bancos else 'Todos'
     if 'fl_contrato_input' not in st.session_state:
         st.session_state['fl_contrato_input'] = st.session_state['fl_contrato'] or ''
     if 'fl_data_vcto_ini_input' not in st.session_state:
@@ -87,8 +98,8 @@ def main():
     # lista de filtros
     with st.form('liquidacao_filtro'):
         with st.container(horizontal=True, vertical_alignment='bottom'):
-            empresa = st.text_input('Empresa', key='fl_empresa_input')
-            banco = st.text_input('Banco', key='fl_banco_input')
+            empresa = st.selectbox('Empresa', opcoes_empresas, key='fl_empresa_input')
+            banco = st.selectbox('Banco', opcoes_bancos, key='fl_banco_input')
             contrato = st.text_input('Contrato', key='fl_contrato_input')
             data_vcto_ini = st.date_input('Vcto de', key='fl_data_vcto_ini_input', format='DD/MM/YYYY')
             data_vcto_fim = st.date_input('Vcto até', key='fl_data_vcto_fim_input', format='DD/MM/YYYY')
@@ -96,8 +107,8 @@ def main():
             submitido = st.form_submit_button('Filtrar', use_container_width=True)
 
         if submitido:
-            st.session_state['fl_empresa'] = empresa if empresa else None
-            st.session_state['fl_banco'] = banco if banco else None
+            st.session_state['fl_empresa'] = None if empresa == 'Todos' else empresa
+            st.session_state['fl_banco'] = None if banco == 'Todos' else banco
             st.session_state['fl_contrato'] = contrato if contrato else None
             st.session_state['fl_data_vcto_ini'] = data_vcto_ini
             st.session_state['fl_data_vcto_fim'] = data_vcto_fim

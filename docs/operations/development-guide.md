@@ -25,6 +25,9 @@
   transação desfeita no final, pois o log de auditoria não pode ser apagado.
 - Filtros de tela: widgets com `key` própria inicializada do filtro salvo,
   nunca `value=st.session_state...` (ver CLAUDE.md, "Filtros de tela").
+  Empresa e Banco são `st.selectbox` com `['Todos'] + razao_social` dos
+  cadastros (cache `df_lista_empresas`/`df_lista_bancos`); `Todos` grava
+  `None` e a query compara por igualdade.
 - Identidade visual (DA07): toda tela começa com
   `cabecalho('Título', 'Subtítulo.', 'icone_do_grupo')`
   (`views/components/cabecalho.py`), sem `<h2>` em HTML nem `st.title`;

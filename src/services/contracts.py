@@ -243,8 +243,8 @@ def listar_contratos(empresa=None, banco=None, contrato=None, sem_anexos=False):
 
     df = pd.DataFrame()
     parametros = {
-        'empresa': f"%{empresa}%" if empresa else None,
-        'banco': f"%{banco}%" if banco else None,
+        'empresa': empresa or None,      # valor exato do selectbox (razão social)
+        'banco': banco or None,
         'contrato': f"%{contrato}%" if contrato else None,
         'sem_anexos': bool(sem_anexos)
     }

@@ -22,8 +22,11 @@ O usuário visualiza os contratos retornados pela view `financiamento.vw_control
 ## Fluxo principal
 
 1. O usuário acessa a página **Contratos**.
-2. (Opcional) O usuário preenche um ou mais filtros: Empresa, Banco ou Contrato.
-3. O usuário clica em **Filtrar** para aplicar os filtros (filtros ILIKE, busca parcial).
+2. (Opcional) O usuário preenche um ou mais filtros: **Empresa** e **Banco**
+   (seleção entre os cadastros, com a opção **Todos**, que não filtra;
+   comparação exata pela razão social), **Contrato** (ILIKE, busca parcial) e
+   **Somente sem anexos**.
+3. O usuário clica em **Filtrar** para aplicar os filtros.
 4. O sistema consulta a view `vw_controle_contratos` com as cláusulas WHERE parametrizadas.
 5. O sistema exibe identificador, empresa, banco, número, data de emissão, valor, tipo de pos-fixação, juros, prazo e vencimento final.
 6. O usuário pode selecionar um registro para executar uma operação disponível (Projeção, Excluir, Novo).
@@ -36,7 +39,7 @@ O sistema exibe um aviso "Nenhum contrato encontrado com os filtros aplicados." 
 
 ### FA02 - Sem filtros
 
-Quando nenhum filtro é preenchido, o sistema lista todos os contratos cadastrados ordenados por identificador.
+Quando nenhum filtro é preenchido (Empresa e Banco em **Todos**), o sistema lista todos os contratos cadastrados ordenados por identificador.
 
 ## Fluxos de exceção
 

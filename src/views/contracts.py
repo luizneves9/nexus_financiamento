@@ -5,6 +5,7 @@ from views.components.modal_contracts_excluir import modal_excluir_contrato
 from views.components.modal_quitacao_antecipacao import modal_quitacao_antecipacao
 from views.components.modal_contracts_detalhe import modal_detalhe_contrato
 from views.components.cabecalho import cabecalho
+from tools.funcoes import listar_empresas, listar_bancos
 
 def excluir_contrato(linha_selecionada):
     '''Funcionalidade de controle para excluir um contrato do banco de dados.'''
@@ -69,12 +70,23 @@ def main():
     if 'fc_sem_anexos' not in st.session_state:
         st.session_state['fc_sem_anexos'] = False
 
+    # opções dos filtros de seleção (mesmo cache de cadastros usado no modal de inclusão)
+    if st.session_state.get('df_lista_empresas') is None:
+        st.session_state['df_lista_empresas'] = listar_empresas()
+    if st.session_state.get('df_lista_bancos') is None:
+        st.session_state['df_lista_bancos'] = listar_bancos()
+
+    df_empresas = st.session_state['df_lista_empresas']
+    df_bancos = st.session_state['df_lista_bancos']
+    opcoes_empresas = ['Todos'] + (df_empresas['razao_social'].to_list() if df_empresas is not None and 'razao_social' in df_empresas else [])
+    opcoes_bancos = ['Todos'] + (df_bancos['razao_social'].to_list() if df_bancos is not None and 'razao_social' in df_bancos else [])
+
     # inicializar session_states dos widgets a partir dos filtros salvos
     # (o widget usa key própria; passar value= dinâmico recria o widget e descarta o que foi digitado)
-    if 'fc_empresa_input' not in st.session_state:
-        st.session_state['fc_empresa_input'] = st.session_state['fc_empresa'] or ''
-    if 'fc_banco_input' not in st.session_state:
-        st.session_state['fc_banco_input'] = st.session_state['fc_banco'] or ''
+    if st.session_state.get('fc_empresa_input') not in opcoes_empresas:
+        st.session_state['fc_empresa_input'] = st.session_state['fc_empresa'] if st.session_state['fc_empresa'] in opcoes_empresas else 'Todos'
+    if st.session_state.get('fc_banco_input') not in opcoes_bancos:
+        st.session_state['fc_banco_input'] = st.session_state['fc_banco'] if st.session_state['fc_banco'] in opcoes_bancos else 'Todos'
     if 'fc_contrato_input' not in st.session_state:
         st.session_state['fc_contrato_input'] = st.session_state['fc_contrato'] or ''
     if 'fc_sem_anexos_input' not in st.session_state:
@@ -83,16 +95,16 @@ def main():
     # lista de filtros
     with st.form('gestao_contratos_filtro'):
         with st.container(horizontal=True, vertical_alignment='bottom'):
-            empresa = st.text_input('Empresa', key='fc_empresa_input')
-            banco = st.text_input('Banco', key='fc_banco_input')
+            empresa = st.selectbox('Empresa', opcoes_empresas, key='fc_empresa_input')
+            banco = st.selectbox('Banco', opcoes_bancos, key='fc_banco_input')
             contrato = st.text_input('Contrato', key='fc_contrato_input')
             sem_anexos = st.checkbox('Somente sem anexos', key='fc_sem_anexos_input',
                                      help='Contratos sem anexo de contrato ou sem anexo de ficha financeira.')
             submitido = st.form_submit_button('Filtrar', use_container_width=True)
 
         if submitido:
-            st.session_state['fc_empresa'] = empresa if empresa else None
-            st.session_state['fc_banco'] = banco if banco else None
+            st.session_state['fc_empresa'] = None if empresa == 'Todos' else empresa
+            st.session_state['fc_banco'] = None if banco == 'Todos' else banco
             st.session_state['fc_contrato'] = contrato if contrato else None
             st.session_state['fc_sem_anexos'] = sem_anexos
 

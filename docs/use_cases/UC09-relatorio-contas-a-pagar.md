@@ -29,7 +29,8 @@ base, com o resumo por situação.
 
 1. O usuário acessa **Relatórios > Contas a Pagar**.
 2. O sistema aplica os filtros padrão: **Data base** = hoje, **Vcto de / até**
-   = mês atual, **Situação** = Todas (prefixo `fcp_`).
+   = mês atual, **Empresa** e **Banco** = Todos, **Situação** = Todas
+   (prefixo `fcp_`).
 3. O sistema consulta a posição na data base (`CTE_POSICAO_DATA_BASE`, RN24) e
    exibe: Empresa, Banco, Contrato, Tipo de contrato, Parcela, Tipo, Situação,
    Vencimento, Vencimento útil, Principal, Juros, Parcela H, Valor projetado,
@@ -43,7 +44,8 @@ base, com o resumo por situação.
 
 ### FA01 - Filtrar
 
-Data base, Empresa, Banco, Contrato (busca parcial), Vcto de/até (vencimento
+Data base, Empresa e Banco (seleção entre os cadastros, com **Todos**;
+comparação exata pela razão social), Contrato (busca parcial), Vcto de/até (vencimento
 útil) e Situação (Todas, Liquidado, Projetado, Antecipação, Quitação), com o
 botão **Filtrar**; a filtragem é feita no banco.
 

@@ -24,6 +24,7 @@ ver o motivo de cada status, as lacunas e a próxima ação, consulte o
 | RF07.5 | RN08, RN10 | UC11 | Implementado | Validar com o financeiro; avaliar exportação. |
 | RF07.6 | RN19, RN20, RN22, RN23 | UC13 | Implementado | Tratar antecipações vindas no CSV do ERP (BL-028). |
 | RF07.7 | RN23 | UC13 | Implementado | Tela de cadastro de vínculos (BL-029). |
+| RF07.8 | RN02, RN24, RN27 | UC15 | Implementado | Validar indicadores com o financeiro; liquidações sem baixa desde 02/2026 deixam o fluxo recente no projetado. |
 | RF08 | RN12 | UC02, UC04 | Parcial | Registro implementado (RF08.1); falta consulta na interface (RF08.2). |
 | RF08.1 | RN12 | UC01, UC04, UC06, UC07, UC08, UC12, UC13 | Implementado | Retenção do log e usuário de banco somente-inserção (BL-022). |
 | RF08.2 | RN12 | A definir | Planejado | Definir tela de histórico (BL-021). |

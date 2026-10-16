@@ -71,10 +71,11 @@ views (Streamlit) → services → repositories/queries → PostgreSQL (schema f
 
 - `src/main.py` — entrypoint Streamlit. Sem usuário logado, registra só a
   página de login (`st.navigation(..., position='hidden')`); logado, renova a
-  sessão, mostra usuário/**Sair** na sidebar e define a navegação em três
-  grupos: *Operacional* (Contratos, Antecipação, Liquidação), *Cadastros*
-  (Empresas, Bancos, Fornecedor, Selic) e *Relatórios* (Contas a Pagar,
-  Endividamento).
+  sessão, mostra usuário/**Sair** na sidebar e define a navegação em quatro
+  grupos: *Painel* (Indicadores), *Operacional* (Contratos, Antecipação,
+  Liquidação), *Cadastros* (Empresas, Bancos, Fornecedor, Selic) e
+  *Relatórios* (Contas a Pagar, Endividamento). A página inicial após o login
+  é Contratos (`default=True`), não o Painel.
 - Projeção — `financiamento.projecao_parcelas` (+ `projecao_controle`),
   recalculada por contrato pelos triggers do banco a cada inclusão/alteração
   de contrato, antecipação/quitação ou Selic (DA08). As antigas materialized
@@ -86,7 +87,17 @@ views (Streamlit) → services → repositories/queries → PostgreSQL (schema f
 - Relatórios Contas a Pagar e Endividamento compartilham a consulta
   `CTE_POSICAO_DATA_BASE` (`queries/queries_contas_a_pagar.py`): posição na
   data base (pago × projetado, Selic até a data base, antecipações
-  posteriores fora; DA10). Mudança nessa regra afeta os dois.
+  posteriores fora; DA10). Mudança nessa regra afeta os dois — e também o
+  Painel de Indicadores, que usa a mesma CTE.
+- Painel > Indicadores — `views/indicadores.py` + `services/indicadores.py`
+  (UC15, RN27): consulta a posição duas vezes (período e data base atuais e
+  os mesmos recuados um ano) numa única passada por data base
+  (`GROUPING SETS` em `SELECT_INDICADORES_POSICAO`). Saldo devedor = só
+  parcelas a vencer (as anteriores a 2026 nunca foram baixadas no Nexus).
+  Layout com regra de alinhamento: cartões compactos de mesma altura (CSS no
+  container `fi_cartoes`) e os dois gráficos Altair com linha de título de
+  altura fixa, legenda HTML própria (a do Altair desalinha) e a mesma altura;
+  valores em R$ Mi com 3 casas.
 - Selic — `views/selic.py` + `services/selic.py`: importa a série do BNDES
   (`um143.txt`) só com datas novas (DA11).
 - Detalhe do contrato — botão **Detalhes** em Contratos abre
@@ -177,8 +188,8 @@ Toda tela que exibe datas ou valores monetários em `st.dataframe`/
   logo (`src/assets/`) e rodapé do menu (`sb_rodape`) em `src/main.py`.
 - Toda tela começa com `cabecalho('Título', 'Subtítulo.', 'icone')`
   (`views/components/cabecalho.py`), com o ícone Material do grupo no menu
-  (`request_quote` Operacional, `folder_open` Cadastros, `bar_chart`
-  Relatórios) — não usar `<h2>` em HTML nem `st.title`.
+  (`dashboard` Painel, `request_quote` Operacional, `folder_open` Cadastros,
+  `bar_chart` Relatórios) — não usar `<h2>` em HTML nem `st.title`.
 - A ação principal de cada tela/modal usa `type='primary'`
   (`views/components/botao_principal.py`); não estilizar botão por botão.
   Filtrar e a linha de ações das telas (ex. Novo/Projeção/Quitação/

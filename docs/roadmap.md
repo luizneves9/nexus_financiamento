@@ -30,6 +30,8 @@ está no [Registro de Status e Pendências](requirements/status-register.md).
   relatório de pagamentos do ERP, com vínculos ERP → Nexus (UC13).
 - Detalhe do contrato em abas, com anexos (PDF) de contrato e ficha
   financeira no banco e visualização na tela (UC14).
+- Painel de indicadores (Painel > Indicadores) comparados ao mesmo período
+  do ano anterior, com fluxo de pagamentos mensal e composição (UC15).
 
 ## Versão 1.0
 

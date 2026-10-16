@@ -53,6 +53,7 @@ com este registro.
 | UC11 | Consulta de antecipações | Implementado | Aba Antecipação lista todas as antecipações/quitações com filtros no banco e resumo. | Validar com o financeiro. |
 | UC13 | Conciliação com o ERP | Implementado | Importação do CSV do ERP com tabela temporária, prévia por situação, vínculos ERP → Nexus (inclusive grupos com rateio) e liquidação com ajuste. | Antecipações no CSV (BL-028) e tela de vínculos (BL-029). |
 | UC14 | Detalhe do contrato e anexos | Implementado | Detalhe em abas (Dados, Contrato, Ficha Financeira, Histórico) com PDFs no banco, visualização na tela, anexar/baixar/excluir e log; anexos também na inclusão do contrato. | Acrescentar novas abas conforme evolução. |
+| UC15 | Painel de indicadores | Implementado | Painel > Indicadores com saldo devedor, fluxo de pagamentos, juros, contratado e taxa média comparados ao ano anterior, fluxo mensal e composição por empresa/banco/tipo. | Validar com o financeiro (BL-031). |
 | UC12 | Autenticação de usuário | Implementado | Login, primeiro acesso com cadastro de senha (hash scrypt), sessão de 30 min e Sair; eventos registrados no log. Perfis ainda não existem. | Resolver pendências de segurança BL-014 a BL-018. |
 | RF03.1 | Filtros de contratos | Parcial | Empresa, banco, contrato e "Somente sem anexos" (padrão `key=`, BL-020 resolvido). | Definir demais filtros (taxa, período, valor, tipo). |
 | RF08 | Auditoria | Parcial | Log de auditoria grava todas as escritas e eventos de acesso (RF08.1); não há tela de consulta (RF08.2). | Definir a tela de histórico (BL-021). |
@@ -304,6 +305,25 @@ com este registro.
 - **Critério de conclusão:** pendências de segurança resolvidas, perfis
   implementados e acesso validado em produção via HTTPS.
 
+### UC15 - Painel de indicadores
+
+- **Status:** Implementado.
+- **Entregue:** grupo **Painel** no topo do menu com a tela Indicadores;
+  filtros data base (hoje), período (início do ano até hoje), empresa e banco
+  (prefixo `fi_`); cinco cartões comparados ao mesmo período do ano anterior
+  (saldo devedor, fluxo de pagamentos, juros no período, contratado no
+  período, taxa média ponderada); gráfico do fluxo de pagamentos por mês
+  (ano atual × anterior) e composição do fluxo por empresa, banco ou tipo de
+  contrato. Fluxo do período conferido com Contas a Pagar (mesmo valor).
+- **Pendente:** validação dos indicadores pelo financeiro; enquanto as
+  liquidações de 03/2026 em diante não forem importadas do ERP, o fluxo desses
+  meses usa o valor projetado.
+- **Evidência:** `src/views/indicadores.py`, `src/services/indicadores.py`,
+  `src/queries/queries_indicadores.py`, `src/main.py`.
+- **Próxima ação:** validar com o financeiro (BL-031).
+- **Critério de conclusão:** indicadores conferidos com os controles do
+  financeiro.
+
 ### RF08.1 - Log de auditoria
 
 - **Status:** Implementado.
@@ -362,6 +382,7 @@ com este registro.
 | BL-027 | Corrigir os bugs herdados das MVs na projeção: TFC ignora antecipação/quitação; SELIC considera uma única antecipação por contrato; parcela do mesmo dia da quitação é cancelada; unificar `projetar_contrato_*` (prévia da inclusão) com `calcular_projecao_contrato`. | Médio | Validação do financeiro | Aberto |
 | BL-028 | Tratar antecipações e quitações que venham no CSV do ERP (hoje entram na soma da chave e aparecem como Diferença). | Médio | Regra para identificá-las no relatório | Aberto |
 | BL-029 | Tela de cadastro dos vínculos ERP → Nexus (listar, buscar, incluir, remover) fora da importação. | Baixo | — | Aberto |
+| BL-031 | Validar com o financeiro os indicadores do Painel (UC15): definição de saldo devedor (só parcelas a vencer), fluxo de pagamentos e comparação com o ano anterior. | Médio | Disponibilidade do financeiro | Aberto |
 | BL-030 | Agendar a importação da Selic e confirmar o acesso do servidor de produção a `www.bndes.gov.br`. | Médio | Infraestrutura | Aberto |
 
 ## Regra de atualização

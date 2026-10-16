@@ -6,6 +6,7 @@ from database.connection import ConexaoBancoSQL
 from queries.queries_gerais import INCLUIR_CONTRATO, SELECT_CONTRATOS
 from queries.queries_contracts import (
     DELETE_CONTRATO,
+    VERIFICAR_LIQUIDACAO_CONTRATO,
     PROJETAR_CONTRATO_SELIC,
     PROJETAR_CONTRATO_TFC,
     SELECT_PROJECAO,
@@ -281,6 +282,12 @@ def visualizar_projecao(linha_selecionada):
 def deletar_contrato_banco(id_contrato):
     '''Registrando exclusão no banco de dados.'''
 
+    # contrato com liquidação (ativa ou estornada) não pode ser excluído: preserva o histórico de pagamentos
+    with engine.begin() as conn:
+        qtd_liquidacoes = interacao_database(text(VERIFICAR_LIQUIDACAO_CONTRATO), conn, {'id': id_contrato}).scalar_one()
+    if qtd_liquidacoes:
+        raise ValueError('Contrato possui parcelas liquidadas e não pode ser excluído.')
+
     # iniciando exclusão
     try:
 
@@ -302,4 +309,6 @@ def deletar_contrato_banco(id_contrato):
 
     except Exception as e:
         registrar_log_falha(CONTRATO_EXCLUIR, getattr(e, 'orig', e), 'contratos', id_contrato)
+        if isinstance(e, IntegrityError):
+            raise ValueError('Contrato possui antecipações, quitações ou liquidações vinculadas e não pode ser excluído.')
         raise ValueError('Erro ao excluir contrato!')

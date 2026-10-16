@@ -129,15 +129,17 @@ def main():
     pages = {
         ':material/request_quote: Operacional': [
             st.Page('views/contracts.py', title='Contratos'),
-            st.Page('views/include_antecipation.py', title='Antecipação')
+            st.Page('views/include_antecipation.py', title='Antecipação'),
+            st.Page('views/liquidacao.py', title='Liquidação')
         ],
         ':material/folder_open: Cadastros': [
             st.Page('views/empresas.py', title='Empresas'),
             st.Page('views/bancos.py', title='Bancos'),
             st.Page('views/fornecedor.py', title='Fornecedor'),
+            st.Page('views/selic.py', title='Selic'),
         ],
         ':material/bar_chart: Relatórios': [
-            st.Page('views/relatorio_projecao_pagamentos.py', title='Projeção de Pagamentos'),
+            st.Page('views/relatorio_contas_a_pagar.py', title='Contas a Pagar'),
             st.Page('views/relatorio_endividamento.py', title='Endividamento')
         ]
     }

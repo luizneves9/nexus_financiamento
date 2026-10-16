@@ -2,6 +2,21 @@ import streamlit as st
 from services.include_antecipation import listar_antecipacoes, resumir_antecipacoes
 from tools.funcoes import transformar_float_em_str
 from views.components.cabecalho import cabecalho
+from views.components.modal_antecipacao_excluir import modal_excluir_antecipacao
+
+def excluir_antecipacao(linha_selecionada):
+    '''Funcionalidade de controle para excluir uma antecipação/quitação.'''
+
+    # validando quantidade selecionada (deve ser um)
+    if len(linha_selecionada) != 1:
+        st.session_state['mensagem_erro'] = 'Selecione um registro!'
+        return
+
+    # selecionando registro
+    linha = linha_selecionada.iloc[0].copy()
+
+    # abrindo o modal de confirmação
+    modal_excluir_antecipacao(linha)
 
 def main():
 
@@ -83,6 +98,10 @@ def main():
             'data_pagamento': st.column_config.DateColumn(format='DD/MM/YYYY'),
         }
     )
+
+    # botões de interação
+    with st.container(horizontal=True):
+        if st.button('Excluir'): excluir_antecipacao(df_visual[df_visual['sel'] == True])
 
     # resumo de valores
     st.caption(

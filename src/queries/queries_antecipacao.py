@@ -15,19 +15,25 @@ SELECT_DADOS_CONTRATO = '''
 
 SELECT_PARCELA_SALDO_DEVEDOR = '''
 	(
-		SELECT id_contrato, parcela, data_vcto, saldo_devedor, 1 AS prioridade
-		FROM financiamento.mv_projecao_moeda
-		WHERE id_contrato = :id_contrato
-		AND data_vcto >= :data_pagamento
-		ORDER BY data_vcto ASC
+		SELECT p.id_contrato, p.parcela, p.data_vcto, p.saldo_devedor, 1 AS prioridade
+		FROM financiamento.projecao_parcelas p
+		INNER JOIN financiamento.contratos c ON c.id = p.id_contrato
+		WHERE p.id_contrato = :id_contrato
+		AND c.tipo_contrato = 'BNDES FINAME SELIC'
+		AND p.situacao <> 'CANCELADA_QUITACAO'
+		AND p.data_vcto >= :data_pagamento
+		ORDER BY p.data_vcto ASC
 		LIMIT 1
 	)
 	UNION ALL
 	(
-		SELECT id_contrato, parcela, data_vcto, saldo_devedor, 2 AS prioridade
-		FROM financiamento.mv_projecao_moeda
-		WHERE id_contrato = :id_contrato
-		ORDER BY data_vcto DESC
+		SELECT p.id_contrato, p.parcela, p.data_vcto, p.saldo_devedor, 2 AS prioridade
+		FROM financiamento.projecao_parcelas p
+		INNER JOIN financiamento.contratos c ON c.id = p.id_contrato
+		WHERE p.id_contrato = :id_contrato
+		AND c.tipo_contrato = 'BNDES FINAME SELIC'
+		AND p.situacao <> 'CANCELADA_QUITACAO'
+		ORDER BY p.data_vcto DESC
 		LIMIT 1
 	)
 	ORDER BY prioridade
@@ -99,4 +105,10 @@ SELECT_ANTECIPACOES = '''
 	AND (:data_pagamento_ini IS NULL OR a.data_pagamento >= :data_pagamento_ini)
 	AND (:data_pagamento_fim IS NULL OR a.data_pagamento <= :data_pagamento_fim)
 	ORDER BY a.id
+'''
+
+DELETE_ANTECIPACAO = '''
+	DELETE FROM financiamento.antecipacao
+	WHERE id = :id
+	RETURNING *
 '''

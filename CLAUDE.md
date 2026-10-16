@@ -15,6 +15,13 @@ segurança e testes, e por
 que é a fonte de consulta rápida sobre o que está implementado, parcial,
 "banco preparado" ou planejado.
 
+**Não existe banco de testes: o `.env` aponta para o banco de produção.**
+Todo SQL que altera estrutura ou dados roda na produção — faça backup antes e
+escreva testes de escrita como blocos que se desfazem sozinhos (ex.:
+`DO $$ ... RAISE EXCEPTION 'TESTE DESFEITO' $$`), pois o cliente SQL do
+usuário pode estar em auto-commit e o log/liquidações não podem ser apagados.
+Não altere tabelas pré-existentes sem aprovação explícita.
+
 Autenticação (login, primeiro acesso, sessão de 30 min) e log de auditoria já
 estão implementados; **perfis/permissões ainda não** (ver
 `docs/architecture/decisions.md`, DA04 e DA06). Não trate o estado atual como
@@ -54,8 +61,9 @@ O `Dockerfile` assume a existência local da imagem `fin-base:1.0`.
 Camadas estritas, com o PostgreSQL (schema `financiamento`) concentrando a
 lógica financeira — ver `docs/architecture/system-overview.md` e
 `docs/architecture/decisions.md` (DA01: PostgreSQL é o motor financeiro;
-funções, triggers, views e materialized views são a fonte de verdade dos
-cálculos):
+funções, triggers e views são a fonte de verdade dos cálculos; DA08 a DA11
+descrevem a projeção persistida, a liquidação/conciliação com o ERP, a
+posição na data base e a Selic do BNDES):
 
 ```
 views (Streamlit) → services → repositories/queries → PostgreSQL (schema financiamento)
@@ -64,8 +72,23 @@ views (Streamlit) → services → repositories/queries → PostgreSQL (schema f
 - `src/main.py` — entrypoint Streamlit. Sem usuário logado, registra só a
   página de login (`st.navigation(..., position='hidden')`); logado, renova a
   sessão, mostra usuário/**Sair** na sidebar e define a navegação em três
-  grupos: *Operacional* (Contratos, Antecipação), *Cadastros* (Empresas,
-  Bancos, Fornecedor) e *Relatórios* (Projeção de Pagamentos, Endividamento).
+  grupos: *Operacional* (Contratos, Antecipação, Liquidação), *Cadastros*
+  (Empresas, Bancos, Fornecedor, Selic) e *Relatórios* (Contas a Pagar,
+  Endividamento).
+- Projeção — `financiamento.projecao_parcelas` (+ `projecao_controle`),
+  recalculada por contrato pelos triggers do banco a cada inclusão/alteração
+  de contrato, antecipação/quitação ou Selic (DA08). As antigas materialized
+  views `mv_projecao_*` e a `vw_agrupamento_projecao` não existem mais.
+- Liquidação — `views/liquidacao.py` + `services/liquidacao.py`: baixa
+  manual, estorno e importação/conciliação do CSV do ERP (tabela temporária
+  por operação; vínculos em `contrato_erp_vinculo`; DA09). A quitação/
+  antecipação de contrato é outro fluxo (`services/quitacao_antecipacao.py`).
+- Relatórios Contas a Pagar e Endividamento compartilham a consulta
+  `CTE_POSICAO_DATA_BASE` (`queries/queries_contas_a_pagar.py`): posição na
+  data base (pago × projetado, Selic até a data base, antecipações
+  posteriores fora; DA10). Mudança nessa regra afeta os dois.
+- Selic — `views/selic.py` + `services/selic.py`: importa a série do BNDES
+  (`um143.txt`) só com datas novas (DA11).
 - Autenticação — `views/login.py` + `services/login.py`: usuários em
   `financiamento.usuarios` (criados só pelo desenvolvedor, ver
   `database/usuarios.sql`); primeiro acesso com senha vazia leva ao cadastro
@@ -89,8 +112,12 @@ views (Streamlit) → services → repositories/queries → PostgreSQL (schema f
 - `src/repositories/` — funções finas de execução (`conn.execute`,
   `pd.read_sql`) que recebem query e parâmetros já prontos dos services.
 - `src/queries/` — strings SQL nomeadas em maiúsculas, uma por domínio
-  (`queries_contracts.py`, `queries_bancos.py`, `queries_empresas.py`,
-  `queries_fornecedores.py`, `queries_gerais.py`). Todo SQL da aplicação deve
+  (`queries_contracts.py`, `queries_antecipacao.py`, `queries_liquidacao.py`,
+  `queries_contas_a_pagar.py`, `queries_relatorio_endividamento.py`,
+  `queries_selic.py`, `queries_bancos.py`, `queries_empresas.py`,
+  `queries_fornecedores.py`, `queries_gerais.py`). Uma regra SQL usada em mais
+  de uma query fica num trecho comum (ex. `CTE_POSICAO_DATA_BASE`,
+  `CTE_CONCILIACAO_ERP`) concatenado às queries. Todo SQL da aplicação deve
   ficar aqui, não espalhado pelas views/services.
 - `src/database/connection.py` — `ConexaoBancoSQL` cria a engine SQLAlchemy
   (`postgresql://...`) sob demanda a partir de `ImportacaoENV`.
@@ -118,12 +145,15 @@ Toda tela que exibe datas ou valores monetários em `st.dataframe`/
   canônica) em vez de duplicá-la localmente — `views/contracts.py` tem uma
   cópia local da mesma função por legado; não repita esse padrão em telas
   novas.
+- Valores que podem vir vazios (ex. valor pago de parcela aberta) são
+  formatados só quando `pd.notna(v)`, senão aparecem como "nan".
+- Numa `st.caption`/markdown com mais de um "R$", escape o cifrão (`R\\$` no
+  f-string): dois `$` viram fórmula LaTeX no Streamlit.
 - Os nomes de coluna não são inventados: a query em geral retorna exatamente
-  o que a view do PostgreSQL expõe (sem alias em Python). Quando a view não
-  estiver documentada em `database/ddl_financiamento.sql` (caso de
-  `vw_agrupamento_projecao`, ver `database/README.md`), **peça ao usuário os
-  nomes reais das colunas de data/valor** antes de escrever a formatação —
-  não adivinhe.
+  o que a tabela/view do PostgreSQL expõe (sem alias em Python). Quando o
+  objeto não estiver documentado em `database/ddl_financiamento.sql` nem em
+  `database/projecao_persistida.sql`, **peça ao usuário os nomes reais das
+  colunas de data/valor** antes de escrever a formatação — não adivinhe.
 
 ### Identidade visual (mesma do Nexus Extrato, CSS feito para o Streamlit 1.63.0)
 
@@ -135,22 +165,26 @@ Toda tela que exibe datas ou valores monetários em `st.dataframe`/
   Relatórios) — não usar `<h2>` em HTML nem `st.title`.
 - A ação principal de cada tela/modal usa `type='primary'`
   (`views/components/botao_principal.py`); não estilizar botão por botão.
-  Filtrar e a linha de ações das telas (ex. Novo/Projeção/Liquidar/Excluir
-  em Contratos) ficam como botões normais; o destaque fica no Confirmar dos
+  Filtrar e a linha de ações das telas (ex. Novo/Projeção/Quitação/
+  Antecipação/Excluir em Contratos; Importar ERP/Liquidar/Estornar em
+  Liquidação) ficam como botões normais; o destaque fica no Confirmar dos
   modais e no Entrar/Cadastrar senha do login.
 - Consultas que podem demorar em `with st.spinner('Consultando ...'):`.
 
-### Filtros de tela (padrão de views/relatorio_projecao_pagamentos.py)
+### Filtros de tela (padrão de views/relatorio_contas_a_pagar.py)
 
 - `st.form` com os campos em `st.container(horizontal=True, vertical_alignment='bottom')`
   e botão **Filtrar**; filtragem sempre no banco (query com
   `(:param IS NULL OR coluna ILIKE :param)` e intervalos de data `de/até`).
-- `session_state` exclusivo da página com prefixo próprio (`fp_` Projeção,
-  `fa_` Antecipação, `fc_` Contratos) guardando o filtro aplicado.
+- `session_state` exclusivo da página com prefixo próprio (`fcp_` Contas a
+  Pagar, `fe_` Endividamento, `fl_` Liquidação, `fs_` Selic, `fa_`
+  Antecipação, `fc_` Contratos) guardando o filtro aplicado. Filtros de
+  período começam preenchidos quando a tela tem um recorte natural (ex. mês
+  atual; data base = hoje).
 - Cada widget usa `key='<prefixo>_<campo>_input'` inicializada a partir do
   filtro salvo — **nunca** `value=st.session_state...`: um `value` que muda
-  recria o widget e descarta o que o usuário digitou (bug corrigido na
-  Projeção; `views/contracts.py` ainda tem o padrão antigo, ver `BL-020`).
+  recria o widget e descarta o que o usuário digitou (`views/contracts.py`
+  ainda tem o padrão antigo, ver `BL-020`).
 - Resumo abaixo da tabela: uma única `st.caption` com os itens separados por
   `&nbsp;&nbsp;|&nbsp;&nbsp;`, calculado no service **antes** da formatação
   dos valores.
@@ -158,21 +192,24 @@ Toda tela que exibe datas ou valores monetários em `st.dataframe`/
 ### Banco de dados
 
 - `database/ddl_financiamento.sql` é um retrato documental do schema
-  `financiamento` (tabelas de empresas, bancos, fornecedores, contratos,
-  bens, veículos, feriados, Selic, antecipações; funções de dias úteis/Selic/
-  projeção; triggers; a view `vw_controle_contratos`; e as materialized views
-  `mv_projecao_moeda`, `mv_projecao_moeda_final`, `mv_projecao_tfc`). **Não é
-  um instalador/migração** — não execute em produção.
+  `financiamento` original (tabelas de empresas, bancos, fornecedores,
+  contratos, bens, veículos, feriados, Selic, antecipações; funções de dias
+  úteis/Selic/projeção da inclusão; triggers; a view `vw_controle_contratos`).
+  **Não é um instalador/migração** — não execute em produção.
+- `database/projecao_persistida.sql` é o **estado final** dos objetos da
+  projeção persistida, liquidação e vínculo ERP (já aplicado na produção;
+  documentação e base para montar um banco novo).
 - `database/usuarios.sql` e `database/log_auditoria.sql` são scripts de
-  criação (já executados em desenvolvimento) das tabelas de autenticação e
-  auditoria; ainda não refletidos no `ddl_financiamento.sql` (`BL-019`).
+  criação (já executados) das tabelas de autenticação e auditoria; ainda não
+  refletidos no `ddl_financiamento.sql` (`BL-019`).
 - `database/projection_functions.sql` documenta as funções PostgreSQL de
   projeção temporária usadas na inclusão de contratos (DA05: a projeção roda
   via função no banco, sem persistir o contrato, para evitar efeitos
   colaterais de insert+rollback).
 - Fonte de verdade para alterações de modelo/cálculo: o SQL versionado em
-  `database/`, testado em banco de desenvolvimento e refletido na
-  documentação de arquitetura — não altere o comportamento apenas no Python.
+  `database/`, aplicado com backup e testes que se desfazem sozinhos (não há
+  banco de testes) e refletido na documentação de arquitetura — não altere o
+  comportamento apenas no Python.
 
 ## Convenções (docs/operations/development-guide.md)
 
@@ -215,13 +252,19 @@ motivo) antes de considerar a entrega concluída.
     `docs/architecture/decisions.md` (DA06).
 - **Nunca** gravar senha, hash, token/cookie ou segredos em `detalhes`.
 - O log é somente inserção (trigger bloqueia UPDATE/DELETE/TRUNCATE): para
-  testar escritas no banco de desenvolvimento sem deixar registros, rode o
-  teste dentro de uma transação desfeita no final (savepoints + rollback).
+  testar escritas sem deixar registros (o banco é a produção), rode o teste
+  num bloco que se desfaz sozinho (`DO $$ ... RAISE EXCEPTION 'TESTE
+  DESFEITO' $$`) — `BEGIN ... ROLLBACK` não é confiável se o cliente SQL
+  estiver em auto-commit.
 
 ## Fluxo de trabalho para novas funcionalidades
 
 Processo padrão (validado na sessão que criou o relatório de Projeção de
-Pagamentos — UC09/RF07.3):
+Pagamentos, hoje Contas a Pagar — UC09/RF07.3, e no projeto da projeção
+persistida/liquidação, 10/2026): avançar em passos pequenos, mostrar as
+alterações pretendidas e aplicar só após aprovação, e terminar cada passo com
+um passo a passo numerado do que o usuário deve executar e o resultado
+esperado.
 
 1. **Levantar contexto antes de codificar:** ler o Use Case/RF/RN citados
    pelo usuário e o arquivo de domínio mais próximo já existente
@@ -238,7 +281,7 @@ Pagamentos — UC09/RF07.3):
    auditoria") e implementá-lo quando necessário.
 5. **Testar a funcionalidade** no Streamlit antes de documentar (não presumir que
    compilação Python = funcionamento correto):
-   - Para consultas ao banco: validar que os dados chegam; se a view/tabela não estiver documentada no DDL (ex. `vw_agrupamento_projecao`), registrar em `database/README.md` após confirmar que funciona.
+   - Para consultas ao banco: validar que os dados chegam; se a view/tabela não estiver documentada no DDL nem em `database/projecao_persistida.sql`, registrar em `database/README.md` após confirmar que funciona.
    - Para telas: navegar até o caminho novo e validar visualmente.
    - Só após teste bem-sucedido e aprovação do usuário, prosseguir para documentação.
 6. **Atualizar a documentação**, nesta ordem (apenas após teste aprovado), só criando o que for

@@ -1,79 +1,65 @@
 # Banco de Dados
 
+> **Não existe banco de testes.** Os scripts são executados direto na
+> produção: faça backup antes e escreva testes de escrita como blocos que se
+> desfazem sozinhos (ex.: `DO $$ ... RAISE EXCEPTION 'TESTE DESFEITO' $$`).
+
 ## Arquivos
 
 | Arquivo | Finalidade |
 | --- | --- |
-| `ddl_financiamento.sql` | Retrato documental do schema PostgreSQL `financiamento` existente no banco, incluindo tabelas, funções, triggers, views e materialized views. |
-| `projection_functions.sql` | Funções parametrizadas para projeção temporária durante a inclusão de contratos. |
-| `usuarios.sql` | Script de criação da tabela `usuarios` (autenticação, UC12) e comandos do desenvolvedor: criar usuário, resetar senha, bloquear e conferir. Já executado em desenvolvimento. |
-| `log_auditoria.sql` | Script de criação da tabela `log_auditoria`, índices, função `log_auditoria_imutavel` e triggers que bloqueiam UPDATE/DELETE/TRUNCATE (DA06), mais consultas úteis de auditoria. Executar depois de `usuarios.sql`. Já executado em desenvolvimento. |
+| `ddl_financiamento.sql` | Retrato documental do schema PostgreSQL `financiamento` (tabelas, funções, triggers e views originais). Não inclui os objetos da projeção persistida. |
+| `projecao_persistida.sql` | **Estado final** da projeção persistida, liquidação e vínculo ERP (DA08, DA09): tabelas `projecao_controle`, `projecao_parcelas`, `liquidacao` e `contrato_erp_vinculo`, funções de cálculo/recálculo, triggers e carga inicial. **Já aplicado na produção** em 15-16/10/2026; serve de documentação e para montar um banco novo. Não executar de novo na produção. |
+| `projection_functions.sql` | Funções parametrizadas para projeção temporária durante a inclusão de contratos (DA05). |
+| `usuarios.sql` | Script de criação da tabela `usuarios` (autenticação, UC12) e comandos do desenvolvedor: criar usuário, resetar senha, bloquear e conferir. Já executado. |
+| `log_auditoria.sql` | Script de criação da tabela `log_auditoria`, índices, função `log_auditoria_imutavel` e triggers que bloqueiam UPDATE/DELETE/TRUNCATE (DA06), mais consultas úteis de auditoria. Executar depois de `usuarios.sql`. Já executado. |
 
 ## Finalidade
 
-O arquivo `ddl_financiamento.sql` foi gerado a partir do banco existente e é
-mantido no projeto para documentar sua estrutura atual. Ele não representa,
-neste momento, uma migração ou um instalador completo do banco.
+`ddl_financiamento.sql` foi gerado a partir do banco e documenta a estrutura
+original. Em 16/10/2026 foram retirados dele os objetos excluídos do banco
+(materialized views `mv_projecao_moeda`, `mv_projecao_moeda_final`,
+`mv_projecao_tfc`, a função `refresh_views_contratos()` e os triggers
+`trg_after_insert_contratos` / `trg_after_insert_antecipacao`). Os objetos
+novos estão em `projecao_persistida.sql`.
 
-Da mesma forma, `projection_functions.sql` documenta as funções de projeção
-criadas para a funcionalidade de inclusão de contratos e deve permanecer
-versionado junto ao código.
-
-Diferente do DDL, `usuarios.sql` e `log_auditoria.sql` **são scripts de
-criação**: devem ser executados uma única vez em cada ambiente (primeiro
-`usuarios.sql`, depois `log_auditoria.sql`).
+`projection_functions.sql` documenta as funções de projeção da inclusão de
+contratos. Unificá-las com `calcular_projecao_contrato` está no backlog
+(BL-027).
 
 ## Objetos principais
 
-O DDL contém:
-
 - tabelas de empresas, bancos, fornecedores, contratos, bens, veículos,
-  feriados, Selic e antecipações;
-- funções de dias úteis, Selic, data de referência e atualização das
-  projeções;
-- triggers de contratos e antecipações, incluindo `trg_after_insert_contratos`
-  e `trg_after_insert_antecipacao`, que acionam `refresh_views_contratos()`
-  após a inclusão de contrato ou de antecipação/quitação, respectivamente;
-- view `vw_controle_contratos`;
-- materialized views:
-  - `mv_projecao_moeda`: base de cálculo com suporte a antecipações (ANTECIPACAO/QUITACAO), filtragem de quitação via CTE `parcela_quitada`.
-  - `mv_projecao_moeda_final`: aplicação de Selic por dia de vencimento e cálculo de parcela H.
-  - `mv_projecao_tfc`: cálculo TFC com dias corridos.
+  feriados, Selic e antecipações (`ddl_financiamento.sql`);
+- projeção persistida: `projecao_controle`, `projecao_parcelas`,
+  `calcular_projecao_contrato(id, data_base opcional)`,
+  `recalcular_projecao_contrato`, `recalcular_projecao_selic`,
+  `atualizar_controle_contrato` e os triggers `trg_projecao_contratos`,
+  `trg_projecao_antecipacao` e `trg_projecao_selic_*`;
+- liquidação: `liquidacao` e os triggers `trg_liquidacao_*` (só inclusão e
+  estorno);
+- vínculo ERP: `contrato_erp_vinculo`;
+- views: `vw_controle_contratos` (lista de contratos).
 
-## Uso do arquivo
+## Uso dos arquivos
 
-Use o DDL como referência para:
-
-- consultar a estrutura existente;
-- entender tabelas e relacionamentos;
-- localizar funções, triggers, views e materialized views;
-- comparar alterações futuras no banco;
-- atualizar a documentação de arquitetura.
-
-Não execute o DDL diretamente em produção. Caso futuramente seja necessário
-recriar o banco ou aplicar uma alteração, deverão ser criados scripts de
-implantação ou migração próprios, com ordem de dependências, testes, backup e
-plano de rollback.
+Use o DDL e o `projecao_persistida.sql` como referência para consultar a
+estrutura, entender relacionamentos, localizar funções e triggers e comparar
+alterações futuras. Alterações novas devem ganhar um script próprio, com
+backup, testes que se desfazem sozinhos e plano de volta, e depois ser
+incorporadas ao arquivo de estado final correspondente.
 
 ## Fonte de verdade
 
 Alterações no modelo ou nos cálculos devem ser feitas no SQL versionado,
-testadas em banco de desenvolvimento e refletidas na documentação de
+aplicadas com cuidado (não há banco de testes) e refletidas na documentação de
 arquitetura.
 
 ## Pendências conhecidas
 
-1. **View `vw_agrupamento_projecao`** — Usada pelas telas:
-   - **Relatórios > Projeção de Pagamentos** (`src/queries/queries_projection.py`)
-   - **Relatórios > Endividamento** (`src/queries/queries_relatorio_endividamento.py`)
-   
-   A view ainda não está documentada em `ddl_financiamento.sql`. Assim que a 
-   definição da view for extraída do banco, ela deve ser incluída no DDL e no
-   [Dicionário de Dados](../docs/architecture/data-dictionary.md). Ver
-   [BL-010](../docs/requirements/status-register.md#backlog-rastreável).
-
-2. **Tabelas `usuarios` e `log_auditoria`** — criadas por `usuarios.sql` e
-   `log_auditoria.sql`, ainda não refletidas em `ddl_financiamento.sql`
-   (tabelas, índices, função `log_auditoria_imutavel` e os triggers
-   `trg_log_auditoria_imutavel` / `trg_log_auditoria_sem_truncate`). Ver
+1. **Tabelas `usuarios` e `log_auditoria`** — criadas por `usuarios.sql` e
+   `log_auditoria.sql`, ainda não refletidas em `ddl_financiamento.sql`. Ver
    [BL-019](../docs/requirements/status-register.md#backlog-rastreável).
+2. **Limpeza final** — schema `financiamento_base` (cópias da migração e
+   backup da Selic) e a view sem uso `vw_agrupamento_projecao_parcelas`. Ver
+   [BL-026](../docs/requirements/status-register.md#backlog-rastreável).

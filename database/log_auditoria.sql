@@ -30,7 +30,7 @@ CREATE TABLE financiamento.log_auditoria (
 COMMENT ON TABLE financiamento.log_auditoria IS 'Log de auditoria das interações com o sistema (somente inserção).';
 COMMENT ON COLUMN financiamento.log_auditoria.id_usuario IS 'Usuário autenticado; NULL em falha de login de usuário inexistente.';
 COMMENT ON COLUMN financiamento.log_auditoria.usuario IS 'Nome do usuário no momento da ação (ou o nome digitado na falha de login).';
-COMMENT ON COLUMN financiamento.log_auditoria.acao IS 'Ação executada (LOGIN, LOGIN_FALHA, LOGOUT, CADASTRO_SENHA, CONTRATO_INCLUIR, CONTRATO_EXCLUIR, ANTECIPACAO_INCLUIR, QUITACAO_INCLUIR, ACESSO_NEGADO...).';
+COMMENT ON COLUMN financiamento.log_auditoria.acao IS 'Ação executada (LOGIN, LOGIN_FALHA, LOGOUT, SESSAO_ENCERRADA, CADASTRO_SENHA, CONTRATO_INCLUIR, CONTRATO_EXCLUIR, ANTECIPACAO_INCLUIR, QUITACAO_INCLUIR, ANTECIPACAO_EXCLUIR, LIQUIDACAO_INCLUIR, LIQUIDACAO_ESTORNAR, CONCILIACAO_ERP, VINCULO_ERP_INCLUIR, VINCULO_ERP_EXCLUIR, SELIC_IMPORTAR, ACESSO_NEGADO...).';
 COMMENT ON COLUMN financiamento.log_auditoria.entidade IS 'Tabela/objeto afetado (contratos, antecipacao, usuarios...).';
 COMMENT ON COLUMN financiamento.log_auditoria.id_registro IS 'Id do registro afetado na entidade (sem FK: o registro pode ter sido excluído).';
 COMMENT ON COLUMN financiamento.log_auditoria.detalhes IS 'Dados da ação em JSON (ex.: snapshot do contrato excluído, valores da antecipação).';

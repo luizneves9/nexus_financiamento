@@ -35,7 +35,7 @@ continua sendo a fonte normativa para tipos, nulidade, indices e restricoes.
 | `selic` | Taxa Selic aplicada a antecipação. |
 | `valor_pago` | Valor financeiro pago. |
 | `valor_moeda` | Valor calculado pela taxa Selic aplicável. |
-| `tipo_lancamento` | Classificação do lançamento: 'ANTECIPACAO' (pagamento parcial) ou 'QUITACAO' (liquidação total do contrato). |
+| `tipo_lancamento` | Classificação do lançamento: 'ANTECIPACAO' (pagamento parcial) ou 'QUITACAO' (quitação total do contrato). |
 
 ## Usuários
 
@@ -80,3 +80,35 @@ carroceria.
 Campos financeiros utilizam tipos numericos do PostgreSQL. Datas são
 armazenadas como `daté`. Regras de nulidade e unicidade devem ser consultadas
 no DDL vigente antes de qualquer integração.
+
+## Projeção (projecao_parcelas)
+
+| Campo | Significado |
+| --- | --- |
+| `id` | Identificador estável da parcela (usado pela liquidação). |
+| `id_contrato`, `parcela` | Contrato e número da parcela (chave única). |
+| `tipo` | CARENCIA ou AMORTIZACAO. |
+| `dia_util`, `data`, `data_vcto` | 1º dia útil do mês, vencimento teórico (chave da conciliação) e vencimento útil. |
+| `principal`, `juros`, `total_parcela` | Valores em moeda (SELIC) ou R$ (TFC). |
+| `valor_principal`, `valor_juros`, `parcela_h`, `valor_pagamento` | Valores em R$ (Selic da data ou a última disponível). |
+| `situacao` | ABERTA, LIQUIDADA ou CANCELADA_QUITACAO. |
+
+## Liquidação (liquidacao)
+
+| Campo | Significado |
+| --- | --- |
+| `id_parcela`, `id_contrato` | Parcela liquidada (o contrato é preenchido pelo trigger). |
+| `data_pagamento`, `valor_pago` | Pagamento real. |
+| `valor_projetado` | Valor da parcela no momento da baixa (preenchido pelo trigger). |
+| `valor_ajuste` | `valor_pago - valor_projetado` (coluna calculada). |
+| `origem` | MANUAL ou ERP. |
+| `lote_conciliacao`, `nome_arquivo`, `doctos_erp`, `qtd_linhas_erp` | Rastro da conciliação com o ERP. |
+| `estornado`, `data_estorno`, `usuario_estorno`, `motivo_estorno` | Estorno (a liquidação nunca é excluída). |
+
+## Vínculo ERP (contrato_erp_vinculo)
+
+| Campo | Significado |
+| --- | --- |
+| `codigo_erp` | Trecho do Docto do ERP antes do primeiro `-`. |
+| `id_contrato` | Contrato do Nexus; um código com vários contratos forma um grupo. |
+| `usuario`, `data_registro` | Quem e quando vinculou. |

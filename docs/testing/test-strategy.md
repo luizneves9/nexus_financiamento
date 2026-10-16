@@ -49,7 +49,7 @@ representativos, verificando resultado funcional e mensagens.
 | T12 | Falha de banco | Operação não e confirmada e erro e informado. |
 | T13 | Banco indisponível durante inclusão | Mensagem funcional exibida e contrato não persistido. |
 | T14 | Falha na projeção temporária | Mensagem funcional exibida e formulário permanece disponível. |
-| T15 | Filtrar Projeção de Pagamentos (cada filtro, combinados, Vcto só de/só até) | Tabela e resumo refletem os filtros; filtro mantido ao trocar de aba; alterar/limpar um filtro aplica na primeira tentativa. |
+| T15 | Filtrar Contas a Pagar (cada filtro, combinados, Vcto só de/só até) | Tabela e resumo refletem os filtros; filtro mantido ao trocar de aba; alterar/limpar um filtro aplica na primeira tentativa. |
 | T16 | Filtrar Antecipações | Tabela e resumo refletem os filtros (validado contra o banco: 19 lançamentos sem filtro). |
 | T17 | Login com usuário inexistente, bloqueado ou senha errada | Notificação "Usuário ou senha incorretos." e `LOGIN_FALHA` com o motivo no log. |
 | T18 | Primeiro acesso (senha vazia) | Cadastro de senha exibido; senha curta ou confirmação diferente rejeitadas; banco guarda só `scrypt$...`; `CADASTRO_SENHA` no log. |
@@ -57,6 +57,11 @@ representativos, verificando resultado funcional e mensagens.
 | T20 | Cookie adulterado ou expirado | Recusado; login exigido. |
 | T21 | Log das operações de escrita | Inclusão, exclusão (com cópia do contrato) e antecipação registradas na mesma transação; falhas com `sucesso = false`. |
 | T22 | Imutabilidade do log | UPDATE, DELETE e TRUNCATE em `log_auditoria` bloqueados pelo trigger. |
+| T23 | Recálculo por contrato | Incluir/excluir antecipação recalcula só o contrato (`projecao_controle.motivo_ultimo_calculo`); resultado igual ao cálculo completo. |
+| T24 | Liquidação e estorno | Liquidar parcela aberta grava ajuste; parcela liquidada não é liquidada de novo, alterada, excluída nem truncada; estorno reabre e recalcula. |
+| T25 | Conciliação com o ERP | Linhas com a mesma chave somadas; Itaú não identificado sem vínculo; vínculo permanente; grupo com rateio igual ao valor do ERP; reimportação = Já liquidada. |
+| T26 | Posição na data base | Data base passada: Selic até a data, antecipações posteriores fora e contrato refeito; data base de hoje igual à projeção gravada (exceto Selic publicada à frente). |
+| T27 | Importação da Selic | Só datas novas; segunda importação informa "já atualizada"; um recálculo por importação; log `SELIC_IMPORTAR`. |
 
 ## Testes que escrevem no banco
 
@@ -80,3 +85,10 @@ identificada.
 
 Cenários prioritários aprovados, sem defeitos críticos abertos e resultados
 registrados para a versão avaliada.
+
+## Testes no banco (sem ambiente de testes)
+
+Não existe banco de testes: os scripts e testes rodam na produção. Testes de
+escrita devem ser blocos que se desfazem sozinhos (ex.: `DO $$ ... RAISE
+EXCEPTION 'TESTE DESFEITO' $$`), pois o cliente SQL pode estar em auto-commit e
+o log de auditoria e as liquidações não podem ser apagados.

@@ -127,8 +127,12 @@ def main():
             st.button('Sair', use_container_width=True, on_click=sair)
 
     pages = {
+        ':material/dashboard: Painel': [
+            st.Page('views/indicadores.py', title='Indicadores'),
+        ],
         ':material/request_quote: Operacional': [
-            st.Page('views/contracts.py', title='Contratos'),
+            # Contratos continua sendo a página inicial após o login (o painel consulta a posição de todos os contratos)
+            st.Page('views/contracts.py', title='Contratos', default=True),
             st.Page('views/include_antecipation.py', title='Antecipação'),
             st.Page('views/liquidacao.py', title='Liquidação')
         ],

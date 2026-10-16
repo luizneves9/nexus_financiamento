@@ -26,8 +26,10 @@ alterado.
 ## Fluxo principal
 
 1. O usuário acessa o menu **Operacional** e abre a página **Antecipação**.
-2. O sistema consulta `financiamento.antecipacao`, unindo `contratos`,
-   `empresas` e `bancos` para obter o número do contrato e as razões sociais.
+2. O sistema aplica os filtros padrão: **Pagamento de / até** = primeiro e
+   último dia do mês atual, **Empresa** e **Banco** = Todos, e consulta
+   `financiamento.antecipacao`, unindo `contratos`, `empresas` e `bancos`
+   para obter o número do contrato e as razões sociais.
 3. O sistema exibe a tabela com as colunas `id`, `nome_empresa`, `banco`,
    `numero_contrato`, `data_pagamento` (DD/MM/AAAA), `valor_pago` (formato
    brasileiro) e `tipo_lancamento` (`ANTECIPACAO` ou `QUITACAO`), ordenada
@@ -39,10 +41,11 @@ alterado.
 
 ### FA01 - Filtrar lançamentos
 
-1. O usuário preenche um ou mais filtros: **Empresa**, **Banco**,
-   **Contrato** (busca parcial, sem diferenciar maiúsculas/minúsculas),
-   **Pagamento de** e **Pagamento até** (intervalo de `data_pagamento`;
-   qualquer extremidade pode ficar vazia).
+1. O usuário preenche um ou mais filtros: **Empresa** e **Banco** (seleção
+   entre os cadastros, com a opção **Todos**, que não filtra; comparação
+   exata pela razão social), **Contrato** (busca parcial, sem diferenciar
+   maiúsculas/minúsculas), **Pagamento de** e **Pagamento até** (intervalo
+   de `data_pagamento`; começam no mês atual).
 2. O usuário aciona **Filtrar**.
 3. O sistema refaz a consulta aplicando os filtros no banco e atualiza a
    tabela e o resumo.

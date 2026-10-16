@@ -25,7 +25,7 @@ liquidados destacados e o bloco Sub Total.
 
 1. O usuário acessa **Relatórios > Endividamento**.
 2. O sistema aplica os filtros padrão: **Data base** = hoje, **Vencimentos a
-   partir do mês de** = 01/01/2026, Empresa e Banco vazios (prefixo `fe_`).
+   partir do mês de** = 01/01/2026, Empresa e Banco = Todos (prefixo `fe_`).
 3. O sistema consulta a mesma posição na data base do Contas a Pagar (RN24),
    somando o valor considerado por ano e mês do vencimento útil.
 4. O sistema exibe a tabela: Saldo Acumulado, um bloco por ano (linha
@@ -40,7 +40,8 @@ liquidados destacados e o bloco Sub Total.
 ### FA01 - Filtrar
 
 Data base, Vencimentos a partir do mês de (o mês inteiro da data escolhida),
-Empresa e Banco (busca parcial), com o botão **Filtrar**.
+Empresa e Banco (seleção entre os cadastros, com **Todos**; comparação exata
+pela razão social), com o botão **Filtrar**.
 
 ### FA02 - Alternância manual de tema
 

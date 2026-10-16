@@ -41,8 +41,8 @@ def listar_contas_a_pagar(data_base, empresa=None, banco=None, contrato=None, da
     query = text(SELECT_CONTAS_A_PAGAR)
     parametros = {
         'data_base': data_base,
-        'empresa': f"%{empresa}%" if empresa else None,
-        'banco': f"%{banco}%" if banco else None,
+        'empresa': empresa or None,      # valor exato do selectbox (razão social)
+        'banco': banco or None,
         'contrato': f"%{contrato}%" if contrato else None,
         'data_vcto_ini': data_vcto_ini,
         'data_vcto_fim': data_vcto_fim,

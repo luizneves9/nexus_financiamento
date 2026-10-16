@@ -21,8 +21,8 @@ SELECT_CONTRATOS = '''
         FROM financiamento.vw_controle_contratos v
     )
     SELECT * FROM contratos
-    WHERE (:empresa IS NULL OR "Empresa" ILIKE :empresa)
-    AND (:banco IS NULL OR "Banco" ILIKE :banco)
+    WHERE (:empresa IS NULL OR "Empresa" = :empresa)
+    AND (:banco IS NULL OR "Banco" = :banco)
     AND (:contrato IS NULL OR "Contrato" ILIKE :contrato)
     AND (NOT CAST(:sem_anexos AS boolean) OR NOT anexo_contrato OR NOT anexo_ficha)   -- sem contrato OU sem ficha
     ORDER BY "Id"

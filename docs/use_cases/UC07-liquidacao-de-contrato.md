@@ -36,8 +36,9 @@ liquidação por estorno.
 ## Fluxo principal - Liquidar manualmente
 
 1. O usuário acessa **Operacional > Liquidação**.
-2. O sistema lista as parcelas do mês atual (filtros por Empresa, Banco,
-   Contrato, Vcto de/até e Situação; prefixo `fl_`), com resumo de parcelas,
+2. O sistema lista as parcelas do mês atual (filtros por Empresa e Banco —
+   seleção entre os cadastros, com **Todos** —, Contrato (busca parcial),
+   Vcto de/até e Situação; prefixo `fl_`), com resumo de parcelas,
    liquidadas, projetado, pago e ajustes.
 3. O usuário marca uma ou mais parcelas ABERTAS e aciona **Liquidar**.
 4. O sistema abre o modal com os dados atuais das parcelas (lidos do banco),

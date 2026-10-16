@@ -50,7 +50,9 @@ representativos, verificando resultado funcional e mensagens.
 | T13 | Banco indisponível durante inclusão | Mensagem funcional exibida e contrato não persistido. |
 | T14 | Falha na projeção temporária | Mensagem funcional exibida e formulário permanece disponível. |
 | T15 | Filtrar Contas a Pagar (cada filtro, combinados, Vcto só de/só até) | Tabela e resumo refletem os filtros; filtro mantido ao trocar de aba; alterar/limpar um filtro aplica na primeira tentativa. |
-| T16 | Filtrar Antecipações | Tabela e resumo refletem os filtros (validado contra o banco: 19 lançamentos sem filtro). |
+| T16 | Filtrar Antecipações | Tabela e resumo refletem os filtros; Pagamento de/até começa no mês atual (validado contra o banco: 19 lançamentos sem filtro). |
+| T30 | Painel de indicadores | Fluxo do período igual ao total considerado de Contas a Pagar (mesmos filtros e data base); ano anterior com período e data base recuados; "sem base" quando o ano anterior é zero; trocar o agrupamento não consulta o banco; cartões e gráficos alinhados. |
+| T29 | Filtros Empresa/Banco por seleção (Contratos, Antecipação, Liquidação, Contas a Pagar, Endividamento) | Opções = cadastros + **Todos**; Todos não filtra; escolha filtra pela razão social exata; filtro mantido ao trocar de aba. |
 | T17 | Login com usuário inexistente, bloqueado ou senha errada | Notificação "Usuário ou senha incorretos." e `LOGIN_FALHA` com o motivo no log. |
 | T18 | Primeiro acesso (senha vazia) | Cadastro de senha exibido; senha curta ou confirmação diferente rejeitadas; banco guarda só `scrypt$...`; `CADASTRO_SENHA` no log. |
 | T19 | Sessão | Fechar e reabrir o navegador em até 30 min entra direto (`LOGIN` com origem cookie); **Sair** recarrega a página no login; usuário bloqueado perde o acesso. |

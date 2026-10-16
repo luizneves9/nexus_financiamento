@@ -9,7 +9,7 @@ from services.relatorio_contas_a_pagar import (
     COLUNAS_CONTAS_A_PAGAR,
     COLUNAS_VALOR,
 )
-from tools.funcoes import transformar_float_em_str
+from tools.funcoes import transformar_float_em_str, listar_empresas, listar_bancos
 from views.components.cabecalho import cabecalho
 
 # opções do filtro de situação (rótulo na tela -> valor na consulta)
@@ -37,14 +37,25 @@ def main():
     if 'fcp_situacao' not in st.session_state:
         st.session_state['fcp_situacao'] = 'Todas'
 
+    # opções dos filtros de seleção (mesmo cache de cadastros usado no modal de inclusão de contrato)
+    if st.session_state.get('df_lista_empresas') is None:
+        st.session_state['df_lista_empresas'] = listar_empresas()
+    if st.session_state.get('df_lista_bancos') is None:
+        st.session_state['df_lista_bancos'] = listar_bancos()
+
+    df_empresas = st.session_state['df_lista_empresas']
+    df_bancos = st.session_state['df_lista_bancos']
+    opcoes_empresas = ['Todos'] + (df_empresas['razao_social'].to_list() if df_empresas is not None and 'razao_social' in df_empresas else [])
+    opcoes_bancos = ['Todos'] + (df_bancos['razao_social'].to_list() if df_bancos is not None and 'razao_social' in df_bancos else [])
+
     # inicializar session_states dos widgets a partir dos filtros salvos
     # (o widget usa key própria; passar value= dinâmico recria o widget e descarta o que foi digitado)
     if 'fcp_data_base_input' not in st.session_state:
         st.session_state['fcp_data_base_input'] = st.session_state['fcp_data_base']
-    if 'fcp_empresa_input' not in st.session_state:
-        st.session_state['fcp_empresa_input'] = st.session_state['fcp_empresa'] or ''
-    if 'fcp_banco_input' not in st.session_state:
-        st.session_state['fcp_banco_input'] = st.session_state['fcp_banco'] or ''
+    if st.session_state.get('fcp_empresa_input') not in opcoes_empresas:
+        st.session_state['fcp_empresa_input'] = st.session_state['fcp_empresa'] if st.session_state['fcp_empresa'] in opcoes_empresas else 'Todos'
+    if st.session_state.get('fcp_banco_input') not in opcoes_bancos:
+        st.session_state['fcp_banco_input'] = st.session_state['fcp_banco'] if st.session_state['fcp_banco'] in opcoes_bancos else 'Todos'
     if 'fcp_contrato_input' not in st.session_state:
         st.session_state['fcp_contrato_input'] = st.session_state['fcp_contrato'] or ''
     if 'fcp_data_vcto_ini_input' not in st.session_state:
@@ -58,8 +69,8 @@ def main():
     with st.form('contas_a_pagar_filtro'):
         with st.container(horizontal=True, vertical_alignment='bottom'):
             data_base = st.date_input('Data base', key='fcp_data_base_input', format='DD/MM/YYYY')
-            empresa = st.text_input('Empresa', key='fcp_empresa_input')
-            banco = st.text_input('Banco', key='fcp_banco_input')
+            empresa = st.selectbox('Empresa', opcoes_empresas, key='fcp_empresa_input')
+            banco = st.selectbox('Banco', opcoes_bancos, key='fcp_banco_input')
             contrato = st.text_input('Contrato', key='fcp_contrato_input')
             data_vcto_ini = st.date_input('Vcto de', key='fcp_data_vcto_ini_input', format='DD/MM/YYYY')
             data_vcto_fim = st.date_input('Vcto até', key='fcp_data_vcto_fim_input', format='DD/MM/YYYY')
@@ -68,8 +79,8 @@ def main():
 
         if submitido:
             st.session_state['fcp_data_base'] = data_base or hoje
-            st.session_state['fcp_empresa'] = empresa if empresa else None
-            st.session_state['fcp_banco'] = banco if banco else None
+            st.session_state['fcp_empresa'] = None if empresa == 'Todos' else empresa
+            st.session_state['fcp_banco'] = None if banco == 'Todos' else banco
             st.session_state['fcp_contrato'] = contrato if contrato else None
             st.session_state['fcp_data_vcto_ini'] = data_vcto_ini
             st.session_state['fcp_data_vcto_fim'] = data_vcto_fim

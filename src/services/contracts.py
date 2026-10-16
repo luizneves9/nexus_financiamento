@@ -7,10 +7,13 @@ from queries.queries_gerais import INCLUIR_CONTRATO, SELECT_CONTRATOS
 from queries.queries_contracts import (
     DELETE_CONTRATO,
     VERIFICAR_LIQUIDACAO_CONTRATO,
+    SELECT_CONTRATO_DETALHE,
+    SELECT_HISTORICO_CONTRATO,
     PROJETAR_CONTRATO_SELIC,
     PROJETAR_CONTRATO_TFC,
     SELECT_PROJECAO,
 )
+from queries.queries_anexos import SELECT_ANEXOS_DO_CONTRATO
 from repositories.include_antecipation import registrar_contrato, consultar_contratos
 from repositories.contract import listar_projecao, interacao_database, listar_contratos as ler_contratos_banco
 from views.components.modal_contracts_projecao import modal_projecao_valores
@@ -227,21 +230,48 @@ def projetar_contrato(session_state):
         session_state['mensagem_erro'] = 'Não foi possível calcular a projeção.'
         return pd.DataFrame()
 
-def listar_contratos(empresa=None, banco=None, contrato=None):
-    '''Função definida para listar contratos registrados no banco de dados com filtros opcionais.'''
+def listar_contratos(empresa=None, banco=None, contrato=None, sem_anexos=False):
+    '''Função definida para listar contratos registrados no banco de dados com filtros opcionais.
+
+    sem_anexos=True: só contratos sem anexo de contrato ou sem anexo de ficha financeira.
+    '''
 
     df = pd.DataFrame()
     parametros = {
         'empresa': f"%{empresa}%" if empresa else None,
         'banco': f"%{banco}%" if banco else None,
-        'contrato': f"%{contrato}%" if contrato else None
+        'contrato': f"%{contrato}%" if contrato else None,
+        'sem_anexos': bool(sem_anexos)
     }
 
     try:
         with engine.begin() as conn:
             df = ler_contratos_banco(text(SELECT_CONTRATOS), conn, parametros)
-    except:
-        pass
+    except Exception as e:
+        st.session_state['mensagem_erro'] = f'Erro ao consultar contratos. ({getattr(e, "orig", e)})'
+
+    return df
+
+def obter_detalhe_contrato(id_contrato):
+    '''Dados do contrato para a aba Dados do detalhe (ou None se não encontrado).'''
+
+    try:
+        with engine.begin() as conn:
+            detalhe = interacao_database(text(SELECT_CONTRATO_DETALHE), conn, {'id': id_contrato}).mappings().first()
+        return dict(detalhe) if detalhe else None
+    except Exception as e:
+        st.session_state['mensagem_erro'] = f'Erro ao consultar o contrato. ({getattr(e, "orig", e)})'
+        return None
+
+def listar_historico_contrato(id_contrato):
+    '''Ações do log de auditoria ligadas ao contrato (aba Histórico do detalhe).'''
+
+    df = pd.DataFrame()
+    try:
+        with engine.begin() as conn:
+            df = ler_contratos_banco(text(SELECT_HISTORICO_CONTRATO), conn, {'id': id_contrato})
+    except Exception as e:
+        st.session_state['mensagem_erro'] = f'Erro ao consultar o histórico. ({getattr(e, "orig", e)})'
 
     return df
 
@@ -298,10 +328,15 @@ def deletar_contrato_banco(id_contrato):
         # iniciando engine e chaando a função de interação com banco de dados
         # (o DELETE ... RETURNING devolve o contrato excluído, gravado no log na mesma transação)
         with engine.begin() as conn:
+            # anexos que saem junto com o contrato (ON DELETE CASCADE): registrados no log, sem o conteúdo
+            anexos = [dict(a) for a in interacao_database(text(SELECT_ANEXOS_DO_CONTRATO), conn, parametro).mappings().all()]
             contrato_excluido = interacao_database(query, conn, parametro).mappings().first()
+            detalhes = dict(contrato_excluido) if contrato_excluido else {'erro': 'contrato não encontrado'}
+            if contrato_excluido and anexos:
+                detalhes['anexos_excluidos'] = anexos
             registrar_log(CONTRATO_EXCLUIR, 'contratos', id_contrato,
                           sucesso=contrato_excluido is not None,
-                          detalhes=dict(contrato_excluido) if contrato_excluido else {'erro': 'contrato não encontrado'},
+                          detalhes=detalhes,
                           conn=conn)
 
         # registrando notificação e encerrando

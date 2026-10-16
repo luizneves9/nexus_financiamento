@@ -11,7 +11,8 @@ ver o motivo de cada status, as lacunas e a próxima ação, consulte o
 | RF02.3 | RN02.1 | UC01 | Implementado | Funções PostgreSQL, queries, service e exibição no modal concluídos. |
 | RF02.2 | RN08 | UC05 | Planejado | Implementar vínculo de bens e veículos. |
 | RF03 | - | UC02 | Implementado | Validar tratamento de erros e desempenho. |
-| RF03.1 | - | UC02 | Planejado | Implementar filtros. |
+| RF03.1 | RN26 | UC02, UC14 | Parcial | Empresa, banco, contrato e "Somente sem anexos" entregues; demais filtros planejados. |
+| RF03.2 | RN12, RN26 | UC14 | Implementado | Novas abas no detalhe conforme evolução. |
 | RF04, RF04.1 | RN01, RN08 | UC05 | Planejado | Implementar consulta e filtros de veículos. |
 | RF05 | RN07, RN08, RN21 | UC04 | Implementado | Bloqueio com mensagem para liquidação e antecipação; exclusão lógica em avaliação. |
 | RF06 | RN08 | UC05 | Planejado | Definir e implementar exclusão de veículos. |

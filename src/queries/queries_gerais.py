@@ -13,9 +13,17 @@ INCLUIR_CONTRATO = '''
 '''
 
 SELECT_CONTRATOS = '''
-    SELECT * FROM financiamento.vw_controle_contratos
+    WITH contratos AS (
+        SELECT
+            v.*,
+            EXISTS (SELECT 1 FROM financiamento.anexo_contrato a WHERE a.id_contrato = v."Id") AS anexo_contrato,
+            EXISTS (SELECT 1 FROM financiamento.anexo_ficha_financeira f WHERE f.id_contrato = v."Id") AS anexo_ficha
+        FROM financiamento.vw_controle_contratos v
+    )
+    SELECT * FROM contratos
     WHERE (:empresa IS NULL OR "Empresa" ILIKE :empresa)
     AND (:banco IS NULL OR "Banco" ILIKE :banco)
     AND (:contrato IS NULL OR "Contrato" ILIKE :contrato)
+    AND (NOT CAST(:sem_anexos AS boolean) OR NOT anexo_contrato OR NOT anexo_ficha)   -- sem contrato OU sem ficha
     ORDER BY "Id"
 '''

@@ -10,6 +10,7 @@
 | --- | --- |
 | `ddl_financiamento.sql` | Retrato documental do schema PostgreSQL `financiamento` (tabelas, funções, triggers e views originais). Não inclui os objetos da projeção persistida. |
 | `projecao_persistida.sql` | **Estado final** da projeção persistida, liquidação e vínculo ERP (DA08, DA09): tabelas `projecao_controle`, `projecao_parcelas`, `liquidacao` e `contrato_erp_vinculo`, funções de cálculo/recálculo, triggers e carga inicial. **Já aplicado na produção** em 15-16/10/2026; serve de documentação e para montar um banco novo. Não executar de novo na produção. |
+| `contrato_anexos.sql` | Tabelas `anexo_contrato` e `anexo_ficha_financeira` (PDFs dos contratos, DA12). Já executado em 16/10/2026. |
 | `projection_functions.sql` | Funções parametrizadas para projeção temporária durante a inclusão de contratos (DA05). |
 | `usuarios.sql` | Script de criação da tabela `usuarios` (autenticação, UC12) e comandos do desenvolvedor: criar usuário, resetar senha, bloquear e conferir. Já executado. |
 | `log_auditoria.sql` | Script de criação da tabela `log_auditoria`, índices, função `log_auditoria_imutavel` e triggers que bloqueiam UPDATE/DELETE/TRUNCATE (DA06), mais consultas úteis de auditoria. Executar depois de `usuarios.sql`. Já executado. |
@@ -39,6 +40,7 @@ contratos. Unificá-las com `calcular_projecao_contrato` está no backlog
 - liquidação: `liquidacao` e os triggers `trg_liquidacao_*` (só inclusão e
   estorno);
 - vínculo ERP: `contrato_erp_vinculo`;
+- anexos: `anexo_contrato` e `anexo_ficha_financeira` (`contrato_anexos.sql`);
 - views: `vw_controle_contratos` (lista de contratos).
 
 ## Uso dos arquivos

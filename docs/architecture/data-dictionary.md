@@ -112,3 +112,13 @@ no DDL vigente antes de qualquer integração.
 | `codigo_erp` | Trecho do Docto do ERP antes do primeiro `-`. |
 | `id_contrato` | Contrato do Nexus; um código com vários contratos forma um grupo. |
 | `usuario`, `data_registro` | Quem e quando vinculou. |
+
+## Anexos (anexo_contrato e anexo_ficha_financeira)
+
+| Campo | Significado |
+| --- | --- |
+| `id_contrato` | Contrato do anexo. |
+| `nome_arquivo`, `tamanho_bytes` | Nome original e tamanho (até 20 MB). |
+| `hash_sha256` | Identifica o arquivo; único por contrato. |
+| `conteudo` | O PDF (`bytea`); nunca lido nas listas. |
+| `usuario`, `data_registro` | Quem e quando anexou. |

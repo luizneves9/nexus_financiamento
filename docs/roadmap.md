@@ -28,6 +28,8 @@ está no [Registro de Status e Pendências](requirements/status-register.md).
   SELIC, com exclusão de lançamento.
 - Liquidação de parcelas manual e estorno (UC07) e conciliação com o
   relatório de pagamentos do ERP, com vínculos ERP → Nexus (UC13).
+- Detalhe do contrato em abas, com anexos (PDF) de contrato e ficha
+  financeira no banco e visualização na tela (UC14).
 
 ## Versão 1.0
 

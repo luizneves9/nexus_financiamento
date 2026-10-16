@@ -14,6 +14,7 @@ from queries.queries_contracts import (
     SELECT_PROJECAO,
 )
 from queries.queries_anexos import SELECT_ANEXOS_DO_CONTRATO
+from services.anexos import TIPOS_ANEXO, validar_arquivos, gravar_anexos
 from repositories.include_antecipation import registrar_contrato, consultar_contratos
 from repositories.contract import listar_projecao, interacao_database, listar_contratos as ler_contratos_banco
 from views.components.modal_contracts_projecao import modal_projecao_valores
@@ -23,8 +24,13 @@ from services.log import registrar_log, registrar_log_falha, CONTRATO_INCLUIR, C
 connect = ConexaoBancoSQL()
 engine = connect.conexao_banco()
 
-def incluir_contrato(session_state):
-    '''Processo de inclusão de contrato, incluindo regras de negócios.'''
+def incluir_contrato(session_state, arquivos_por_tipo=None):
+    '''Processo de inclusão de contrato, incluindo regras de negócios.
+
+    arquivos_por_tipo: PDFs opcionais ({tipo: [arquivos]}) gravados na mesma transação do contrato.
+    '''
+
+    arquivos_por_tipo = {tipo: arquivos for tipo, arquivos in (arquivos_por_tipo or {}).items() if arquivos}
 
     # validando preenchimento das colunas
     campos_nao_preenchidos = []
@@ -77,6 +83,13 @@ def incluir_contrato(session_state):
     if session_state['ic_dt_ultima_parcela'] <= session_state['ic_dt_primeiro_principal']:
         session_state['mensagem_erro'] = f'A data da última parcela deve ser maior que a data do primeiro principal!'
         return
+
+    # validando os anexos (opcionais)
+    for tipo, arquivos in arquivos_por_tipo.items():
+        mensagem = validar_arquivos(arquivos)
+        if mensagem:
+            session_state['mensagem_erro'] = f'{TIPOS_ANEXO[tipo]}: {mensagem}'
+            return
 
     # definindo e ajustando parâmetros
     empresa_selecionada = session_state['df_lista_empresas'].loc[
@@ -137,12 +150,14 @@ def incluir_contrato(session_state):
         'data_emissao': parametro['data_emissao']
     }
 
-    # conexão com o banco de dados (contrato e log na mesma transação)
+    # conexão com o banco de dados (contrato, anexos e logs na mesma transação: tudo ou nada)
     try:
         with engine.begin() as conn:
             id_contrato = registrar_contrato(query, conn, parametro).scalar_one()
             registrar_log(CONTRATO_INCLUIR, 'contratos', id_contrato, detalhes=detalhes_log, conn=conn)
-        st.session_state['mensagem_sucesso'] = 'Contrato incluído com sucesso!'
+            qtd_anexos = gravar_anexos(conn, id_contrato, arquivos_por_tipo) if arquivos_por_tipo else 0
+        st.session_state['mensagem_sucesso'] = 'Contrato incluído com sucesso!' + (
+            f' {qtd_anexos} anexo(s) incluído(s).' if qtd_anexos else '')
         st.rerun()
     except IntegrityError as e:
         if 'contratos_numero_contrato_key' in str(e.orig):
@@ -160,43 +175,33 @@ def incluir_contrato(session_state):
         registrar_log_falha(CONTRATO_INCLUIR, e, 'contratos', detalhes=detalhes_log)
         st.rerun()
 
+def pendencias_projecao(session_state):
+    '''Lista o que falta (ou está inválido) nos dados do contrato para calcular a projeção.'''
+
+    vazio = lambda campo: session_state.get(campo) is None or str(session_state.get(campo)) == ''
+    pendencias = []
+
+    for campo, rotulo in (('ic_tipo', 'Tipo'), ('ic_dt_emissao', 'Data Emissão'), ('ic_dt_bndes', 'Data BNDES'),
+                          ('ic_registro_cobranca', 'Registro de cobrança'), ('ic_pagamento_carencia', 'Pagamento de carência')):
+        if vazio(campo):
+            pendencias.append(rotulo)
+
+    for campo, rotulo in (('ic_valor_financiado', 'Valor financiado'), ('ic_taxa_juros_efetiva', 'Taxa juros efetiva (%)'),
+                          ('ic_prazo_carencia', 'Prazo carência'), ('ic_prazo_final', 'Prazo final')):
+        if vazio(campo) or session_state[campo] <= 0:
+            pendencias.append(f'{rotulo} (maior que zero)')
+
+    if not vazio('ic_dt_emissao') and not vazio('ic_dt_bndes') and session_state['ic_dt_bndes'] < session_state['ic_dt_emissao']:
+        pendencias.append('Data BNDES (maior ou igual à Data Emissão)')
+
+    return pendencias
+
 def projetar_contrato(session_state):
     '''Calcula a projeção temporária sem persistir o contrato.'''
 
-    campos_obrigatorios = [
-        'ic_dt_emissao',
-        'ic_dt_bndes',
-        'ic_valor_financiado',
-        'ic_taxa_juros_efetiva',
-        'ic_prazo_carencia',
-        'ic_prazo_final',
-        'ic_pagamento_carencia',
-        'ic_registro_cobranca',
-        'ic_tipo',
-    ]
-    campos_nao_preenchidos = [
-        campo for campo in campos_obrigatorios
-        if session_state.get(campo) is None or str(session_state.get(campo)) == ''
-    ]
-
-    if campos_nao_preenchidos:
-        session_state['mensagem_erro'] = 'Preencha os campos necessários para projetar.'
-        return pd.DataFrame()
-
-    if session_state['ic_valor_financiado'] <= 0:
-        session_state['mensagem_erro'] = 'O valor financiado deve ser maior que zero!'
-        return pd.DataFrame()
-
-    if session_state['ic_taxa_juros_efetiva'] <= 0:
-        session_state['mensagem_erro'] = 'A taxa de juros efetiva deve ser maior que zero!'
-        return pd.DataFrame()
-
-    if session_state['ic_prazo_carencia'] <= 0 or session_state['ic_prazo_final'] <= 0:
-        session_state['mensagem_erro'] = 'Os prazos devem ser maiores que zero!'
-        return pd.DataFrame()
-
-    if session_state['ic_dt_bndes'] < session_state['ic_dt_emissao']:
-        session_state['mensagem_erro'] = 'A data BNDES deve ser maior ou igual à data de emissão.'
+    pendencias = pendencias_projecao(session_state)
+    if pendencias:
+        session_state['mensagem_erro'] = f'Preencha para projetar: {", ".join(pendencias)}.'
         return pd.DataFrame()
 
     parametros = {
@@ -204,9 +209,9 @@ def projetar_contrato(session_state):
         'data_bndes': session_state['ic_dt_bndes'],
         'valor_financiado': session_state['ic_valor_financiado'],
         'taxa_juros_efetiva': session_state['ic_taxa_juros_efetiva'],
-        'prazo_carencia': session_state['ic_prazo_carencia'],
-        'prazo_final': session_state['ic_prazo_final'],
-        'carencia_pagamento': session_state['ic_pagamento_carencia'],
+        'prazo_carencia': int(session_state['ic_prazo_carencia']),        # funções do banco esperam int
+        'prazo_final': int(session_state['ic_prazo_final']),
+        'carencia_pagamento': int(session_state['ic_pagamento_carencia']),
         'registro_cobranca': session_state['ic_registro_cobranca'],
     }
 
@@ -226,8 +231,8 @@ def projetar_contrato(session_state):
     except OperationalError:
         session_state['mensagem_erro'] = 'Não foi possível acessar o banco para calcular a projeção.'
         return pd.DataFrame()
-    except Exception:
-        session_state['mensagem_erro'] = 'Não foi possível calcular a projeção.'
+    except Exception as e:
+        session_state['mensagem_erro'] = f'Não foi possível calcular a projeção. ({getattr(e, "orig", e)})'
         return pd.DataFrame()
 
 def listar_contratos(empresa=None, banco=None, contrato=None, sem_anexos=False):

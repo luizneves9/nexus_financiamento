@@ -97,6 +97,14 @@ views (Streamlit) → services → repositories/queries → PostgreSQL (schema f
   Para mostrar PDF use `views/components/visualizador_pdf.py`: Chrome/Edge
   bloqueiam o visualizador de PDF em `st.iframe`/componentes (iframes isolados)
   e o `st.html` remove iframes estáticos — o iframe é criado por JavaScript.
+- Inclusão de contrato — `views/components/modal_contracts_incluir.py`: abas
+  Dados, Contrato, Ficha Financeira e Projeção, **sem `st.form`** (a projeção
+  é automática ao abrir a aba, via `st.tabs(..., on_change='rerun')` e
+  `.open`; `pendencias_projecao` lista o que falta). Contrato e anexos são
+  gravados na mesma transação (`gravar_anexos`). Sem `st.form`, campos
+  inteiros precisam de `step=1, format='%d'` (senão viram float e as funções
+  do banco recusam). As keys `ic_*` são todas validadas como obrigatórias em
+  `incluir_contrato`: widgets opcionais usam outro prefixo.
 - Autenticação — `views/login.py` + `services/login.py`: usuários em
   `financiamento.usuarios` (criados só pelo desenvolvedor, ver
   `database/usuarios.sql`); primeiro acesso com senha vazia leva ao cadastro

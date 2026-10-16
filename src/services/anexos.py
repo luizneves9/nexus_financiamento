@@ -42,8 +42,10 @@ def obter_conteudo_anexo(tipo, id_anexo):
     return anexo['nome_arquivo'], bytes(anexo['conteudo'])
 
 def validar_arquivos(arquivos):
-    '''Valida os PDFs enviados (extensão, assinatura %PDF e tamanho); devolve a mensagem de erro ou None.'''
+    '''Valida os PDFs enviados de um tipo (extensão, assinatura %PDF, tamanho e o mesmo arquivo repetido
+    no envio); devolve a mensagem de erro ou None.'''
 
+    hashes = set()
     for arquivo in arquivos:
         conteudo = arquivo.getvalue()
         if not arquivo.name.lower().endswith('.pdf') or not conteudo.startswith(b'%PDF'):
@@ -52,8 +54,37 @@ def validar_arquivos(arquivos):
             return f'O arquivo "{arquivo.name}" passa de 20 MB.'
         if not conteudo:
             return f'O arquivo "{arquivo.name}" está vazio.'
+        hash_arquivo = hashlib.sha256(conteudo).hexdigest()
+        if hash_arquivo in hashes:
+            return f'O arquivo "{arquivo.name}" foi selecionado mais de uma vez.'
+        hashes.add(hash_arquivo)
 
     return None
+
+def gravar_anexos(conn, id_contrato, arquivos_por_tipo):
+    '''Grava os PDFs ({tipo: [arquivos]}) na transação recebida, com log de cada arquivo; devolve a quantidade.
+
+    Usada pelo Detalhe (incluir_anexos) e pela inclusão do contrato novo (mesma transação do contrato).
+    '''
+
+    usuario = st.session_state.get('auth_usuario')
+    gravados = 0
+    for tipo, arquivos in arquivos_por_tipo.items():
+        for arquivo in arquivos:
+            conteudo = arquivo.getvalue()
+            anexo = interacao_database(text(INSERIR_ANEXO[tipo]), conn, {
+                'id_contrato': id_contrato,
+                'nome_arquivo': arquivo.name[:255],
+                'tamanho_bytes': len(conteudo),
+                'hash_sha256': hashlib.sha256(conteudo).hexdigest(),
+                'conteudo': conteudo,
+                'usuario': usuario
+            }).mappings().first()
+            registrar_log(ANEXO_INCLUIR, entidade_anexo(tipo), anexo['id'],
+                          detalhes={'tipo': tipo, **dict(anexo)}, conn=conn)
+            gravados += 1
+
+    return gravados
 
 def incluir_anexos(id_contrato, arquivos_por_tipo):
     '''Grava os PDFs enviados ({tipo: [arquivos]}) numa única transação, com log de cada arquivo.
@@ -61,25 +92,9 @@ def incluir_anexos(id_contrato, arquivos_por_tipo):
     Devolve a mensagem de erro ou None.
     '''
 
-    usuario = st.session_state.get('auth_usuario')
-    gravados = 0
-
     try:
         with engine.begin() as conn:
-            for tipo, arquivos in arquivos_por_tipo.items():
-                for arquivo in arquivos:
-                    conteudo = arquivo.getvalue()
-                    anexo = interacao_database(text(INSERIR_ANEXO[tipo]), conn, {
-                        'id_contrato': id_contrato,
-                        'nome_arquivo': arquivo.name[:255],
-                        'tamanho_bytes': len(conteudo),
-                        'hash_sha256': hashlib.sha256(conteudo).hexdigest(),
-                        'conteudo': conteudo,
-                        'usuario': usuario
-                    }).mappings().first()
-                    registrar_log(ANEXO_INCLUIR, entidade_anexo(tipo), anexo['id'],
-                                  detalhes={'tipo': tipo, **dict(anexo)}, conn=conn)
-                    gravados += 1
+            gravados = gravar_anexos(conn, id_contrato, arquivos_por_tipo)
 
         st.session_state['mensagem_sucesso'] = f'{gravados} anexo(s) incluído(s).'
         return None

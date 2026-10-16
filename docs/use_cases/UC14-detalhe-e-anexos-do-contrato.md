@@ -52,7 +52,12 @@ centralizar no sistema os PDFs do contrato e da ficha financeira.
 O usuário aciona **Excluir** no arquivo selecionado e confirma; o anexo é
 removido na hora, com log.
 
-### FA03 - Filtrar contratos sem anexos
+### FA03 - Anexar na inclusão do contrato
+
+No modal **Novo** (UC01), as abas Contrato e Ficha Financeira permitem
+selecionar os PDFs, gravados junto com o contrato na mesma transação.
+
+### FA04 - Filtrar contratos sem anexos
 
 Na lista, o checkbox **Somente sem anexos** (desmarcado por padrão) mostra os
 contratos sem anexo de contrato ou sem anexo de ficha financeira.

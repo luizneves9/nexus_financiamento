@@ -2,7 +2,7 @@
 
 **Status:** Parcialmente implementado  
 **Ator principal:** Usuario responsável pelo setor financeiro  
-**Requisitos associados:** RF02, RF02.1, RF02.3, RN01, RN02, RN02.1, RN05
+**Requisitos associados:** RF02, RF02.1, RF02.3, RF03.2, RN01, RN02, RN02.1, RN05, RN26
 
 **Rastreamento detalhado:** [Registro de Status e Pendências](../requirements/status-register.md#uc01---inclusão-de-contratos)
 
@@ -21,38 +21,46 @@ Cadastrar um contrato de financiamento com seus dados cadastrais e financeiros, 
 
 - Um contrato válido e persistido em `financiamento.contratos`.
 - Triggers do banco preenchem a Selic e a data de referencia quando aplicável.
-- As matérialized views de projeção são atualizadas conforme a configuração atual do banco.
+- A projeção do contrato é gravada em `projecao_parcelas` pelo trigger de recálculo (DA08).
+- Os PDFs anexados na inclusão (opcionais) ficam em `anexo_contrato` / `anexo_ficha_financeira`, gravados na mesma transação do contrato.
 
 ## Fluxo principal
 
 1. O usuário abre a tela de contratos.
 2. O usuário seleciona **Novo**.
-3. O sistema apresenta o formulario de inclusão.
-4. O usuário informa empresa, banco, número do contrato, datas, tipo, valor, taxas, prazos e parâmetros de cobrança. A taxa de juros efetiva aceita até 6 casas decimais (ex.: 13,125974).
-5. O usuário confirma a inclusão.
-6. A aplicação valida campos obrigatórios, valores positivos e ordem das datas.
-7. A aplicação grava o contrato no PostgreSQL.
-8. O banco executa os triggers de preenchimento e atualização da projeção.
-9. O sistema informa que o contrato foi incluído.
+3. O sistema apresenta o modal de inclusão com as abas **Dados**, **Contrato**,
+   **Ficha Financeira** e **Projeção** (as mesmas do Detalhe do contrato, UC14).
+4. Na aba Dados, o usuário informa empresa, banco, número do contrato, datas,
+   tipo, valor, taxas, prazos (inteiros) e parâmetros de cobrança. A taxa de
+   juros efetiva aceita até 6 casas decimais (ex.: 13,125974).
+5. Opcionalmente, nas abas Contrato e Ficha Financeira, o usuário seleciona
+   PDFs (a linha "Anexos selecionados" mostra a quantidade).
+6. O usuário aciona **Confirmar**.
+7. A aplicação valida campos obrigatórios, valores positivos, ordem das datas
+   e os PDFs (RN26).
+8. A aplicação grava, numa única transação, o contrato, os anexos e os logs —
+   se algo falhar, nada é gravado.
+9. O banco executa os triggers de preenchimento e de recálculo da projeção.
+10. O sistema informa a inclusão e a quantidade de anexos.
 
 ## Fluxos alternativos
 
-### FA01 - Projetar antes da gravação
+### FA01 - Projeção antes da gravação (automática)
 
-1. O usuário preenche os dados do contrato.
-2. O usuário clica em **Projetar**.
-3. O sistema valida as informações obrigatórias e as regras de entrada.
-4. O sistema envia os parâmetros para uma função PostgreSQL de projeção temporária.
-5. O PostgreSQL calcula a projeção final sem persistir o contrato.
-6. O sistema exibe a projeção abaixo do formulário, no mesmo modal.
-7. O usuário consulta a projeção e permanece no formulário para confirmar ou cancelar a inclusão.
+1. O usuário abre a aba **Projeção**.
+2. Se faltar algum dado, a aba lista o que falta ou está inválido (ex.: "Data
+   BNDES", "Prazo final (maior que zero)", "Data BNDES (maior ou igual à Data
+   Emissão)").
+3. Com os dados completos, o sistema envia os parâmetros para a função
+   PostgreSQL de projeção temporária e exibe a projeção na aba, sem botão.
+4. O usuário volta à aba Dados para ajustar ou confirma a inclusão.
 
-O fluxo não deve inserir o contrato, atualizar dados permanentes ou alterar as
-materialized views de produção.
+O fluxo não insere o contrato nem altera dados permanentes. A projeção só é
+calculada com a aba Projeção aberta.
 
 ### FA02 - Cancelar inclusão
 
-O usuário seleciona **Cancelar**. O sistema abandona o formulario sem gravar o contrato.
+O usuário seleciona **Cancelar**. O sistema fecha o modal sem gravar o contrato e limpa os PDFs selecionados.
 
 ## Fluxos de exceção
 
@@ -84,8 +92,13 @@ a inclusão do contrato.
 
 ### FE07 - Falha na projeção temporária
 
-O sistema informa que não foi possível calcular a projeção e mantém o contrato
-sem persistência até que o usuário confirme a inclusão.
+A aba Projeção informa que não foi possível calcular a projeção, com o motivo
+retornado pelo banco, e o contrato continua sem persistência.
+
+### FE08 - Anexo inválido
+
+PDF inválido, acima de 20 MB ou repetido no mesmo envio: nada é gravado e o
+sistema informa o arquivo e a aba (RN26).
 
 ## Regras de negócio
 
@@ -103,4 +116,4 @@ Empresa, banco, número do contrato, datas, tipo, valor financiado, Selic, taxas
 
 ## Auditoria
 
-A inclusão registra `CONTRATO_INCLUIR` em `financiamento.log_auditoria` na mesma transação do contrato (número, empresa, banco, tipo, valor e emissão em `detalhes`). Falhas, como número duplicado, são registradas com `sucesso = false` e o erro (RF08.1, RN12).
+A inclusão registra `CONTRATO_INCLUIR` (e um `ANEXO_INCLUIR` por PDF anexado) em `financiamento.log_auditoria` na mesma transação do contrato (número, empresa, banco, tipo, valor e emissão em `detalhes`). Falhas, como número duplicado, são registradas com `sucesso = false` e o erro (RF08.1, RN12).

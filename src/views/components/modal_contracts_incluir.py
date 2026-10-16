@@ -1,7 +1,8 @@
 import pandas as pd
 import streamlit as st
 from tools.funcoes import listar_empresas, listar_bancos
-from services.contracts import incluir_contrato, projetar_contrato
+from services.contracts import incluir_contrato, projetar_contrato, pendencias_projecao
+from services.anexos import TIPOS_ANEXO
 
 def formatar_projecao(df_projecao):
     '''Formata a projeção apenas para apresentação na interface.'''
@@ -106,72 +107,116 @@ def modal_incluir_contrato():
     # inicializando as variáveis de armazenamento
     inicializar_state()
 
-    # formulário de interação
-    with st.form('contract', border=False):
+    # empresa/banco: o valor guardado precisa estar entre as opções do selectbox
+    for chave, df_opcoes in (('ic_empresas', st.session_state.df_lista_empresas), ('ic_bancos', st.session_state.df_lista_bancos)):
+        opcoes = df_opcoes['razao_social'].to_list() if df_opcoes is not None else []
+        if st.session_state.get(chave) not in opcoes:
+            st.session_state[chave] = opcoes[0] if opcoes else None
 
+    # prazos são inteiros (o banco espera int); corrige valores decimais guardados de execuções anteriores
+    for chave in ('ic_prazo_total', 'ic_prazo_carencia', 'ic_prazo_final', 'ic_pagamento_carencia'):
+        if isinstance(st.session_state.get(chave), float):
+            st.session_state[chave] = int(st.session_state[chave])
+
+    # abas (as mesmas do Detalhe do contrato + Projeção); sem st.form, para a projeção acompanhar os dados.
+    # on_change='rerun' indica a aba aberta: a projeção só é calculada com a aba Projeção aberta.
+    aba_dados, aba_contrato, aba_ficha, aba_projecao = st.tabs(
+        ['Dados', 'Contrato', 'Ficha Financeira', 'Projeção'], key='novo_aba', on_change='rerun'
+    )
+
+    # os widgets usam só a key (o valor inicial vem de inicializar_state)
+    with aba_dados:
         c1, c2, c3, c4 = st.columns([1, 1.5, 1.5, 1])
 
         c1.selectbox('Empresa', st.session_state.df_lista_empresas['razao_social'], key='ic_empresas')
         c2.selectbox('Banco', st.session_state.df_lista_bancos['razao_social'], key='ic_bancos')
-        c3.text_input('Número do Contrato', st.session_state.ic_numero_contrato, key='ic_numero_contrato')
-        c4.date_input('Data Emissão', format='DD/MM/YYYY', value=st.session_state.ic_dt_emissao, key='ic_dt_emissao')
+        c3.text_input('Número do Contrato', key='ic_numero_contrato')
+        c4.date_input('Data Emissão', format='DD/MM/YYYY', key='ic_dt_emissao')
 
         c5, c6, c7, c8 = st.columns([1, 1.5, 1.5, 1])
 
-        c5.date_input('Data BNDES', value=st.session_state.ic_dt_bndes, format='DD/MM/YYYY', key='ic_dt_bndes')
+        c5.date_input('Data BNDES', format='DD/MM/YYYY', key='ic_dt_bndes')
         c6.selectbox('Tipo', st.session_state.opcoes_tipo, key='ic_tipo')
-        c7.number_input('Valor financiado', st.session_state.ic_valor_financiado, key='ic_valor_financiado')
+        c7.number_input('Valor financiado', key='ic_valor_financiado')
         c8.selectbox('Pós fixado', st.session_state.opcoes_pos_fixado, key='ic_pos_fixado')
 
         c9, c10, c11, c12 = st.columns([1, 1, 1, 1])
 
-        c9.number_input('Custo bndes (%)', st.session_state.ic_custo_bndes, key='ic_custo_bndes')
-        c10.number_input('Sobretaxa bndes (%)', st.session_state.ic_sobretaxa_bndes, key='ic_sobretaxa_bndes')
-        c11.number_input('Taxa banco (%)', st.session_state.ic_taxa_banco, key='ic_taxa_banco')
-        c12.number_input('Taxa juros efetiva (%)', st.session_state.ic_taxa_juros_efetiva, step=0.000001, format='%.6f', key='ic_taxa_juros_efetiva')
+        c9.number_input('Custo bndes (%)', key='ic_custo_bndes')
+        c10.number_input('Sobretaxa bndes (%)', key='ic_sobretaxa_bndes')
+        c11.number_input('Taxa banco (%)', key='ic_taxa_banco')
+        c12.number_input('Taxa juros efetiva (%)', step=0.000001, format='%.6f', key='ic_taxa_juros_efetiva')
 
         c13, c14, c15, c16 = st.columns([1, 1, 1, 1])
-        
-        c13.number_input('Prazo total', st.session_state.ic_prazo_total, key='ic_prazo_total')
-        c14.number_input('Prazo carência', st.session_state.ic_prazo_carencia, key='ic_prazo_carencia')
-        c15.number_input('Prazo final', st.session_state.ic_prazo_final, key='ic_prazo_final')
-        c16.number_input('Pagamento de carência', st.session_state.ic_pagamento_carencia, key='ic_pagamento_carencia')
+
+        c13.number_input('Prazo total', min_value=0, step=1, format='%d', key='ic_prazo_total')
+        c14.number_input('Prazo carência', min_value=0, step=1, format='%d', key='ic_prazo_carencia')
+        c15.number_input('Prazo final', min_value=0, step=1, format='%d', key='ic_prazo_final')
+        c16.number_input('Pagamento de carência', min_value=0, step=1, format='%d', key='ic_pagamento_carencia')
 
         c17, c18, c19, c20, c21 = st.columns([1, 1, 1, 1, 1])
-        
-        c17.date_input('Data primeira parcela de encargo', value=st.session_state.ic_dt_primeiro_encargo, format='DD/MM/YYYY', key='ic_dt_primeiro_encargo')
-        c18.date_input('Data primeira parcela do principal', value=st.session_state.ic_dt_primeiro_principal, format='DD/MM/YYYY', key='ic_dt_primeiro_principal')
-        c19.date_input('Data ultima parcela', value=st.session_state.ic_dt_ultima_parcela, format='DD/MM/YYYY', key='ic_dt_ultima_parcela')
+
+        c17.date_input('Data primeira parcela de encargo', format='DD/MM/YYYY', key='ic_dt_primeiro_encargo')
+        c18.date_input('Data primeira parcela do principal', format='DD/MM/YYYY', key='ic_dt_primeiro_principal')
+        c19.date_input('Data ultima parcela', format='DD/MM/YYYY', key='ic_dt_ultima_parcela')
         c20.selectbox('Débito em cc', st.session_state.opcoes_debito_cc, key='ic_debito_cc')
         c21.selectbox('Registro de cobrança', st.session_state.opcoes_registro_cobranca, key='ic_registro_cobranca')
 
-        with st.container(horizontal=True):
-            if st.form_submit_button('Projetar'):
-                st.session_state['ic_df_projecao'] = projetar_contrato(st.session_state)
+    # anexos (opcionais): gravados junto com o contrato, na mesma transação
+    versao_anexos = st.session_state.get('novo_anexo_versao', 0)
+    arquivos_por_tipo = {}
+    for aba, tipo in ((aba_contrato, 'CONTRATO'), (aba_ficha, 'FICHA_FINANCEIRA')):
+        with aba:
+            st.caption('Opcional: os PDFs podem ser anexados agora ou depois, pelo botão Detalhes.')
+            arquivos_por_tipo[tipo] = st.file_uploader(
+                f'PDFs de {TIPOS_ANEXO[tipo].lower()} (até 20 MB cada)', type=['pdf'],
+                accept_multiple_files=True, key=f'novo_anexo_{tipo}_{versao_anexos}'
+            ) or []
 
-            if st.form_submit_button('Confirmar', type='primary'):
-                incluir_contrato(st.session_state)
+    # projeção automática com os dados preenchidos (só quando a aba está aberta); o aviso fica na própria aba
+    with aba_projecao:
+        if aba_projecao.open:
+            pendencias = pendencias_projecao(st.session_state)
+            if pendencias:
+                st.info('Para calcular a projeção, preencha na aba **Dados**:\n\n'
+                        + '\n'.join(f'- {pendencia}' for pendencia in pendencias), icon=':material/info:')
+                df_projecao = None
+            else:
+                df_projecao = projetar_contrato(st.session_state)
 
-            if st.form_submit_button('Cancelar'):
-                st.session_state.pop('ic_df_projecao', None)
-                st.rerun()
+            if df_projecao is None:
+                pass
+            elif 'mensagem_erro' in st.session_state:
+                mensagem = st.session_state.pop('mensagem_erro')
+                st.info(f'{mensagem} A projeção aparece aqui assim que os dados estiverem completos.', icon=':material/info:')
+            elif df_projecao.empty:
+                st.info('Nenhuma parcela projetada para os dados informados.', icon=':material/info:')
+            else:
+                st.caption('Projeção temporária (o contrato ainda não foi gravado).')
+                st.dataframe(formatar_projecao(df_projecao), hide_index=True, width='stretch')
 
-        if 'ic_df_projecao' in st.session_state:
-            df_projecao = st.session_state['ic_df_projecao']
-            if not df_projecao.empty:
-                st.markdown('### Projeção temporária')
-                st.dataframe(
-                    formatar_projecao(df_projecao),
-                    hide_index=True,
-                    use_container_width=True
-                )
-            
-        ## notificações
-        if 'mensagem_sucesso' in st.session_state:
-            st.toast(st.session_state.pop('mensagem_sucesso'), icon='✅')
-            st.session_state.pop('ic_df_projecao', None)
-            inicializar_state()
+    # ações (fora das abas)
+    st.caption(
+        f"Anexos selecionados: {len(arquivos_por_tipo['CONTRATO'])} de contrato · "
+        f"{len(arquivos_por_tipo['FICHA_FINANCEIRA'])} de ficha financeira (gravados junto com o contrato, ao Confirmar)."
+    )
+    col_confirmar, col_cancelar = st.columns(2)
+
+    with col_confirmar:
+        if st.button('Confirmar', type='primary', width='stretch'):
+            incluir_contrato(st.session_state, arquivos_por_tipo)
+
+    with col_cancelar:
+        if st.button('Cancelar', width='stretch'):
+            st.session_state['novo_anexo_versao'] = versao_anexos + 1   # limpa os PDFs selecionados
             st.rerun()
 
-        if 'mensagem_erro' in st.session_state:
-            st.toast(st.session_state.pop('mensagem_erro'), icon='⚠️')
+    ## notificações
+    if 'mensagem_sucesso' in st.session_state:
+        st.toast(st.session_state.pop('mensagem_sucesso'), icon='✅')
+        st.session_state['novo_anexo_versao'] = versao_anexos + 1
+        inicializar_state()
+        st.rerun()
+
+    if 'mensagem_erro' in st.session_state:
+        st.toast(st.session_state.pop('mensagem_erro'), icon='⚠️')

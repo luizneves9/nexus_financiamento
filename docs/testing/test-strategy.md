@@ -61,6 +61,7 @@ representativos, verificando resultado funcional e mensagens.
 | T24 | Liquidação e estorno | Liquidar parcela aberta grava ajuste; parcela liquidada não é liquidada de novo, alterada, excluída nem truncada; estorno reabre e recalcula. |
 | T25 | Conciliação com o ERP | Linhas com a mesma chave somadas; Itaú não identificado sem vínculo; vínculo permanente; grupo com rateio igual ao valor do ERP; reimportação = Já liquidada. |
 | T26 | Posição na data base | Data base passada: Selic até a data, antecipações posteriores fora e contrato refeito; data base de hoje igual à projeção gravada (exceto Selic publicada à frente). |
+| T28 | Anexos e detalhe do contrato | Anexar vários PDFs por tipo; PDF exibido na tela (Edge/Chrome) e em nova aba; mesmo PDF recusado; não-PDF e >20 MB recusados; excluir; colunas e filtro "Somente sem anexos"; histórico; log sem conteúdo do arquivo. |
 | T27 | Importação da Selic | Só datas novas; segunda importação informa "já atualizada"; um recálculo por importação; log `SELIC_IMPORTAR`. |
 
 ## Testes que escrevem no banco

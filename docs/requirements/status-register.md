@@ -52,8 +52,9 @@ com este registro.
 | UC10 | Relatório de endividamento | Implementado | Fluxo de caixa na posição da data base, filtros (data base, mês de corte, empresa, banco), meses liquidados destacados e Sub Total. | Exportação e demais modalidades (fora do Nexus). |
 | UC11 | Consulta de antecipações | Implementado | Aba Antecipação lista todas as antecipações/quitações com filtros no banco e resumo. | Validar com o financeiro. |
 | UC13 | Conciliação com o ERP | Implementado | Importação do CSV do ERP com tabela temporária, prévia por situação, vínculos ERP → Nexus (inclusive grupos com rateio) e liquidação com ajuste. | Antecipações no CSV (BL-028) e tela de vínculos (BL-029). |
+| UC14 | Detalhe do contrato e anexos | Implementado | Detalhe em abas (Dados, Contrato, Ficha Financeira, Histórico) com PDFs no banco, visualização na tela, anexar/baixar/excluir e log. | Acrescentar novas abas conforme evolução. |
 | UC12 | Autenticação de usuário | Implementado | Login, primeiro acesso com cadastro de senha (hash scrypt), sessão de 30 min e Sair; eventos registrados no log. Perfis ainda não existem. | Resolver pendências de segurança BL-014 a BL-018. |
-| RF03.1 | Filtros de contratos | Planejado | Tela atual lista registros, mas não possui filtros funcionais. | Definir componentes e testes dos filtros. |
+| RF03.1 | Filtros de contratos | Parcial | Empresa, banco, contrato e "Somente sem anexos" (padrão `key=`, BL-020 resolvido). | Definir demais filtros (taxa, período, valor, tipo). |
 | RF08 | Auditoria | Parcial | Log de auditoria grava todas as escritas e eventos de acesso (RF08.1); não há tela de consulta (RF08.2). | Definir a tela de histórico (BL-021). |
 | RF10 | Autenticação e perfis | Parcial | Autenticação implementada (UC12); perfis e permissões por aba/ação não existem. | Definir matriz de perfis e permissões (BL-005). |
 | RNF07 | Logs e observabilidade | Parcial | Existem mensagens de erro, mas ha exceções silenciosas e falta padrão de logs. | Definir política de logs e substituir tratamentos silenciosos. |
@@ -81,7 +82,7 @@ com este registro.
 ### UC02 - Consulta de contratos
 
 - **Status:** Implementado.
-- **Entregue:** 
+- **Entregue:**
   - Listagem da view `financiamento.vw_controle_contratos` com ordenação por Id.
   - Filtros parametrizados por Empresa, Banco e Contrato (busca ILIKE, parcial).
   - Validação de dataframe vazio com aviso ao usuário.
@@ -229,6 +230,25 @@ com este registro.
 - **Próxima ação:** usar no fechamento mensal e coletar ajustes.
 - **Critério de conclusão:** conciliação mensal feita sem planilha paralela.
 
+### UC14 - Detalhe do contrato e anexos
+
+- **Status:** Implementado.
+- **Entregue:** botão **Detalhes** em Contratos com o modal em abas (Dados,
+  Contrato, Ficha Financeira, Histórico); PDFs em `anexo_contrato` e
+  `anexo_ficha_financeira` (vários por contrato, até 20 MB, sem repetir o
+  mesmo arquivo); visualização na tela (visualizador do navegador montado na
+  página principal, pois Chrome/Edge bloqueiam PDF em iframes isolados) e
+  "Abrir em nova aba"; anexar, baixar e excluir com log `ANEXO_INCLUIR` /
+  `ANEXO_EXCLUIR`; colunas e filtro "Somente sem anexos" na lista.
+- **Pendente:** novas abas (ex.: Projeção) conforme evolução; confirmar a
+  versão do Streamlit na imagem de produção (BL-025).
+- **Evidência:** `src/views/components/modal_contracts_detalhe.py`,
+  `src/views/components/visualizador_pdf.py`, `src/services/anexos.py`,
+  `src/queries/queries_anexos.py`, `database/contrato_anexos.sql`.
+- **Próxima ação:** anexar os documentos dos contratos existentes.
+- **Critério de conclusão:** todos os contratos com contrato e ficha
+  anexados.
+
 ### UC11 - Consulta de antecipações
 
 - **Status:** Implementado.
@@ -328,7 +348,7 @@ com este registro.
 | BL-017 | **Segurança:** invalidar cookies antigos ao trocar senha, bloquear ou clicar em Sair (versão de sessão no token) e definir tempo máximo absoluto de sessão. | Médio | Coluna nova em `usuarios` | Aberto |
 | BL-018 | **Segurança:** avaliar scrypt N=2^15 (135 ms, 32 MiB) com rehash no login; igualar o tempo de resposta do caso "senha não cadastrada"; avaliar bloqueio de senhas óbvias. | Baixo | — | Aberto |
 | BL-019 | Sincronizar `database/ddl_financiamento.sql` com as tabelas `usuarios` e `log_auditoria`, a função `log_auditoria_imutavel` e seus triggers (os objetos da projeção persistida estão em `database/projecao_persistida.sql`). | Médio | Extração do DDL do banco | Aberto |
-| BL-020 | Corrigir os filtros de `views/contracts.py`: usam `value=st.session_state...`, o que descarta a primeira alteração do usuário (mesmo bug corrigido em Projeção de Pagamentos com `key` própria). | Médio | — | Aberto |
+| BL-020 | Corrigir os filtros de `views/contracts.py`: usam `value=st.session_state...`, o que descarta a primeira alteração do usuário (mesmo bug corrigido em Projeção de Pagamentos com `key` própria). | Médio | — | Concluído (UC14) |
 | BL-021 | Tela de consulta do histórico de operações (RF08.2) a partir de `log_auditoria`. | Médio | Perfis (acesso restrito) | Aberto |
 | BL-022 | Definir retenção do log de auditoria e avaliar usuário de banco da aplicação apenas com INSERT no log (hoje `fin` é dono da tabela e poderia remover o trigger). | Médio | Administração do PostgreSQL | Aberto |
 | BL-023 | Exibir mensagem clara ao tentar excluir contrato com antecipação (hoje "Erro ao excluir contrato!"; o motivo só fica no log). | Baixo | — | Concluído (UC04) |

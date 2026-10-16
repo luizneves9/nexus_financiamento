@@ -22,6 +22,7 @@ configurado no ambiente.
 | `projecao_parcelas` | Parcelas projetadas por contrato (moeda e R$), situação ABERTA / LIQUIDADA / CANCELADA_QUITACAO | Referencia contrato (CASCADE); chave única (contrato, parcela) |
 | `liquidacao` | Baixa das parcelas (valor projetado, pago e ajuste; origem manual ou ERP; estorno) | Referencia parcela e contrato (RESTRICT); só inclusão e estorno |
 | `contrato_erp_vinculo` | De-para código do ERP → contrato(s) do Nexus | Referencia contrato (CASCADE); chave única (código, contrato) |
+| `anexo_contrato` / `anexo_ficha_financeira` | PDFs do contrato e da ficha financeira (conteúdo `bytea`) | Referencia contrato (CASCADE); chave única (contrato, hash) |
 | `usuarios` | Usuários do sistema (login, hash da senha, ativo) | Referenciada por `log_auditoria` |
 | `log_auditoria` | Log de auditoria das interações (somente inserção) | Referencia `usuarios`; `entidade`/`id_registro` apontam para o registro afetado sem chave estrangeira |
 

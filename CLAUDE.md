@@ -89,6 +89,14 @@ views (Streamlit) → services → repositories/queries → PostgreSQL (schema f
   posteriores fora; DA10). Mudança nessa regra afeta os dois.
 - Selic — `views/selic.py` + `services/selic.py`: importa a série do BNDES
   (`um143.txt`) só com datas novas (DA11).
+- Detalhe do contrato — botão **Detalhes** em Contratos abre
+  `views/components/modal_contracts_detalhe.py`, um modal em abas (Dados,
+  Contrato, Ficha Financeira, Histórico), uma função por aba: novas
+  funcionalidades do contrato entram como novas abas. Os PDFs ficam no banco
+  (`anexo_contrato`, `anexo_ficha_financeira`; `services/anexos.py`; DA12).
+  Para mostrar PDF use `views/components/visualizador_pdf.py`: Chrome/Edge
+  bloqueiam o visualizador de PDF em `st.iframe`/componentes (iframes isolados)
+  e o `st.html` remove iframes estáticos — o iframe é criado por JavaScript.
 - Autenticação — `views/login.py` + `services/login.py`: usuários em
   `financiamento.usuarios` (criados só pelo desenvolvedor, ver
   `database/usuarios.sql`); primeiro acesso com senha vazia leva ao cadastro
@@ -170,6 +178,8 @@ Toda tela que exibe datas ou valores monetários em `st.dataframe`/
   Liquidação) ficam como botões normais; o destaque fica no Confirmar dos
   modais e no Entrar/Cadastrar senha do login.
 - Consultas que podem demorar em `with st.spinner('Consultando ...'):`.
+- Indicadores sim/não em tabelas usam `st.column_config.CheckboxColumn(..., disabled=True)`,
+  nunca emoji (padrão do usuário).
 
 ### Filtros de tela (padrão de views/relatorio_contas_a_pagar.py)
 
@@ -183,8 +193,7 @@ Toda tela que exibe datas ou valores monetários em `st.dataframe`/
   atual; data base = hoje).
 - Cada widget usa `key='<prefixo>_<campo>_input'` inicializada a partir do
   filtro salvo — **nunca** `value=st.session_state...`: um `value` que muda
-  recria o widget e descarta o que o usuário digitou (`views/contracts.py`
-  ainda tem o padrão antigo, ver `BL-020`).
+  recria o widget e descarta o que o usuário digitou.
 - Resumo abaixo da tabela: uma única `st.caption` com os itens separados por
   `&nbsp;&nbsp;|&nbsp;&nbsp;`, calculado no service **antes** da formatação
   dos valores.

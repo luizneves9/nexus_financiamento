@@ -31,6 +31,7 @@ comportamento atualmente definido para o projeto.
 | RN23 | Vínculo ERP → Nexus | Código do ERP diferente do número do contrato é resolvido por vínculo permanente; um código ligado a vários contratos forma um grupo (mesmo contrato dividido no Nexus), conciliado em conjunto e com o valor pago rateado proporcionalmente ao valor projetado (sobra de arredondamento na maior parcela). Parcela em dois grupos no mesmo mês = vínculo conflitante. | Atual |
 | RN24 | Posição na data base | Nos relatórios, parcela liquidada até a data base vale o valor pago; as demais valem o projetado, refeito com a Selic conhecida até a data base; antecipações e quitações pagas depois da data base não entram, e o contrato é considerado como estava na data base. | Atual |
 | RN25 | Importação da Selic | A Selic é importada da série oficial do BNDES (UM143), só com datas posteriores à última gravada. | Atual |
+| RN26 | Anexos do contrato | Os PDFs do contrato e da ficha financeira ficam no banco, uma tabela por tipo; vários arquivos por contrato; só PDF (extensão e assinatura `%PDF`), de 1 byte a 20 MB; o mesmo arquivo (hash) não se repete no mesmo contrato e tipo; ao excluir o contrato, os anexos são excluídos junto. | Atual |
 
 ## Regras ainda não formalizadas
 

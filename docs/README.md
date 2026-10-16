@@ -49,7 +49,7 @@ alinhando a documentação ao estado real da aplicação e ao roadmap do projeto
 | UC11 | Consulta de antecipações | Implementado |
 | UC12 | Autenticação de usuário | Implementado (perfis planejados) |
 | UC13 | Conciliação com o ERP | Implementado |
-| UC13 | Conciliação com o ERP | Implementado |
+| UC14 | Detalhe do contrato e anexos | Implementado |
 
 ## Estrutura da documentação
 

@@ -2,44 +2,44 @@
 
 ## DA01 - PostgreSQL como motor financeiro
 
-**Status:** Aceita  
+**Status:** Aceita
 **Decisão:** Funções, triggers e views do PostgreSQL são responsáveis pelos
 cálculos financeiros. Desde a DA08 a projeção é gravada em tabela
-(`projecao_parcelas`), recalculada por contrato pelas funções do banco.  
+(`projecao_parcelas`), recalculada por contrato pelas funções do banco.
 **Motivo:** Centralizar fórmulas, calendário, Selic e arredondamentos em uma
-única fonte de verdade.  
+única fonte de verdade.
 **Consequência:** Alterações no cálculo exigem versionamento e testes no banco.
 
 ## DA02 - Exclusão física inicial
 
-**Status:** Aceita  
-**Decisão:** A primeira versão utiliza exclusão física de contratos.  
+**Status:** Aceita
+**Decisão:** A primeira versão utiliza exclusão física de contratos.
 **Motivo:** E o comportamento atualmente implementado e ainda não existe
-política aprovada de exclusão lógica.  
+política aprovada de exclusão lógica.
 **Consequência:** Integridade referencial pode impedir a exclusão e histórico
 precisa ser tratado em evolução futura.
 
 ## DA05 - Projeção temporária por função PostgreSQL
 
-**Status:** Aceita  
+**Status:** Aceita
 **Decisão:** A projeção acionada durante a inclusão será executada por uma
 função PostgreSQL que receberá os parâmetros do contrato e retornará o cálculo
-final sem persistir o contrato.  
+final sem persistir o contrato.
 **Motivo:** Manter o cálculo financeiro no banco e evitar efeitos colaterais de
-uma inserção seguida de rollback.  
+uma inserção seguida de rollback.
 **Consequência:** A função deverá possuir contrato de entrada e saída, testes
 próprios e alinhamento com a regra de cálculo da projeção persistida
 (`calcular_projecao_contrato`, DA08). Unificar as duas está no backlog.
 
 ## DA03 - API da Selic posterior
 
-**Status:** Substituída pela DA11  
+**Status:** Substituída pela DA11
 **Decisão original:** A integração automática da Selic seria desenvolvida
 posteriormente; até lá os dados eram carregados manualmente no banco.
 
 ## DA04 - Autenticação própria com sessão em cookie assinado
 
-**Status:** Aceita (autenticação implementada; perfis planejados para a versão 1.0)  
+**Status:** Aceita (autenticação implementada; perfis planejados para a versão 1.0)
 **Decisão:** A autenticação é feita pela própria aplicação, sem provedor
 externo:
 
@@ -58,7 +58,7 @@ externo:
 
 **Motivo:** A imagem base `fin-base:1.0` não traz bibliotecas de hash
 (bcrypt/argon2) nem de cookies, e o controle de usuários é interno e de baixo
-volume.  
+volume.
 **Consequência:** O cookie não pode ser `HttpOnly` (gravado por JS) e um
 cookie copiado vale até expirar; o vazamento do `AUTH_SECRET` permite forjar
 login. Pendências registradas em BL-014 a BL-018. Perfis e permissões
@@ -66,7 +66,7 @@ login. Pendências registradas em BL-014 a BL-018. Perfis e permissões
 
 ## DA06 - Log de auditoria no banco, na mesma transação e somente inserção
 
-**Status:** Aceita  
+**Status:** Aceita
 **Decisão:** Toda operação de escrita e todo evento de acesso são registrados
 em `financiamento.log_auditoria` por `services/log.py`:
 
@@ -84,13 +84,13 @@ Ações do catálogo: `LOGIN`, `LOGIN_FALHA`, `LOGOUT`, `SESSAO_ENCERRADA`,
 `CADASTRO_SENHA`, `CONTRATO_INCLUIR`, `CONTRATO_EXCLUIR`,
 `ANTECIPACAO_INCLUIR`, `QUITACAO_INCLUIR`, `ANTECIPACAO_EXCLUIR`,
 `LIQUIDACAO_INCLUIR`, `LIQUIDACAO_ESTORNAR`, `CONCILIACAO_ERP` (um registro
-por lote), `VINCULO_ERP_INCLUIR`, `VINCULO_ERP_EXCLUIR`, `SELIC_IMPORTAR`
+por lote), `VINCULO_ERP_INCLUIR`, `VINCULO_ERP_EXCLUIR`, `SELIC_IMPORTAR`, `ANEXO_INCLUIR`, `ANEXO_EXCLUIR`
 (e, com os perfis, `ACESSO_NEGADO`). O recálculo automático da projeção não
 gera log próprio (é consequência de uma ação já registrada).
 
 **Motivo:** Rastrear quem fez o quê, quando e com qual resultado (RNF08),
 inclusive o conteúdo de registros excluídos fisicamente (DA02), garantindo
-que nenhuma operação fique sem registro.  
+que nenhuma operação fique sem registro.
 **Consequência:** Toda funcionalidade nova deve avaliar a necessidade de log
 (regra registrada no `CLAUDE.md`). Como não há banco de testes, testes de
 escrita devem rodar em blocos que se desfazem sozinhos (ex.: `DO` terminado
@@ -128,7 +128,7 @@ Docker). Confirmar a versão da imagem `fin-base:1.0` está em BL-025.
 
 ## DA08 - Projeção persistida por contrato (substitui as materialized views)
 
-**Status:** Aceita (implantada em 15-16/10/2026)  
+**Status:** Aceita (implantada em 15-16/10/2026)
 **Decisão:** A projeção deixa de ser calculada pelas materialized views
 `mv_projecao_moeda`, `mv_projecao_moeda_final` e `mv_projecao_tfc` (removidas)
 e passa a ser gravada em `projecao_parcelas` (uma linha por parcela, chave
@@ -145,14 +145,14 @@ estável `(id_contrato, parcela)`) com controle em `projecao_controle`:
 
 **Motivo:** O refresh das MVs recalculava toda a base a cada inclusão, não
 acompanhava exclusões nem a Selic e não tinha chave estável para vincular
-pagamentos.  
+pagamentos.
 **Consequência:** Estrutura documentada em `database/projecao_persistida.sql`.
 Os bugs herdados das MVs (TFC sem antecipação, uma antecipação por contrato,
 parcela do dia da quitação) foram reproduzidos de propósito e estão no backlog.
 
 ## DA09 - Liquidação e conciliação com o ERP sem guardar o relatório
 
-**Status:** Aceita  
+**Status:** Aceita
 **Decisão:** A baixa de parcelas fica em `liquidacao` (manual ou por
 conciliação), com `valor_ajuste = valor_pago - valor_projetado` calculado pelo
 banco; a parcela liquidada não é alterada pelo recálculo; liquidação só pode
@@ -161,34 +161,49 @@ e carregado numa tabela temporária (`ON COMMIT DROP`) a cada prévia (transaç�
 desfeita) e na confirmação (conciliação refeita na mesma transação); só as
 liquidações são gravadas. Códigos do ERP diferentes do número do contrato são
 resolvidos por `contrato_erp_vinculo` (um código pode formar um grupo de
-contratos, com rateio proporcional do valor pago).  
+contratos, com rateio proporcional do valor pago).
 **Motivo:** A reexecução do Streamlit pode trocar a conexão do pool, o que
 impede manter uma tabela temporária entre interações; o relatório do ERP não
-precisa ser guardado além do que vira liquidação.  
+precisa ser guardado além do que vira liquidação.
 **Consequência:** Linhas não identificadas e não pagas existem só na prévia; o
 resumo do lote fica no log `CONCILIACAO_ERP`.
 
 ## DA10 - Posição na data base nos relatórios
 
-**Status:** Aceita  
+**Status:** Aceita
 **Decisão:** Contas a Pagar e Endividamento usam a mesma regra
 (`CTE_POSICAO_DATA_BASE`): parcela liquidada até a data base vale o valor
 pago; as demais valem o valor projetado, refeito com a Selic conhecida até a
 data base; antecipações e quitações pagas depois da data base não entram, e os
-contratos que as têm são recalculados como estavam na data base.  
+contratos que as têm são recalculados como estavam na data base.
 **Motivo:** Permitir consultar posições passadas sem usar informação que não
-existia naquela data.  
+existia naquela data.
 **Consequência:** O recálculo pela data base acontece só na consulta; a tabela
 `projecao_parcelas` continua guardando a projeção atual.
 
 ## DA11 - Selic oficial do BNDES
 
-**Status:** Aceita (substitui a DA03)  
+**Status:** Aceita (substitui a DA03)
 **Decisão:** A Selic (fator UM143) é importada de
 `https://www.bndes.gov.br/Moedas/um143.txt` pela tela Cadastros > Selic, com
 um único INSERT apenas das datas posteriores à última gravada (o recálculo da
-projeção roda uma vez por importação).  
+projeção roda uma vez por importação).
 **Motivo:** As cargas manuais por planilha gravaram datas com dia e mês
-trocados; a série oficial publica inclusive o dia seguinte.  
+trocados; a série oficial publica inclusive o dia seguinte.
 **Consequência:** O servidor precisa de acesso a `www.bndes.gov.br`; datas
 antigas ausentes não são importadas automaticamente (são apenas informadas).
+
+## DA12 - Anexos (PDF) no banco e visualização na página
+
+**Status:** Aceita
+**Decisão:** Os PDFs do contrato e da ficha financeira são gravados no banco
+(`bytea`), uma tabela por tipo (`anexo_contrato`, `anexo_ficha_financeira`),
+com hash SHA-256 para não repetir o arquivo e limite de 20 MB. As listas nunca
+leem o conteúdo. A visualização usa o visualizador nativo do navegador, num
+iframe criado por JavaScript na própria página (`st.html`), porque o Chrome e
+o Edge bloqueiam o visualizador de PDF em iframes isolados (`st.iframe`,
+componentes) e o `st.html` remove iframes estáticos.
+**Motivo:** Centralizar os documentos no sistema e no backup do banco.
+**Consequência:** O banco e os backups crescem com os PDFs; o detalhe do
+contrato depende de `st.html(..., unsafe_allow_javascript=True)` (Streamlit
+recente, BL-025).

@@ -1,28 +1,13 @@
 SELECT_PROJECAO = '''
-	WITH selic AS (
-		SELECT valor
-		FROM financiamento.selic
-		ORDER BY data DESC
-		LIMIT 1
-	),
-	valores_moeda AS (
+	WITH valores_parcelas AS (
 		SELECT
-			parcela AS "Parcela",
-            'Parcela' AS "Tipo",
+			parcela::numeric AS "Parcela",
+			'Parcela' AS "Tipo",
 			data_vcto AS "Data de Vencimento",
-			ROUND(COALESCE(valor_pagamento, total_parcela * s.valor), 2) AS "Valor"
-		FROM financiamento.mv_projecao_moeda_final
-		CROSS JOIN selic s
+			valor_pagamento AS "Valor"
+		FROM financiamento.projecao_parcelas
 		WHERE id_contrato = :id
-	),
-	valores_tfc AS (
-		SELECT 
-			parcela AS "Parcela",
-            'Parcela' AS "Tipo",
-			data_vcto AS "Data de Vencimento",
-			total_parcela AS "Valor"
-		FROM financiamento.mv_projecao_tfc
-		WHERE id_contrato = :id
+		AND situacao <> 'CANCELADA_QUITACAO'
 	),
 	valores_antecipacao AS (
 		SELECT
@@ -33,9 +18,7 @@ SELECT_PROJECAO = '''
 		FROM financiamento.antecipacao
 		WHERE id_contrato = :id
 	)
-	SELECT "Parcela", "Tipo", "Data de Vencimento", "Valor" FROM valores_moeda
-	UNION ALL
-	SELECT "Parcela", "Tipo", "Data de Vencimento", "Valor" FROM valores_tfc
+	SELECT "Parcela", "Tipo", "Data de Vencimento", "Valor" FROM valores_parcelas
 	UNION ALL
 	SELECT "Parcela", "Tipo", "Data de Vencimento", "Valor" FROM valores_antecipacao
 	ORDER BY "Data de Vencimento"
@@ -74,4 +57,10 @@ DELETE_CONTRATO = '''
 	DELETE FROM financiamento.contratos
 	WHERE id = :id
 	RETURNING *
+'''
+
+VERIFICAR_LIQUIDACAO_CONTRATO = '''
+	SELECT count(*) AS qtd
+	FROM financiamento.liquidacao
+	WHERE id_contrato = :id
 '''

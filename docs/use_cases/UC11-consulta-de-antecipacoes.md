@@ -69,7 +69,7 @@ limitação registrada no UC02 e no UC09).
 - A quitação total aparece como lançamento com `tipo_lancamento = QUITACAO`
   (RN10).
 - A tela é somente leitura: o registro de novas antecipações continua no
-  botão **Liquidar** da Gestão de Contratos (UC06).
+  botão **Quitação/Antecipação** da Gestão de Contratos (UC06); a exclusão de um lançamento é feita nesta tela (UC06, FA01).
 - Consultas não são registradas no log de auditoria (RN12).
 
 ## Dados consultados

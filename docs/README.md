@@ -16,12 +16,13 @@ financeiros, empresas, bancos, fornecedores e bens vinculados.
 
 O sistema deve apoiar o ciclo operacional dos contratos, desde a inclusão e
 consulta dos dados até a projeção de parcelas, o acompanhamento de
-antecipações e a liquidação total ou parcial. Os cálculos financeiros devem
+antecipações e quitações, a liquidação das parcelas (manual ou pela
+conciliação com o ERP) e os relatórios na posição de uma data base. Os cálculos financeiros devem
 considerar as regras do contrato, a Selic, os dias úteis e o calendário de
 feriados mantido no PostgreSQL.
 
 Na evolução planejada, o Nexus também deverá permitir o cadastro e vínculo de
-bens e veículos, atualização automática da Selic, controle de acesso, filtros
+bens e veículos, agendamento da atualização da Selic, controle de acesso, filtros
 operacionais, detalhamento dos registros e rastreabilidade das operações
 financeiras.
 
@@ -40,13 +41,15 @@ alinhando a documentação ao estado real da aplicação e ao roadmap do projeto
 | UC03 | Visualização de projeção | Parcialmente implementado |
 | UC04 | Exclusão física de contrato | Implementado |
 | UC05 | Cadastro de bens e veículos | Banco preparado |
-| UC06 | Antecipação e liquidação antecipada de contrato | Implementado (BNDES FINAME SELIC) |
-| UC07 | Liquidação de contrato | Consolidado em UC06 |
-| UC08 | Atualização da Selic | Dados no banco; integração por API planejada |
-| UC09 | Relatório de projeção de pagamentos | Implementado |
+| UC06 | Quitação/Antecipação de contrato | Implementado (BNDES FINAME SELIC) |
+| UC07 | Liquidação de parcelas | Implementado |
+| UC08 | Atualização da Selic | Implementado (importação do BNDES sob demanda) |
+| UC09 | Relatório Contas a Pagar | Implementado |
 | UC10 | Relatório de endividamento | Implementado |
 | UC11 | Consulta de antecipações | Implementado |
 | UC12 | Autenticação de usuário | Implementado (perfis planejados) |
+| UC13 | Conciliação com o ERP | Implementado |
+| UC13 | Conciliação com o ERP | Implementado |
 
 ## Estrutura da documentação
 

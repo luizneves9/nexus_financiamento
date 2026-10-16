@@ -2,7 +2,7 @@
 
 **Status:** Implementado, sujeito a dependências de integridade  
 **Ator principal:** Usuario responsável pelo setor financeiro  
-**Requisitos associados:** RF05, RN04
+**Requisitos associados:** RF05, RN07, RN08, RN21
 
 **Rastreamento detalhado:** [Registro de Status e Pendências](../requirements/status-register.md#uc04---exclusão-física-de-contrato)
 
@@ -20,7 +20,7 @@ Remover físicamente um contrato da tabela de contratos mediante confirmação d
 
 ## Pos-condicoes
 
-O registro do contrato e removido de `financiamento.contratos` quando a transação e concluida.
+O registro do contrato é removido de `financiamento.contratos` quando a transação é concluída; a projeção dele (`projecao_parcelas`, `projecao_controle`) e os vínculos ERP são removidos junto (ON DELETE CASCADE).
 
 ## Fluxo principal
 
@@ -43,11 +43,19 @@ O usuário seleciona **Cancelar**. Nenhum dado e alterado.
 
 O sistema exige exatamente um contrato selecionado.
 
-### FE02 - Integridade referencial
+### FE02 - Contrato com liquidação
 
-O banco pode impedir a exclusão quando existirem bens ou antecipações vinculados ao contrato.
+Antes do `DELETE`, o sistema verifica se o contrato tem liquidação (ativa ou
+estornada) e informa "Contrato possui parcelas liquidadas e não pode ser
+excluído." (RN21). Essa verificação é uma validação e não grava log.
 
-### FE03 - Falha de banco
+### FE03 - Integridade referencial
+
+Quando o banco recusa a exclusão por vínculo (bens, antecipações, quitações ou
+liquidações), o sistema informa "Contrato possui antecipações, quitações ou
+liquidações vinculadas e não pode ser excluído."; a falha é registrada no log.
+
+### FE04 - Falha de banco
 
 A aplicação informa o erro e a transação não deve ser considerada concluida.
 
@@ -60,4 +68,4 @@ A aplicação informa o erro e a transação não deve ser considerada concluida
 
 ## Auditoria
 
-A exclusão registra `CONTRATO_EXCLUIR` em `financiamento.log_auditoria` na mesma transação do `DELETE`, com a cópia completa do contrato excluído em `detalhes` (`DELETE ... RETURNING *`). Exclusões bloqueadas pelo banco, como contrato com antecipação, são registradas com `sucesso = false` e o motivo; na tela a mensagem ainda é genérica (BL-023) (RF08.1, RN12).
+A exclusão registra `CONTRATO_EXCLUIR` em `financiamento.log_auditoria` na mesma transação do `DELETE`, com a cópia completa do contrato excluído em `detalhes` (`DELETE ... RETURNING *`). Exclusões bloqueadas pelo banco, como contrato com antecipação, são registradas com `sucesso = false` e o motivo, e a tela informa o motivo (RF08.1, RN12).

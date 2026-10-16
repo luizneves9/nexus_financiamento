@@ -112,7 +112,7 @@ def validar_dados_antecipacao(id_contrato, tipo_lancamento, valor_pago,
 	return True, None
 
 def registrar_antecipacao(session_state):
-	'''Registra a antecipação/liquidação no banco de dados.'''
+	'''Registra a quitação/antecipação no banco de dados.'''
 
 	# Validar se todos os campos obrigatórios foram preenchidos
 	campos_obrigatorios = [
@@ -178,7 +178,7 @@ def registrar_antecipacao(session_state):
 			if campo in session_state:
 				session_state.pop(campo, None)
 
-		session_state['mensagem_sucesso'] = 'Antecipação/Liquidação registrada com sucesso!'
+		session_state['mensagem_sucesso'] = 'Quitação/Antecipação registrada com sucesso!'
 		st.rerun()
 
 	except IntegrityError as e:

@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from datetime import date
 from services.relatorio_endividamento import listar_projecao_endividamento, transformar_dados_para_relatorio
 from views.components.cabecalho import cabecalho
 
@@ -100,16 +101,52 @@ def get_css(tema):
 """
 
 
+# larguras fixas das colunas (Anos, Modalidades, 12 meses, Total Anual, Total Anual, %), iguais na
+# tabela dos anos e na do Sub Total para que as colunas fiquem alinhadas
+COLUNAS_TABELA = (
+    "<colgroup><col style='width:4%'><col style='width:10%'>"
+    + "<col style='width:5.3%'>" * len(MESES)
+    + "<col style='width:6.4%'><col style='width:8%'><col style='width:8%'></colgroup>"
+)
+
+CORES_PAGAMENTO = {
+    # tema: (mês todo liquidado, mês parcialmente liquidado) - verde do cabeçalho da tabela
+    'claro': ('#4F6228', '#76933C'),
+    'escuro': ('#4F6228', '#76933C'),
+}
+
+
+def get_css_pagamento(tema):
+    """CSS das células de meses pagos (até a data base) e da legenda, conforme o tema."""
+
+    def regras(pago, parcial):
+        return (f".tabela-endiv td.pago {{ background:{pago}; color:#fff; }} "
+                f".tabela-endiv td.parcial {{ background:{parcial}; color:#fff; }} "
+                f".legenda-endiv span.pago {{ background:{pago}; }} "
+                f".legenda-endiv span.parcial {{ background:{parcial}; }} ")
+
+    base = (".legenda-endiv { margin-top:6px; font-size:13px; } "
+            ".legenda-endiv span { display:inline-block; width:14px; height:14px; border:1px solid #000; "
+            "vertical-align:middle; margin:0 4px 0 12px; } ")
+
+    if tema in CORES_PAGAMENTO:
+        return f"<style>{base}{regras(*CORES_PAGAMENTO[tema])}</style>"
+
+    return (f"<style>{base}"
+            f"@media (prefers-color-scheme: light) {{ {regras(*CORES_PAGAMENTO['claro'])} }} "
+            f"@media (prefers-color-scheme: dark) {{ {regras(*CORES_PAGAMENTO['escuro'])} }}</style>")
+
+
 # ------------------------------------------------------------------
 # MONTAGEM DO HTML ------------------------------------------------
 # ------------------------------------------------------------------
-def build_html(saldo, saldo_total_grupo, anos, tema):
-    html = [get_css(tema)]
+def build_html(saldo, saldo_total_grupo, anos, subtotal, tema, data_base):
+    html = [get_css(tema), get_css_pagamento(tema)]
     html.append(
         "<div class='titulo-bar'><h2>ENDIVIDAMENTO BANCÁRIO - PROJEÇÃO DOS PAGAMENTOS - "
-        "FLUXO DE CAIXA</h2></div>"
+        f"FLUXO DE CAIXA - DATA BASE {data_base:%d/%m/%Y}</h2></div>"
     )
-    html.append("<table class='tabela-endiv'>")
+    html.append(f"<table class='tabela-endiv' style='table-layout:fixed'>{COLUNAS_TABELA}")
 
     # Cabeçalho linha 1
     html.append("<tr>")
@@ -148,15 +185,47 @@ def build_html(saldo, saldo_total_grupo, anos, tema):
             if i == 0:
                 html.append(f"<td class='anos-col' rowspan='{n}'>{ano}</td>")
             html.append(f"<td class='body-row modalidade-normal'>{linha['modalidade']}</td>")
-            for v in linha["valores"]:
-                html.append(f"<td class='body-row'>{fmt(v)}</td>")
+            for v, status in zip(linha["valores"], linha["status"]):
+                classe = 'pago' if status else ''   # mês com parcela liquidada até a data base
+                html.append(f"<td class='body-row {classe}'>{fmt(v)}</td>")
             if i == 0:
                 html.append(f"<td class='total-col' rowspan='{n}'>{fmt_total(bloco['total_grupo'])}</td>")
             html.append(f"<td class='total-anual'>{fmt_total(linha['total'])}</td>")
             html.append(f"<td class='pct-col'>{linha['pct']}</td>")
             html.append("</tr>")
 
+    # espaço entre os anos e o Sub Total: duas tabelas com as mesmas larguras de coluna, separadas
+    # por um espaço com o fundo do sistema (Streamlit)
     html.append("</table>")
+    html.append("<div style='height:16px'></div>")
+    html.append(f"<table class='tabela-endiv' style='table-layout:fixed'>{COLUNAS_TABELA}")
+
+    # Bloco Sub Total (modalidades + Total Geral): meses somados em todos os anos exibidos,
+    # total, total pago até a data base e total a pagar
+    for i, linha in enumerate(subtotal):
+        classe_modalidade = 'modalidade' if linha['modalidade'] == 'Total Geral' else 'modalidade-normal'
+        html.append("<tr>")
+        if i == 0:
+            html.append(f"<td class='anos-col' rowspan='{len(subtotal)}'>Sub<br>Total</td>")
+        html.append(f"<td class='body-row {classe_modalidade}'>{linha['modalidade']}</td>")
+        for v in linha["valores"]:
+            html.append(f"<td class='body-row'>{fmt(v)}</td>")
+        html.append(f"<td class='total-col'>{fmt_total(linha['total'])}</td>")
+        # rótulo e valor na mesma célula (duas colunas mescladas), sem a linha divisória entre eles
+        html.append(
+            "<td class='total-anual' colspan='2' style='white-space:nowrap'>"
+            "<div style='display:flex; justify-content:space-between; gap:8px'>"
+            f"<span>Total pago:</span><span>{fmt_total(linha['total_pago'])}</span></div>"
+            "<div style='display:flex; justify-content:space-between; gap:8px'>"
+            f"<span>Total a pagar:</span><span>{fmt_total(linha['total_a_pagar'])}</span></div>"
+            "</td>"
+        )
+        html.append("</tr>")
+
+    html.append("</table>")
+    html.append(
+        "<div class='legenda-endiv'><span class='pago'></span>Mês liquidado</div>"
+    )
     return "".join(html)
 
 
@@ -167,13 +236,53 @@ def build_html(saldo, saldo_total_grupo, anos, tema):
 # cabeçalho padrão da tela (ícone do grupo no menu)
 cabecalho('Endividamento Bancário', 'Projeção dos pagamentos do endividamento bancário por ano e modalidade.', 'bar_chart')
 
-# Buscar dados do banco
+# filtros (FE = Filtro Endividamento); padrão: data base hoje e vencimentos a partir de 01/01/2026
+if 'fe_data_base' not in st.session_state:
+    st.session_state['fe_data_base'] = date.today()
+if 'fe_data_corte' not in st.session_state:
+    st.session_state['fe_data_corte'] = date(2026, 1, 1)
+if 'fe_empresa' not in st.session_state:
+    st.session_state['fe_empresa'] = None
+if 'fe_banco' not in st.session_state:
+    st.session_state['fe_banco'] = None
+
+# o widget usa key própria; passar value= dinâmico recria o widget e descarta o que foi digitado
+if 'fe_data_base_input' not in st.session_state:
+    st.session_state['fe_data_base_input'] = st.session_state['fe_data_base']
+if 'fe_data_corte_input' not in st.session_state:
+    st.session_state['fe_data_corte_input'] = st.session_state['fe_data_corte']
+if 'fe_empresa_input' not in st.session_state:
+    st.session_state['fe_empresa_input'] = st.session_state['fe_empresa'] or ''
+if 'fe_banco_input' not in st.session_state:
+    st.session_state['fe_banco_input'] = st.session_state['fe_banco'] or ''
+
+with st.form('endividamento_filtro'):
+    with st.container(horizontal=True, vertical_alignment='bottom'):
+        data_base = st.date_input('Data base', key='fe_data_base_input', format='DD/MM/YYYY')
+        data_corte = st.date_input('Vencimentos a partir do mês de', key='fe_data_corte_input', format='DD/MM/YYYY')
+        empresa = st.text_input('Empresa', key='fe_empresa_input')
+        banco = st.text_input('Banco', key='fe_banco_input')
+        submitido = st.form_submit_button('Filtrar')
+
+    if submitido:
+        st.session_state['fe_data_base'] = data_base or date.today()
+        st.session_state['fe_data_corte'] = data_corte
+        st.session_state['fe_empresa'] = empresa if empresa else None
+        st.session_state['fe_banco'] = banco if banco else None
+
+# Buscar dados do banco (mesma regra do Contas a Pagar: pago até a data base, projetado depois)
+data_base = st.session_state['fe_data_base']
 with st.spinner('Consultando endividamento...'):
-    df_raw = listar_projecao_endividamento()
+    df_raw = listar_projecao_endividamento(
+        data_base,
+        data_corte=st.session_state.get('fe_data_corte'),
+        empresa=st.session_state.get('fe_empresa'),
+        banco=st.session_state.get('fe_banco')
+    )
 
 if not df_raw.empty:
-    saldo, saldo_total_grupo, anos = transformar_dados_para_relatorio(df_raw)
-    html_table = build_html(saldo, saldo_total_grupo, anos, st.session_state.tema_endividamento)
+    saldo, saldo_total_grupo, anos, subtotal = transformar_dados_para_relatorio(df_raw)
+    html_table = build_html(saldo, saldo_total_grupo, anos, subtotal, st.session_state.tema_endividamento, data_base)
     st.markdown(html_table, unsafe_allow_html=True)
 else:
     st.warning('Nenhum dado disponível para o endividamento.')

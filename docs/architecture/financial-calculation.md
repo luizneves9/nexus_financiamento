@@ -2,9 +2,29 @@
 
 ## Principio
 
-Todos os cálculos financeiros são realizados no PostgreSQL. A aplicação
-consulta os resultados das views e matérialized views e não replica as
-fórmulas em Python.
+Todos os cálculos financeiros são realizados no PostgreSQL. A projeção é
+calculada por contrato (`calcular_projecao_contrato`) e gravada em
+`projecao_parcelas` (DA08); a aplicação consulta os resultados e não replica
+as fórmulas em Python.
+
+## Recálculo automático
+
+- Inclusão/alteração de contrato e inclusão/alteração/exclusão de antecipação:
+  recalcula só o contrato afetado (`trg_projecao_contratos`,
+  `trg_projecao_antecipacao`).
+- Nova Selic: recalcula, uma vez por comando, os contratos com parcelas
+  abertas afetadas (`trg_projecao_selic_*`).
+- Parcelas LIQUIDADAS nunca são alteradas; o estorno reabre a parcela e
+  recalcula o contrato.
+
+## Posição na data base (relatórios)
+
+Contas a Pagar e Endividamento usam a mesma consulta (`CTE_POSICAO_DATA_BASE`,
+DA10): parcela liquidada até a data base = valor pago; demais = valor
+projetado refeito com a Selic conhecida até a data base (Selic da própria data
+se ela for até a data base, senão a última até a data base); antecipações e
+quitações pagas depois da data base não entram, e os contratos que as têm são
+recalculados com `calcular_projecao_contrato(id, data_base)`.
 
 ## Projeção durante a inclusão
 
@@ -53,51 +73,49 @@ valores antecipados.
 
 ## Projeção TFC
 
-A matérialized view TFC utiliza dias corridos e base anual de 365 dias,
+O cálculo TFC utiliza dias corridos e base anual de 365 dias,
 conforme a implementação atual do banco.
 
 ## Antecipação
 
-A antecipação registra valor pago, data de pagamento, Selic e, quando existe 
+A antecipação registra valor pago, data de pagamento, Selic e, quando existe
 Selic aplicável, calcula o `valor_moeda` pela divisão do valor pago pela Selic.
 
 Cada antecipação possui um `tipo_lancamento` que pode ser:
-- **ANTECIPACAO**: pagamento parcial que reduz o saldo devedor, mas mantém as 
+- **ANTECIPACAO**: pagamento parcial que reduz o saldo devedor, mas mantém as
   demais parcelas na projeção.
-- **QUITACAO**: pagamento que liquida o contrato totalmente. A projeção é 
-  truncada na parcela da quitação; parcelas posteriores não são exibidas.
+- **QUITACAO**: pagamento que quita o contrato. As parcelas a partir da
+  parcela da quitação ficam como `CANCELADA_QUITACAO` e não são exibidas.
 
-A view `mv_projecao_moeda` detecta quitações através da CTE `parcela_quitada` 
-e filtra a projeção com `WHERE q.parcela_quitacao IS NULL OR cs.parcela <= q.parcela_quitacao`.
+O cálculo identifica a quitação pela CTE `parcela_quitada` (primeira parcela
+com vencimento maior ou igual à data de compensação).
 
 A consulta `SELECT_PROJECAO` (UC03) retorna três blocos:
-1. **Parcelas**: dados de `mv_projecao_moeda_final` (saldo, principal, juros, total).
-2. **Projeção TFC**: dados da view TFC quando aplicável.
-3. **Antecipações**: registros de `financiamento.antecipacao` com tipo e valor pago.
+1. **Parcelas**: `projecao_parcelas` sem as canceladas por quitação (SELIC e TFC).
+2. **Antecipações**: registros de `financiamento.antecipacao` com tipo e valor pago.
 
 O registro de antecipação/quitação pela interface (UC06) exibe, antes da
-confirmação, um saldo devedor pré-calculado: busca em `mv_projecao_moeda` a
+confirmação, um saldo devedor pré-calculado: busca em `projecao_parcelas` a
 parcela com vencimento mais próximo da data de pagamento informada, busca a
 Selic exata dessa data (ou a próxima disponível, com fallback para a mais
 recente cadastrada) e multiplica o saldo devedor da parcela pela Selic
-encontrada. Como `mv_projecao_moeda` só é populada para contratos do tipo
-`BNDES FINAME SELIC`, esse cálculo pré-confirmação não está disponível para
-outras modalidades.
+encontrada. Esse cálculo pré-confirmação só atende contratos do tipo
+`BNDES FINAME SELIC`.
 
 ## Pontos para validação do negócio
 
 - Arredondamentos e casas decimais.
 - Politica quando não existe Selic para uma data.
-- Momento de atualização das matérialized views.
 - Regras de carência e pagamento durante carência.
 
 ## Tratamento de Quitação na Projeção
 
 Quando `tipo_lancamento = 'QUITACAO'`:
-1. A CTE `parcela_quitada` identifica a parcela em que ocorreu a quitação 
-   (`MAX(parcela) WHERE tipo_lancamento = 'QUITACAO'`).
-2. O filtro WHERE retém apenas as parcelas até a quitação (`cs.parcela <= q.parcela_quitacao`).
-3. Parcelas posteriores à quitação **não são retornadas** da view.
+1. A CTE `parcela_quitada` identifica a primeira parcela com vencimento maior
+   ou igual à data de compensação da quitação.
+2. Essa parcela e as posteriores ficam com `situacao = CANCELADA_QUITACAO`
+   (inclusive a do mesmo dia da quitação — ponto a validar, BL-027).
+3. As parcelas canceladas não são exibidas nem somadas.
 4. O resultado reflete o final do contrato na data de quitação.
 
 **Casos tratados:**
@@ -107,9 +125,9 @@ Quando `tipo_lancamento = 'QUITACAO'`:
 
 ## Validação do UC03
 
-A projeção exibida pelo UC03 foi comparada com os resultados das materialized
-views utilizadas pelo banco. Os cálculos foram considerados corretos e
-coerentes com o padrão implementado nos MVs.
+Na migração de 15/10/2026, `calcular_projecao_contrato` foi comparada com as
+antigas materialized views para todos os contratos (valores em moeda e em R$,
+SELIC e TFC): diferença zero.
 
 Essa validação cobre a equivalência do cálculo entre a consulta utilizada pela
 interface e o cálculo oficial do PostgreSQL. Novos cenários financeiros devem

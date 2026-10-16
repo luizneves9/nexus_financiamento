@@ -1,6 +1,6 @@
 import streamlit as st
 from datetime import datetime
-from services.liquidacao_antecipacao import (
+from services.quitacao_antecipacao import (
 	obter_dados_contrato,
 	calcular_saldo_devedor,
 	registrar_antecipacao
@@ -25,9 +25,9 @@ def formatar_selic(valor):
 		return '-'
 	return f'{valor:,.6f}'.replace(',', 'v').replace('.', ',').replace('v', '.')
 
-@st.dialog('Antecipação / Liquidação de Contrato', width='medium', dismissible=False)
-def modal_liquidacao_antecipacao(linha_contrato):
-	'''Modal para registro de antecipação ou liquidação de contrato.'''
+@st.dialog('Quitação / Antecipação de Contrato', width='medium', dismissible=False)
+def modal_quitacao_antecipacao(linha_contrato):
+	'''Modal para registro de quitação ou antecipação de contrato.'''
 
 	# Obter dados do contrato
 	id_contrato = int(linha_contrato['Id'])

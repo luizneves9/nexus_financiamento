@@ -2,6 +2,35 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Regra de atuação (acima de qualquer outra instrução)
+
+**O usuário é o líder; o Claude é apenas a ferramenta de desenvolvimento.**
+Quem decide e quem executa é sempre o usuário.
+
+**NUNCA alterar o banco de dados.** O Claude só executa consultas de leitura
+(`SELECT`), numa transação somente leitura (`SET TRANSACTION READ ONLY` /
+`default_transaction_read_only = on`), e só o mínimo necessário. Em qualquer
+banco (produção ou teste), é proibido: DDL (`CREATE`, `ALTER`, `DROP`), DML
+(`INSERT`, `UPDATE`, `DELETE`, `TRUNCATE`, `COPY`), `REFRESH MATERIALIZED
+VIEW`, tabela temporária, teste de escrita (**nem mesmo em transação
+desfeita**) e execução de scripts de migração ou de importação. Todo SQL que
+altera o banco é entregue ao usuário, que decide e executa.
+
+**NUNCA alterar o disco por conta própria.** O Claude só edita os arquivos do
+projeto que o usuário pediu para alterar. Sem ordem explícita para aquela ação
+específica, o Claude não:
+
+- cria, apaga, move ou renomeia arquivos ou pastas;
+- cria ou altera `.env`, nem copia credenciais ou segredos;
+- inicializa ou altera repositórios git (`init`, `add`, `commit`, `push`,
+  `merge`, `reset`, branches...);
+- instala pacotes, roda Docker, faz deploy ou chama serviços externos.
+
+**Entrega:** ao terminar cada passo, o Claude entrega o script/comando e um
+passo a passo numerado do que o usuário deve executar, com o resultado
+esperado, e aguarda. Uma autorização vale só para a ação pedida, não para as
+seguintes.
+
 ## Sobre o projeto
 
 Nexus é uma aplicação Streamlit interna para o Grupo GBS que centraliza a
@@ -73,13 +102,24 @@ views (Streamlit) → services → repositories/queries → PostgreSQL (schema f
   página de login (`st.navigation(..., position='hidden')`); logado, renova a
   sessão, mostra usuário/**Sair** na sidebar e define a navegação em quatro
   grupos: *Painel* (Indicadores), *Operacional* (Contratos, Antecipação,
-  Liquidação), *Cadastros* (Empresas, Bancos, Fornecedor, Selic) e
-  *Relatórios* (Contas a Pagar, Endividamento). A página inicial após o login
-  é Contratos (`default=True`), não o Painel.
+  Liquidação, Consórcio, Outros Pagamentos), *Cadastros* (Empresas, Bancos,
+  Fornecedor, Selic) e *Relatórios* (Contas a Pagar, Endividamento). A página
+  inicial após o login é Painel > Indicadores (`default=True`). Páginas em
+  calibração mostram o selo laranja **BETA** no menu: lista `PAGINAS_BETA`
+  (url_path da página, hoje Indicadores e Endividamento), aplicado por CSS
+  `::after` no link — a página precisa de `url_path` fixo no `st.Page`; a
+  página inicial (`default=True`) é servida na raiz, por isso entra na lista
+  como `''`.
 - Projeção — `financiamento.projecao_parcelas` (+ `projecao_controle`),
-  recalculada por contrato pelos triggers do banco a cada inclusão/alteração
-  de contrato, antecipação/quitação ou Selic (DA08). As antigas materialized
-  views `mv_projecao_*` e a `vw_agrupamento_projecao` não existem mais.
+  recalculada por contrato pelos triggers do banco a cada inclusão de
+  contrato, alteração de um campo de contrato usado no cálculo
+  (`trg_projecao_contratos` é `UPDATE OF` só dessas colunas; DA13),
+  antecipação/quitação ou Selic (DA08). As antigas materialized views
+  `mv_projecao_*` e a `vw_agrupamento_projecao` não existem mais.
+- Data de contabilização — `contratos.data_contabilizacao` (obrigatória,
+  ≥ emissão; RN28, DA13) define a entrada do contrato no Endividamento e no
+  Painel (`data_contabilizacao <= :data_base`), no lugar da data de emissão;
+  não afeta a projeção. Ainda não há tela de edição (BL-032).
 - Liquidação — `views/liquidacao.py` + `services/liquidacao.py`: baixa
   manual, estorno e importação/conciliação do CSV do ERP (tabela temporária
   por operação; vínculos em `contrato_erp_vinculo`; DA09). A quitação/
@@ -89,9 +129,25 @@ views (Streamlit) → services → repositories/queries → PostgreSQL (schema f
   data base (pago × projetado, Selic até a data base, antecipações
   posteriores fora; DA10). Mudança nessa regra afeta os dois — e também o
   Painel de Indicadores, que usa a mesma CTE.
+- Endividamento — `views/relatorio_endividamento.py` +
+  `services/relatorio_endividamento.py` (UC10, RN29/RN30): quatro modalidades
+  (Financiamentos pela `CTE_POSICAO_DATA_BASE`; Compra Santo Anjo e Tributário
+  de `outros_pagamentos`; Consórcios de `consorcio_pago` + última competência
+  de `consorcio_a_pagar`) num trecho comum `CTE_MOVIMENTOS_ENDIVIDAMENTO`, usado
+  pelo relatório (`SELECT_PROJECAO_ENDIVIDAMENTO`) e pelo resumo do mês
+  (`SELECT_RESUMO_ENDIVIDAMENTO`, rodado no fim do mês anterior e na data
+  base). Créditos de consórcio e Dívida Líquida no rodapé. Valores em R$ Mi
+  arredondados por mês antes da soma — o resumo usa o mesmo arredondamento
+  para o Saldo Final bater com o Total a pagar.
+- Consórcio (`views/consorcio.py`, UC16) e Outros Pagamentos
+  (`views/outros_pagamentos.py`, UC17) — importação dos CSVs pago/a pagar por
+  banco e consorciado e créditos por competência; parcelas manuais de Compra
+  Santo Anjo e Tributário com baixa e estorno (DA14,
+  `database/consorcio_outros_pagamentos.sql`).
 - Painel > Indicadores — `views/indicadores.py` + `services/indicadores.py`
-  (UC15, RN27): consulta a posição duas vezes (período e data base atuais e
-  os mesmos recuados um ano) numa única passada por data base
+  (UC15, RN27): compara dois anos, Data X × Data Y (filtros por ano; padrão
+  ano anterior × ano atual; datas de cada lado em `periodos_comparados`),
+  consultando a posição uma vez por lado, numa única passada por data base
   (`GROUPING SETS` em `SELECT_INDICADORES_POSICAO`). Saldo devedor = só
   parcelas a vencer (as anteriores a 2026 nunca foram baixadas no Nexus).
   Layout com regra de alinhamento: cartões compactos de mesma altura (CSS no
@@ -115,7 +171,9 @@ views (Streamlit) → services → repositories/queries → PostgreSQL (schema f
   gravados na mesma transação (`gravar_anexos`). Sem `st.form`, campos
   inteiros precisam de `step=1, format='%d'` (senão viram float e as funções
   do banco recusam). As keys `ic_*` são todas validadas como obrigatórias em
-  `incluir_contrato`: widgets opcionais usam outro prefixo.
+  `incluir_contrato`: widgets opcionais usam outro prefixo. A Data
+  Contabilização (`ic_dt_contabilizacao`) começa vazia e recebe a Data Emissão
+  antes de o widget ser criado, quando a emissão é informada.
 - Autenticação — `views/login.py` + `services/login.py`: usuários em
   `financiamento.usuarios` (criados só pelo desenvolvedor, ver
   `database/usuarios.sql`); primeiro acesso com senha vazia leva ao cadastro
@@ -141,10 +199,12 @@ views (Streamlit) → services → repositories/queries → PostgreSQL (schema f
 - `src/queries/` — strings SQL nomeadas em maiúsculas, uma por domínio
   (`queries_contracts.py`, `queries_antecipacao.py`, `queries_liquidacao.py`,
   `queries_contas_a_pagar.py`, `queries_relatorio_endividamento.py`,
-  `queries_selic.py`, `queries_bancos.py`, `queries_empresas.py`,
-  `queries_fornecedores.py`, `queries_gerais.py`). Uma regra SQL usada em mais
-  de uma query fica num trecho comum (ex. `CTE_POSICAO_DATA_BASE`,
-  `CTE_CONCILIACAO_ERP`) concatenado às queries. Todo SQL da aplicação deve
+  `queries_indicadores.py`, `queries_consorcio.py`,
+  `queries_outros_pagamentos.py`, `queries_selic.py`, `queries_bancos.py`,
+  `queries_empresas.py`, `queries_fornecedores.py`, `queries_gerais.py`). Uma
+  regra SQL usada em mais de uma query fica num trecho comum (ex.
+  `CTE_POSICAO_DATA_BASE`, `CTE_CONCILIACAO_ERP`,
+  `CTE_MOVIMENTOS_ENDIVIDAMENTO`) concatenado às queries. Todo SQL da aplicação deve
   ficar aqui, não espalhado pelas views/services.
 - `src/database/connection.py` — `ConexaoBancoSQL` cria a engine SQLAlchemy
   (`postgresql://...`) sob demanda a partir de `ImportacaoENV`.
@@ -207,7 +267,8 @@ Toda tela que exibe datas ou valores monetários em `st.dataframe`/
   `(:param IS NULL OR coluna ILIKE :param)` e intervalos de data `de/até`).
 - `session_state` exclusivo da página com prefixo próprio (`fcp_` Contas a
   Pagar, `fe_` Endividamento, `fl_` Liquidação, `fs_` Selic, `fa_`
-  Antecipação, `fc_` Contratos) guardando o filtro aplicado. Filtros de
+  Antecipação, `fc_` Contratos, `fi_` Indicadores, `fco_` Consórcio, `fop_`
+  Outros Pagamentos) guardando o filtro aplicado. Filtros de
   período começam preenchidos quando a tela tem um recorte natural (ex. mês
   atual; data base = hoje).
 - Cada widget usa `key='<prefixo>_<campo>_input'` inicializada a partir do
@@ -233,8 +294,11 @@ Toda tela que exibe datas ou valores monetários em `st.dataframe`/
   projeção persistida, liquidação e vínculo ERP (já aplicado na produção;
   documentação e base para montar um banco novo).
 - `database/usuarios.sql` e `database/log_auditoria.sql` são scripts de
-  criação (já executados) das tabelas de autenticação e auditoria; ainda não
-  refletidos no `ddl_financiamento.sql` (`BL-019`).
+  criação (já executados) das tabelas de autenticação e auditoria;
+  `database/consorcio_outros_pagamentos.sql` (tabelas de consórcio e outros
+  pagamentos) e `database/data_contabilizacao.sql` (coluna e trigger restrito)
+  também já foram executados. Nenhum deles está refletido no
+  `ddl_financiamento.sql` (`BL-019`).
 - `database/projection_functions.sql` documenta as funções PostgreSQL de
   projeção temporária usadas na inclusão de contratos (DA05: a projeção roda
   via função no banco, sem persistir o contrato, para evitar efeitos

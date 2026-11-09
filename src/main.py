@@ -82,6 +82,31 @@ ESTILO_GERAL = '''
     </style>
 '''
 
+# páginas em calibração/ajuste: selo laranja "BETA" ao lado do nome no menu (url_path da página)
+# (o título do st.Page não aceita HTML; o selo é um ::after no link do menu, identificado pelo endereço)
+# '' = página inicial (default=True, hoje Indicadores): o Streamlit a serve na raiz, com o link terminando em '/'
+PAGINAS_BETA = ['', 'relatorio_endividamento']
+
+def estilo_selo_beta():
+    seletores = ', '.join(f'[data-testid="stSidebarNavLink"][href$="/{pagina}"]::after' for pagina in PAGINAS_BETA)
+    return f'''
+    <style>
+        {seletores} {{
+            content: 'BETA';
+            margin-left: 0.5rem;
+            padding: 0 0.4rem;
+            border-radius: 0.3rem;
+            border: 1px solid rgba(249, 115, 22, 0.45);
+            background-color: rgba(249, 115, 22, 0.15);
+            color: #F97316;
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            line-height: 1.5;
+        }}
+    </style>
+'''
+
 # fecha os grupos do menu no início da sessão, menos o da página atual
 # (o "Sair" recarrega o navegador e abre uma nova sessão, então o menu é recolhido de novo no próximo login)
 SCRIPT_RECOLHER_MENU = '''
@@ -118,6 +143,7 @@ def main():
     # identidade visual: logo no menu lateral, CSS geral e botão principal
     st.logo(str(LOGO), icon_image=str(ICONE), size='large')
     st.html(ESTILO_GERAL)
+    st.html(estilo_selo_beta())
     estilo_botao_principal()
 
     # usuário e Sair fixos no fim do menu lateral
@@ -128,13 +154,16 @@ def main():
 
     pages = {
         ':material/dashboard: Painel': [
-            st.Page('views/indicadores.py', title='Indicadores'),
+            # url_path fixo: o selo BETA (PAGINAS_BETA) localiza o link do menu por ele
+            # página inicial após o login
+            st.Page('views/indicadores.py', title='Indicadores', url_path='indicadores', default=True),
         ],
         ':material/request_quote: Operacional': [
-            # Contratos continua sendo a página inicial após o login (o painel consulta a posição de todos os contratos)
-            st.Page('views/contracts.py', title='Contratos', default=True),
+            st.Page('views/contracts.py', title='Contratos'),
             st.Page('views/include_antecipation.py', title='Antecipação'),
-            st.Page('views/liquidacao.py', title='Liquidação')
+            st.Page('views/liquidacao.py', title='Liquidação'),
+            st.Page('views/consorcio.py', title='Consórcio'),
+            st.Page('views/outros_pagamentos.py', title='Outros Pagamentos')
         ],
         ':material/folder_open: Cadastros': [
             st.Page('views/empresas.py', title='Empresas'),
@@ -144,7 +173,8 @@ def main():
         ],
         ':material/bar_chart: Relatórios': [
             st.Page('views/relatorio_contas_a_pagar.py', title='Contas a Pagar'),
-            st.Page('views/relatorio_endividamento.py', title='Endividamento')
+            # url_path fixo (o mesmo de antes): o selo BETA (PAGINAS_BETA) localiza o link do menu por ele
+            st.Page('views/relatorio_endividamento.py', title='Endividamento', url_path='relatorio_endividamento')
         ]
     }
 

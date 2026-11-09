@@ -12,6 +12,7 @@ continua sendo a fonte normativa para tipos, nulidade, indices e restricoes.
 | `id_banco` | Banco relacionado. |
 | `número_contrato` | Numero informado no contrato. |
 | `data_emissão` | Data de emissão. |
+| `data_contabilizacao` | Data de contabilização (obrigatória, ≥ emissão): a partir dela o contrato entra no Endividamento e no Painel. Não afeta a projeção (RN28, DA13). |
 | `data_bndes` | Data usada para localizar Selic. |
 | `selic` | Taxa preenchida pelo trigger quando nula. |
 | `tipo_contrato` | Tipo de cálculo, como SELIC ou TFC. |
@@ -122,3 +123,41 @@ no DDL vigente antes de qualquer integração.
 | `hash_sha256` | Identifica o arquivo; único por contrato. |
 | `conteudo` | O PDF (`bytea`); nunca lido nas listas. |
 | `usuario`, `data_registro` | Quem e quando anexou. |
+
+## Consórcio pago (`consorcio_pago`)
+
+| Campo | Significado |
+| --- | --- |
+| `competencia` | Referência da importação (mês da maior data de pagamento do arquivo); não é usada no relatório. |
+| `banco` / `nome_consorciado` | Banco e consorciado do arquivo importado. |
+| `numero_proposta` / `id_cota` | Cota de consórcio. |
+| `movimento` | Movimento financeiro (ex.: RECBTO. PARCELA, RECBTO LANCE DILUIDO). |
+| `data_pagamento` | Data do pagamento; no Endividamento o valor fica no mês desta data. |
+| `valor_total` | Coluna Total do CSV, usada no Endividamento (todos os movimentos). |
+
+## Consórcio a pagar (`consorcio_a_pagar`)
+
+| Campo | Significado |
+| --- | --- |
+| `competencia` | Mês da data base informada na importação (1º dia do mês); foto por competência, banco e consorciado. |
+| `banco` / `nome_consorciado` | Banco do CSV e consorciado informado na importação. |
+| `numero_proposta` | Cota contemplada. |
+| `valor_parcela` | Valor previsto da parcela. |
+| `data_pagamento` | Vencimento previsto da parcela. |
+
+## Créditos de consórcio (`consorcio_credito`)
+
+| Campo | Significado |
+| --- | --- |
+| `competencia` | Mês do fechamento (um lançamento por competência). |
+| `credito_cotas_contempladas` | Crédito Cotas Consórcios Contempladas (R$), abatido na Dívida Líquida. |
+| `credito_parcelas_nao_contempladas` | Crédito Parcelas pagas e não contempladas (R$), abatido na Dívida Líquida. |
+
+## Outros pagamentos (`outros_pagamentos`)
+
+| Campo | Significado |
+| --- | --- |
+| `modalidade` | `COMPRA_SANTO_ANJO` ou `TRIBUTARIO`. |
+| `descricao` | Descrição livre da parcela. |
+| `data_vencimento` / `valor` | Vencimento e valor lançado (> 0); no Endividamento a parcela fica no mês do vencimento. |
+| `data_pagamento` / `valor_pago` | Baixa (os dois juntos; vazios = em aberto). O estorno limpa os dois. |

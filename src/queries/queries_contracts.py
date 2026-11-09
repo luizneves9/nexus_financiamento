@@ -74,6 +74,7 @@ SELECT_CONTRATO_DETALHE = '''
 		b.razao_social AS banco,
 		c.tipo_contrato,
 		c.data_emissao,
+		c.data_contabilizacao,
 		c.data_bndes,
 		c.valor_financiado,
 		c.selic,

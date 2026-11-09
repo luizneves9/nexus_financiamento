@@ -48,6 +48,10 @@ def incluir_contrato(session_state, arquivos_por_tipo=None):
         session_state['mensagem_erro'] = f'A data BNDES deve ser maior ou igual que a data de emissão.'
         return
 
+    if session_state['ic_dt_contabilizacao'] < session_state['ic_dt_emissao']:
+        session_state['mensagem_erro'] = 'A data de contabilização deve ser maior ou igual à data de emissão.'
+        return
+
     if session_state['ic_valor_financiado'] <= 0:
         session_state['mensagem_erro'] = f'O valor financiado deve ser maior que zero!'
         return
@@ -118,6 +122,7 @@ def incluir_contrato(session_state, arquivos_por_tipo=None):
         'id_banco': id_banco,
         'contrato': session_state['ic_numero_contrato'],
         'data_emissao': session_state['ic_dt_emissao'],
+        'data_contabilizacao': session_state['ic_dt_contabilizacao'],
         'data_bndes': session_state['ic_dt_bndes'],
         'tipo': session_state['ic_tipo'],
         'valor': session_state['ic_valor_financiado'],
@@ -147,7 +152,8 @@ def incluir_contrato(session_state, arquivos_por_tipo=None):
         'banco': session_state['ic_bancos'],
         'tipo_contrato': parametro['tipo'],
         'valor_financiado': parametro['valor'],
-        'data_emissao': parametro['data_emissao']
+        'data_emissao': parametro['data_emissao'],
+        'data_contabilizacao': parametro['data_contabilizacao']
     }
 
     # conexão com o banco de dados (contrato, anexos e logs na mesma transação: tudo ou nada)

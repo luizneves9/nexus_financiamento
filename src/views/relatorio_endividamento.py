@@ -1,9 +1,15 @@
 import streamlit as st
 import pandas as pd
 from datetime import date
-from services.relatorio_endividamento import listar_projecao_endividamento, transformar_dados_para_relatorio
+from services.relatorio_endividamento import (
+    listar_projecao_endividamento,
+    buscar_credito_endividamento,
+    transformar_dados_para_relatorio,
+    montar_rodape,
+    consultar_resumo_mes,
+    montar_resumo_mes,
+)
 from views.components.cabecalho import cabecalho
-from tools.funcoes import listar_empresas, listar_bancos
 
 MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
 
@@ -13,10 +19,8 @@ if 'tema_endividamento' not in st.session_state:
 
 
 def fmt(v):
-    """Formata número com 3 decimais e ponto como separador (ex.: 7.536)."""
-    if v is None or v == 0:
-        return ""
-    return f"{v:,.3f}"
+    """Formata número com 3 decimais e ponto como separador (ex.: 7.536); mês sem valor mostra 0.000."""
+    return f"{(v or 0):,.3f}"
 
 
 def fmt_total(v):
@@ -47,8 +51,8 @@ def get_css(tema):
     .total-anual { background:#D8E4BC; font-weight:bold; }
     .pct-col { background:#D8E4BC; font-weight:bold; }
     .anos-col { background:#D8E4BC; font-weight:bold; }
-    .modalidade { background:#D8E4BC; text-align:left; font-weight:bold;}
-    .modalidade-normal { background:#D8E4BC; text-align:left; font-weight:normal; }
+    .modalidade { background:#D8E4BC; text-align:left; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .modalidade-normal { background:#D8E4BC; text-align:left; font-weight:normal; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 </style>
 """
     elif tema == 'escuro':
@@ -63,8 +67,8 @@ def get_css(tema):
     .total-anual { background:#2f3b17; font-weight:bold; }
     .pct-col { background:#2f3b17; font-weight:bold; }
     .anos-col { background:#2f3b17; font-weight:bold; }
-    .modalidade { background:#2f3b17; text-align:left; font-weight:bold;}
-    .modalidade-normal { background:#2f3b17; text-align:left; font-weight:normal; }
+    .modalidade { background:#2f3b17; text-align:left; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .modalidade-normal { background:#2f3b17; text-align:left; font-weight:normal; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 </style>
 """
     else:  # auto - respeita preferência do sistema operacional
@@ -81,8 +85,8 @@ def get_css(tema):
     .total-anual { background:#D8E4BC; font-weight:bold; }
     .pct-col { background:#D8E4BC; font-weight:bold; }
     .anos-col { background:#D8E4BC; font-weight:bold; }
-    .modalidade { background:#D8E4BC; text-align:left; font-weight:bold;}
-    .modalidade-normal { background:#D8E4BC; text-align:left; font-weight:normal; }
+    .modalidade { background:#D8E4BC; text-align:left; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .modalidade-normal { background:#D8E4BC; text-align:left; font-weight:normal; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -95,8 +99,8 @@ def get_css(tema):
     .total-anual { background:#2f3b17; font-weight:bold; }
     .pct-col { background:#2f3b17; font-weight:bold; }
     .anos-col { background:#2f3b17; font-weight:bold; }
-    .modalidade { background:#2f3b17; text-align:left; font-weight:bold;}
-    .modalidade-normal { background:#2f3b17; text-align:left; font-weight:normal; }
+    .modalidade { background:#2f3b17; text-align:left; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .modalidade-normal { background:#2f3b17; text-align:left; font-weight:normal; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 }
 </style>
 """
@@ -105,9 +109,9 @@ def get_css(tema):
 # larguras fixas das colunas (Anos, Modalidades, 12 meses, Total Anual, Total Anual, %), iguais na
 # tabela dos anos e na do Sub Total para que as colunas fiquem alinhadas
 COLUNAS_TABELA = (
-    "<colgroup><col style='width:4%'><col style='width:10%'>"
-    + "<col style='width:5.3%'>" * len(MESES)
-    + "<col style='width:6.4%'><col style='width:8%'><col style='width:8%'></colgroup>"
+    "<colgroup><col style='width:4%'><col style='width:14%'>"
+    + "<col style='width:4.9%'>" * len(MESES)
+    + "<col style='width:7.2%'><col style='width:8%'><col style='width:8%'></colgroup>"
 )
 
 CORES_PAGAMENTO = {
@@ -126,7 +130,11 @@ def get_css_pagamento(tema):
                 f".legenda-endiv span.pago {{ background:{pago}; }} "
                 f".legenda-endiv span.parcial {{ background:{parcial}; }} ")
 
-    base = (".legenda-endiv { margin-top:6px; font-size:13px; } "
+    base = (".tabela-endiv td.body-row, .tabela-endiv td.total-anual, .tabela-endiv td.pct-col, .tabela-endiv td.total-col "
+            "{ text-align:right; font-variant-numeric:tabular-nums; } "
+            ".tabela-endiv td.modalidade, .tabela-endiv td.modalidade-normal { text-align:left; font-weight:bold; } "
+            ".tabela-endiv td.saldo-rotulo { white-space:nowrap; overflow:visible; } "
+            ".legenda-endiv { margin-top:6px; font-size:13px; } "
             ".legenda-endiv span { display:inline-block; width:14px; height:14px; border:1px solid #000; "
             "vertical-align:middle; margin:0 4px 0 12px; } ")
 
@@ -141,7 +149,7 @@ def get_css_pagamento(tema):
 # ------------------------------------------------------------------
 # MONTAGEM DO HTML ------------------------------------------------
 # ------------------------------------------------------------------
-def build_html(saldo, saldo_total_grupo, anos, subtotal, tema, data_base):
+def build_html(saldo, saldo_total_grupo, anos, subtotal, rodape, tema, data_base):
     html = [get_css(tema), get_css_pagamento(tema)]
     html.append(
         "<div class='titulo-bar'><h2>ENDIVIDAMENTO BANCÁRIO - PROJEÇÃO DOS PAGAMENTOS - "
@@ -168,10 +176,9 @@ def build_html(saldo, saldo_total_grupo, anos, subtotal, tema, data_base):
     # Bloco Saldo Acumulado (Total Anual mesclado nas linhas)
     for i, linha in enumerate(saldo):
         html.append("<tr>")
-        if i == 0:
-            html.append(f"<td class='anos-col' rowspan='{len(saldo)}'>-</td>")
-        html.append(f"<td class='body-row modalidade'>{linha['modalidade']}</td>")
-        html.append(f"<td class='body-row' colspan='{len(MESES)}'></td>")
+        # rótulo avança sobre Jan e Fev (vazios no saldo) para caber numa linha só
+        html.append(f"<td class='modalidade saldo-rotulo' colspan='4'>Saldo Acumulado - {linha['modalidade']}</td>")
+        html.append(f"<td class='body-row' colspan='{len(MESES) - 2}'></td>")
         if i == 0:
             html.append(f"<td class='total-col' rowspan='{len(saldo)}'>{fmt_total(saldo_total_grupo)}</td>")
         html.append(f"<td class='total-anual'>{fmt_total(linha['total'])}</td>")
@@ -201,31 +208,115 @@ def build_html(saldo, saldo_total_grupo, anos, subtotal, tema, data_base):
     html.append("<div style='height:16px'></div>")
     html.append(f"<table class='tabela-endiv' style='table-layout:fixed'>{COLUNAS_TABELA}")
 
-    # Bloco Sub Total (modalidades + Total Geral): meses somados em todos os anos exibidos,
-    # total, total pago até a data base e total a pagar
-    for i, linha in enumerate(subtotal):
-        classe_modalidade = 'modalidade' if linha['modalidade'] == 'Total Geral' else 'modalidade-normal'
+    # Bloco Sub Total (modalidades + Total Geral): meses somados em todos os anos exibidos, total,
+    # total pago até a data base e total a pagar em colunas próprias (linhas com a mesma altura dos anos)
+    html.append("<tr>")
+    html.append("<th class='hdr' colspan='2'>Sub Total</th>")
+    for m in MESES:
+        html.append(f"<th class='hdr'>{m}</th>")
+    html.append("<th class='total-col'>Total</th>")
+    html.append("<th class='hdr'>Total pago</th>")
+    html.append("<th class='hdr'>Total a pagar</th>")
+    html.append("</tr>")
+    for linha in subtotal:
         html.append("<tr>")
-        if i == 0:
-            html.append(f"<td class='anos-col' rowspan='{len(subtotal)}'>Sub<br>Total</td>")
-        html.append(f"<td class='body-row {classe_modalidade}'>{linha['modalidade']}</td>")
+        html.append(f"<td class='body-row modalidade' colspan='2'>{linha['modalidade']}</td>")
         for v in linha["valores"]:
             html.append(f"<td class='body-row'>{fmt(v)}</td>")
         html.append(f"<td class='total-col'>{fmt_total(linha['total'])}</td>")
-        # rótulo e valor na mesma célula (duas colunas mescladas), sem a linha divisória entre eles
-        html.append(
-            "<td class='total-anual' colspan='2' style='white-space:nowrap'>"
-            "<div style='display:flex; justify-content:space-between; gap:8px'>"
-            f"<span>Total pago:</span><span>{fmt_total(linha['total_pago'])}</span></div>"
-            "<div style='display:flex; justify-content:space-between; gap:8px'>"
-            f"<span>Total a pagar:</span><span>{fmt_total(linha['total_a_pagar'])}</span></div>"
-            "</td>"
-        )
+        html.append(f"<td class='total-anual'>{fmt_total(linha['total_pago'])}</td>")
+        html.append(f"<td class='total-anual'>{fmt_total(linha['total_a_pagar'])}</td>")
         html.append("</tr>")
 
     html.append("</table>")
+
+    # Rodapé: créditos de consórcio (competência da data base ou última anterior) e Dívida Líquida
+    html.append("<div style='height:16px'></div>")
+    html.append(f"<table class='tabela-endiv' style='table-layout:fixed'>{COLUNAS_TABELA}")
+    competencia = f" ({rodape['competencia']:%m/%Y})" if rodape['competencia'] else " (sem lançamento)"
+    linhas_rodape = [
+        ('modalidade-normal', f"(-) Crédito Cotas Contempladas{competencia}", rodape['credito_cotas_contempladas']),
+        ('modalidade-normal', f"(-) Crédito Parcelas pagas e não contempladas{competencia}",
+         rodape['credito_parcelas_nao_contempladas']),
+        ('modalidade', "Dívida Líquida (Total a pagar - créditos)", rodape['divida_liquida']),
+    ]
+    for classe, rotulo, valor in linhas_rodape:
+        html.append("<tr>")
+        # rótulo à esquerda (Anos até Total pago) e valor na última coluna (Total a pagar)
+        html.append(f"<td class='body-row {classe}' colspan='{len(MESES) + 4}'>{rotulo}</td>")
+        html.append(f"<td class='total-anual'>{fmt_total(valor)}</td>")
+        html.append("</tr>")
+    html.append("</table>")
+
     html.append(
         "<div class='legenda-endiv'><span class='pago'></span>Mês liquidado</div>"
+    )
+    return "".join(html)
+
+
+# Resumo do mês: Período, Modalidade e as 6 colunas de valores
+COLUNAS_RESUMO = (
+    "<colgroup><col style='width:14%'><col style='width:20%'>"
+    + "<col style='width:11%'>" * 6
+    + "</colgroup>"
+)
+
+
+def build_html_resumo(resumo, tema, data_base):
+    """Resumo do mês (variação do endividamento): saldo do mês anterior, movimentos do mês e saldo na data base."""
+
+    html = [get_css(tema), get_css_pagamento(tema)]
+    html.append(
+        "<div style='height:16px'></div>"
+        "<div class='titulo-bar'><h2>RESUMO DO MÊS - VARIAÇÃO DO ENDIVIDAMENTO - "
+        f"DATA BASE {data_base:%d/%m/%Y}</h2></div>"
+    )
+    html.append(f"<table class='tabela-endiv' style='table-layout:fixed'>{COLUNAS_RESUMO}")
+    html.append("<tr>")
+    for titulo in ("Período", "Modalidade", "Saldo Inicial", "Juros", "Pgto Mês",
+                   "Contrato Quitado", "Contrato Novo", "Saldo Final"):
+        html.append(f"<th class='hdr'>{titulo}</th>")
+    html.append("</tr>")
+
+    colunas = ('saldo_inicial', 'juros', 'pgto_mes', 'quitado', 'novo', 'saldo_final')
+    for i, linha in enumerate(resumo['linhas']):
+        html.append("<tr>")
+        if i == 0:
+            html.append(f"<td class='anos-col' rowspan='{len(resumo['linhas'])}'>{resumo['periodo']}</td>")
+        html.append(f"<td class='body-row modalidade-normal'>{linha['modalidade']}</td>")
+        for coluna in colunas:
+            classe = 'total-anual' if coluna == 'saldo_final' else 'body-row'
+            html.append(f"<td class='{classe}'>{fmt(linha[coluna])}</td>")
+        html.append("</tr>")
+
+    total = resumo['total']
+    html.append("<tr>")
+    html.append("<td class='modalidade' colspan='2'>Total</td>")
+    for coluna in colunas:
+        html.append(f"<td class='total-anual'>{fmt_total(total[coluna])}</td>")
+    html.append("</tr>")
+    html.append("</table>")
+
+    # créditos de consórcio (mesma competência do rodapé do relatório) e Dívida Líquida na data base
+    html.append("<div style='height:16px'></div>")
+    html.append(f"<table class='tabela-endiv' style='table-layout:fixed'>{COLUNAS_RESUMO}")
+    competencia = f" ({resumo['competencia']:%m/%Y})" if resumo['competencia'] else " (sem lançamento)"
+    linhas_rodape = [
+        ('modalidade-normal', f"(-) Crédito Cotas Contempladas{competencia}", -resumo['credito_cotas_contempladas']),
+        ('modalidade-normal', f"(-) Crédito Parcelas pagas e não contempladas{competencia}",
+         -resumo['credito_parcelas_nao_contempladas']),
+        ('modalidade', "Dívida Líquida (Saldo Final - créditos)", resumo['divida_liquida']),
+    ]
+    for classe, rotulo, valor in linhas_rodape:
+        html.append("<tr>")
+        html.append(f"<td class='body-row {classe}' colspan='7'>{rotulo}</td>")
+        html.append(f"<td class='total-anual'>{fmt_total(valor)}</td>")
+        html.append("</tr>")
+    html.append("</table>")
+    html.append(
+        "<div class='legenda-endiv'>Saldo Inicial: a pagar no último dia do mês anterior · "
+        "Juros: correção (Selic) e reajustes/novas contemplações de consórcio · "
+        "Contrato Novo: contratos com data de contabilização no mês</div>"
     )
     return "".join(html)
 
@@ -235,68 +326,51 @@ def build_html(saldo, saldo_total_grupo, anos, subtotal, tema, data_base):
 # ------------------------------------------------------------------
 
 # cabeçalho padrão da tela (ícone do grupo no menu)
-cabecalho('Endividamento Bancário', 'Projeção dos pagamentos do endividamento bancário por ano e modalidade.', 'bar_chart')
+cabecalho('Endividamento Bancário', 'Projeção dos pagamentos por ano e modalidade (financiamentos, Compra Santo Anjo, consórcios e tributário).', 'bar_chart')
 
 # filtros (FE = Filtro Endividamento); padrão: data base hoje e vencimentos a partir de 01/01/2026
 if 'fe_data_base' not in st.session_state:
     st.session_state['fe_data_base'] = date.today()
 if 'fe_data_corte' not in st.session_state:
     st.session_state['fe_data_corte'] = date(2026, 1, 1)
-if 'fe_empresa' not in st.session_state:
-    st.session_state['fe_empresa'] = None
-if 'fe_banco' not in st.session_state:
-    st.session_state['fe_banco'] = None
-
 # o widget usa key própria; passar value= dinâmico recria o widget e descarta o que foi digitado
 if 'fe_data_base_input' not in st.session_state:
     st.session_state['fe_data_base_input'] = st.session_state['fe_data_base']
 if 'fe_data_corte_input' not in st.session_state:
     st.session_state['fe_data_corte_input'] = st.session_state['fe_data_corte']
 
-# opções dos filtros de seleção (mesmo cache de cadastros usado no modal de inclusão de contrato)
-if st.session_state.get('df_lista_empresas') is None:
-    st.session_state['df_lista_empresas'] = listar_empresas()
-if st.session_state.get('df_lista_bancos') is None:
-    st.session_state['df_lista_bancos'] = listar_bancos()
-
-df_empresas = st.session_state['df_lista_empresas']
-df_bancos = st.session_state['df_lista_bancos']
-opcoes_empresas = ['Todos'] + (df_empresas['razao_social'].to_list() if df_empresas is not None and 'razao_social' in df_empresas else [])
-opcoes_bancos = ['Todos'] + (df_bancos['razao_social'].to_list() if df_bancos is not None and 'razao_social' in df_bancos else [])
-
-if st.session_state.get('fe_empresa_input') not in opcoes_empresas:
-    st.session_state['fe_empresa_input'] = st.session_state['fe_empresa'] if st.session_state['fe_empresa'] in opcoes_empresas else 'Todos'
-if st.session_state.get('fe_banco_input') not in opcoes_bancos:
-    st.session_state['fe_banco_input'] = st.session_state['fe_banco'] if st.session_state['fe_banco'] in opcoes_bancos else 'Todos'
-
 with st.form('endividamento_filtro'):
     with st.container(horizontal=True, vertical_alignment='bottom'):
         data_base = st.date_input('Data base', key='fe_data_base_input', format='DD/MM/YYYY')
         data_corte = st.date_input('Vencimentos a partir do mês de', key='fe_data_corte_input', format='DD/MM/YYYY')
-        empresa = st.selectbox('Empresa', opcoes_empresas, key='fe_empresa_input')
-        banco = st.selectbox('Banco', opcoes_bancos, key='fe_banco_input')
         submitido = st.form_submit_button('Filtrar')
 
     if submitido:
         st.session_state['fe_data_base'] = data_base or date.today()
         st.session_state['fe_data_corte'] = data_corte
-        st.session_state['fe_empresa'] = None if empresa == 'Todos' else empresa
-        st.session_state['fe_banco'] = None if banco == 'Todos' else banco
 
-# Buscar dados do banco (mesma regra do Contas a Pagar: pago até a data base, projetado depois)
+# Buscar dados do banco (financiamentos com a regra do Contas a Pagar; consórcio, Santo Anjo e tributário na data base)
 data_base = st.session_state['fe_data_base']
 with st.spinner('Consultando endividamento...'):
     df_raw = listar_projecao_endividamento(
         data_base,
-        data_corte=st.session_state.get('fe_data_corte'),
-        empresa=st.session_state.get('fe_empresa'),
-        banco=st.session_state.get('fe_banco')
+        data_corte=st.session_state.get('fe_data_corte')
     )
+    credito = buscar_credito_endividamento(data_base)
 
 if not df_raw.empty:
     saldo, saldo_total_grupo, anos, subtotal = transformar_dados_para_relatorio(df_raw)
-    html_table = build_html(saldo, saldo_total_grupo, anos, subtotal, st.session_state.tema_endividamento, data_base)
+    rodape = montar_rodape(subtotal, credito)
+    html_table = build_html(saldo, saldo_total_grupo, anos, subtotal, rodape, st.session_state.tema_endividamento, data_base)
     st.markdown(html_table, unsafe_allow_html=True)
+
+    # resumo do mês (variação): posição no último dia do mês anterior x posição na data base
+    with st.spinner('Consultando o resumo do mês...'):
+        consulta_resumo = consultar_resumo_mes(data_base, data_corte=st.session_state.get('fe_data_corte'))
+    if consulta_resumo is not None:
+        df_inicial, df_final, base_inicial = consulta_resumo
+        resumo = montar_resumo_mes(df_inicial, df_final, base_inicial, data_base, rodape)
+        st.markdown(build_html_resumo(resumo, st.session_state.tema_endividamento, data_base), unsafe_allow_html=True)
 else:
     st.warning('Nenhum dado disponível para o endividamento.')
 

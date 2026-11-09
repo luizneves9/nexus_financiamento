@@ -11,6 +11,8 @@
 | `ddl_financiamento.sql` | Retrato documental do schema PostgreSQL `financiamento` (tabelas, funções, triggers e views originais). Não inclui os objetos da projeção persistida. |
 | `projecao_persistida.sql` | **Estado final** da projeção persistida, liquidação e vínculo ERP (DA08, DA09): tabelas `projecao_controle`, `projecao_parcelas`, `liquidacao` e `contrato_erp_vinculo`, funções de cálculo/recálculo, triggers e carga inicial. **Já aplicado na produção** em 15-16/10/2026; serve de documentação e para montar um banco novo. Não executar de novo na produção. |
 | `contrato_anexos.sql` | Tabelas `anexo_contrato` e `anexo_ficha_financeira` (PDFs dos contratos, DA12). Já executado em 16/10/2026. |
+| `consorcio_outros_pagamentos.sql` | Tabelas `consorcio_pago`, `consorcio_a_pagar`, `consorcio_credito` e `outros_pagamentos` (modalidades do Endividamento fora da projeção, DA14; UC16 e UC17). Já executado (a coluna `consorcio_a_pagar.nome_consorciado` foi incluída depois, em 06/11/2026). |
+| `data_contabilizacao.sql` | Coluna `contratos.data_contabilizacao` (preenchida com a emissão, `NOT NULL`, ≥ emissão) e trigger `trg_projecao_contratos` restrito às colunas do cálculo (DA13). Já executado em 09/11/2026, inclusive a etapa 2 (`NOT NULL`). |
 | `projection_functions.sql` | Funções parametrizadas para projeção temporária durante a inclusão de contratos (DA05). |
 | `usuarios.sql` | Script de criação da tabela `usuarios` (autenticação, UC12) e comandos do desenvolvedor: criar usuário, resetar senha, bloquear e conferir. Já executado. |
 | `log_auditoria.sql` | Script de criação da tabela `log_auditoria`, índices, função `log_auditoria_imutavel` e triggers que bloqueiam UPDATE/DELETE/TRUNCATE (DA06), mais consultas úteis de auditoria. Executar depois de `usuarios.sql`. Já executado. |
@@ -41,6 +43,11 @@ contratos. Unificá-las com `calcular_projecao_contrato` está no backlog
   estorno);
 - vínculo ERP: `contrato_erp_vinculo`;
 - anexos: `anexo_contrato` e `anexo_ficha_financeira` (`contrato_anexos.sql`);
+- consórcio e outros pagamentos: `consorcio_pago`, `consorcio_a_pagar`,
+  `consorcio_credito` e `outros_pagamentos` (`consorcio_outros_pagamentos.sql`);
+- `contratos.data_contabilizacao` e o trigger `trg_projecao_contratos`
+  restrito (`data_contabilizacao.sql`; o estado final do trigger também está em
+  `projecao_persistida.sql`);
 - views: `vw_controle_contratos` (lista de contratos).
 
 ## Uso dos arquivos
@@ -59,8 +66,10 @@ arquitetura.
 
 ## Pendências conhecidas
 
-1. **Tabelas `usuarios` e `log_auditoria`** — criadas por `usuarios.sql` e
-   `log_auditoria.sql`, ainda não refletidas em `ddl_financiamento.sql`. Ver
+1. **Tabelas `usuarios`, `log_auditoria`, de consórcio e outros pagamentos e
+   a coluna `contratos.data_contabilizacao`** — criadas por `usuarios.sql`,
+   `log_auditoria.sql`, `consorcio_outros_pagamentos.sql` e
+   `data_contabilizacao.sql`, ainda não refletidas em `ddl_financiamento.sql`. Ver
    [BL-019](../docs/requirements/status-register.md#backlog-rastreável).
 2. **Limpeza final** — schema `financiamento_base` (cópias da migração e
    backup da Selic) e a view sem uso `vw_agrupamento_projecao_parcelas`. Ver

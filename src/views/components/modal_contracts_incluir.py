@@ -74,6 +74,7 @@ def inicializar_state():
         'ic_bancos': bancos,
         'ic_numero_contrato': None,
         'ic_dt_emissao': None,
+        'ic_dt_contabilizacao': None,
         'ic_dt_bndes': None,
         'ic_tipo': 'BNDES FINAME SELIC',
         'opcoes_tipo': ['BNDES FINAME SELIC', 'BNDES FINAME TFC'],
@@ -124,14 +125,21 @@ def modal_incluir_contrato():
         ['Dados', 'Contrato', 'Ficha Financeira', 'Projeção'], key='novo_aba', on_change='rerun'
     )
 
+    # data de contabilização vazia começa igual à data de emissão (o usuário pode trocar);
+    # ajustada antes de o widget ser criado nesta execução
+    if st.session_state.get('ic_dt_contabilizacao') is None and st.session_state.get('ic_dt_emissao') is not None:
+        st.session_state['ic_dt_contabilizacao'] = st.session_state['ic_dt_emissao']
+
     # os widgets usam só a key (o valor inicial vem de inicializar_state)
     with aba_dados:
-        c1, c2, c3, c4 = st.columns([1, 1.5, 1.5, 1])
+        c1, c2, c3, c4, c4b = st.columns([1, 1.5, 1.5, 1, 1])
 
         c1.selectbox('Empresa', st.session_state.df_lista_empresas['razao_social'], key='ic_empresas')
         c2.selectbox('Banco', st.session_state.df_lista_bancos['razao_social'], key='ic_bancos')
         c3.text_input('Número do Contrato', key='ic_numero_contrato')
         c4.date_input('Data Emissão', format='DD/MM/YYYY', key='ic_dt_emissao')
+        c4b.date_input('Data Contabilização', format='DD/MM/YYYY', key='ic_dt_contabilizacao',
+                       help='Mês em que o contrato entra no Endividamento e no Painel. Não altera a projeção.')
 
         c5, c6, c7, c8 = st.columns([1, 1.5, 1.5, 1])
 

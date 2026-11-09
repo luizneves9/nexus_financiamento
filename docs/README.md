@@ -45,12 +45,14 @@ alinhando a documentação ao estado real da aplicação e ao roadmap do projeto
 | UC07 | Liquidação de parcelas | Implementado |
 | UC08 | Atualização da Selic | Implementado (importação do BNDES sob demanda) |
 | UC09 | Relatório Contas a Pagar | Implementado |
-| UC10 | Relatório de endividamento | Implementado |
+| UC10 | Relatório de endividamento | Implementado (em calibração) |
 | UC11 | Consulta de antecipações | Implementado |
 | UC12 | Autenticação de usuário | Implementado (perfis planejados) |
 | UC13 | Conciliação com o ERP | Implementado |
 | UC14 | Detalhe do contrato e anexos | Implementado |
-| UC15 | Painel de indicadores | Implementado |
+| UC15 | Painel de indicadores | Implementado (em calibração) |
+| UC16 | Consórcio | Implementado |
+| UC17 | Outros pagamentos (Compra Santo Anjo e Tributário) | Implementado |
 
 ## Estrutura da documentação
 
@@ -78,7 +80,11 @@ funções de projeção temporária estão em
 [database/projection_functions.sql](../database/projection_functions.sql). As
 tabelas de autenticação e auditoria são criadas por
 [database/usuarios.sql](../database/usuarios.sql) e
-[database/log_auditoria.sql](../database/log_auditoria.sql).
+[database/log_auditoria.sql](../database/log_auditoria.sql); as de consórcio e
+outros pagamentos por
+[database/consorcio_outros_pagamentos.sql](../database/consorcio_outros_pagamentos.sql);
+a data de contabilização do contrato por
+[database/data_contabilizacao.sql](../database/data_contabilizacao.sql).
 
 Para incluir uma nova funcionalidade, use o [Templaté de Rastreabilidade de
 Nova Funcionalidade](requirements/feature-traceability-templaté.md).

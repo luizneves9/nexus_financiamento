@@ -3,6 +3,7 @@ import pandas as pd
 import streamlit as st
 from datetime import date
 from services.indicadores import (
+    periodos_comparados,
     consultar_indicadores,
     resumir_indicadores,
     agrupar_indicadores,
@@ -12,7 +13,7 @@ from tools.funcoes import transformar_float_em_str, listar_empresas, listar_banc
 from views.components.cabecalho import cabecalho
 
 MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
-CORES_ANOS = ['#94A3B8', '#6366F1']        # ano anterior (cinza), ano atual (índigo da identidade visual)
+CORES_ANOS = ['#94A3B8', '#6366F1']        # Data X (cinza), Data Y (índigo da identidade visual)
 
 # cartões: (chave do resumo, título, cor do delta, definição)
 # delta 'inverse': queda aparece em verde (saldo, juros e taxa menores são melhores); 'off': sem juízo de valor
@@ -20,7 +21,7 @@ CARTOES = [
     ('saldo_devedor', 'Saldo devedor', 'inverse', 'Principal das parcelas a vencer na data base.'),
     ('servico_periodo', 'Fluxo de pagamentos', 'off', 'Parcelas, antecipações e quitações com vencimento útil no período: valor pago, se liquidado até a data base; senão, o projetado.'),
     ('juros_periodo', 'Juros no período', 'inverse', 'Juros das parcelas com vencimento útil no período.'),
-    ('contratado_periodo', 'Contratado no período', 'off', 'Valor financiado dos contratos emitidos no período.'),
+    ('contratado_periodo', 'Contratado no período', 'off', 'Valor financiado dos contratos contabilizados no período.'),
 ]
 
 # cartões compactos (só nesta tela, pelo container key='fi_cartoes'): valor e título menores, faixa índigo à
@@ -59,7 +60,7 @@ def variacao_txt(valor):
     return '—' if valor is None or pd.isna(valor) else f'{valor:+.1f}%'.replace('.', ',')
 
 def cartoes(resumo, ano, ano_anterior):
-    '''Linha de cartões com o valor atual e a variação sobre o mesmo período do ano anterior.'''
+    '''Linha de cartões com o valor atual e a variação de Data Y sobre Data X.'''
 
     # colunas fixas (os cinco na mesma linha); todo cartão tem a linha de variação (sem base de comparação,
     # mostra "sem base" em cinza), então todos ficam com a mesma altura
@@ -92,7 +93,7 @@ def cartoes(resumo, ano, ano_anterior):
     )
 
 def grafico_servico(dados):
-    '''Fluxo de pagamentos por mês: ano atual x ano anterior, barras lado a lado (eixo em R$ Mi, formato brasileiro).'''
+    '''Fluxo de pagamentos por mês: Data Y x Data X, barras lado a lado (eixo em R$ Mi, formato brasileiro).'''
 
     df, series = servico_mensal_comparado(dados)
     if df.empty:
@@ -118,7 +119,7 @@ def grafico_servico(dados):
     st.altair_chart(grafico, width='stretch')
 
 def grafico_composicao(df, coluna, series):
-    '''Barras horizontais por empresa/banco/tipo: fluxo de pagamentos do ano anterior x ano atual.
+    '''Barras horizontais por empresa/banco/tipo: fluxo de pagamentos de Data X x Data Y.
 
     Rótulo da barra do ano atual: valor, participação no fluxo e variação; saldo e taxa no balão.
     '''
@@ -211,19 +212,23 @@ def composicao(dados, series):
         return
     grafico_composicao(df, coluna, series)
 
+# anos dos filtros: do primeiro contrato (2021) até alguns anos à frente (projeção)
+ANO_INICIAL = 2021
+ANOS_A_FRENTE = 5
+
 def main():
 
     # cabeçalho padrão da tela (ícone do grupo no menu)
-    cabecalho('Indicadores', 'Posição da dívida na data base, comparada ao mesmo período do ano anterior.', 'dashboard')
+    cabecalho('Indicadores', 'Posição da dívida na data base, comparando a Data X com a Data Y.', 'dashboard')
 
-    # inicializar session_states dos filtros (FI = Filtro Indicadores); padrão: do início do ano até hoje
+    # inicializar session_states dos filtros (FI = Filtro Indicadores), por ano; padrão:
+    # Data base = ano atual, Data X = ano anterior, Data Y = ano atual (datas em periodos_comparados)
     hoje = date.today()
-    if 'fi_data_base' not in st.session_state:
-        st.session_state['fi_data_base'] = hoje
-    if 'fi_data_ini' not in st.session_state:
-        st.session_state['fi_data_ini'] = date(hoje.year, 1, 1)
-    if 'fi_data_fim' not in st.session_state:
-        st.session_state['fi_data_fim'] = hoje
+    anos = list(range(ANO_INICIAL, hoje.year + ANOS_A_FRENTE + 1))
+    padroes = {'fi_ano_base': hoje.year, 'fi_ano_x': hoje.year - 1, 'fi_ano_y': hoje.year}
+    for chave, valor in padroes.items():
+        if st.session_state.get(chave) not in anos:
+            st.session_state[chave] = valor
     if 'fi_empresa' not in st.session_state:
         st.session_state['fi_empresa'] = None
     if 'fi_banco' not in st.session_state:
@@ -242,12 +247,9 @@ def main():
 
     # inicializar session_states dos widgets a partir dos filtros salvos
     # (o widget usa key própria; passar value= dinâmico recria o widget e descarta o que foi digitado)
-    if 'fi_data_base_input' not in st.session_state:
-        st.session_state['fi_data_base_input'] = st.session_state['fi_data_base']
-    if 'fi_data_ini_input' not in st.session_state:
-        st.session_state['fi_data_ini_input'] = st.session_state['fi_data_ini']
-    if 'fi_data_fim_input' not in st.session_state:
-        st.session_state['fi_data_fim_input'] = st.session_state['fi_data_fim']
+    for chave in padroes:
+        if st.session_state.get(f'{chave}_input') not in anos:
+            st.session_state[f'{chave}_input'] = st.session_state[chave]
     if st.session_state.get('fi_empresa_input') not in opcoes_empresas:
         st.session_state['fi_empresa_input'] = st.session_state['fi_empresa'] if st.session_state['fi_empresa'] in opcoes_empresas else 'Todos'
     if st.session_state.get('fi_banco_input') not in opcoes_bancos:
@@ -256,26 +258,35 @@ def main():
     # lista de filtros
     with st.form('indicadores_filtro'):
         with st.container(horizontal=True, vertical_alignment='bottom'):
-            data_base = st.date_input('Data base', key='fi_data_base_input', format='DD/MM/YYYY')
-            data_ini = st.date_input('Período de', key='fi_data_ini_input', format='DD/MM/YYYY')
-            data_fim = st.date_input('Período até', key='fi_data_fim_input', format='DD/MM/YYYY')
+            ano_base = st.selectbox('Data base', anos, key='fi_ano_base_input')
+            ano_x = st.selectbox('Data X', anos, key='fi_ano_x_input', help='Ano de comparação (ex.: ano anterior).')
+            ano_y = st.selectbox('Data Y', anos, key='fi_ano_y_input', help='Ano analisado (ex.: ano atual).')
             empresa = st.selectbox('Empresa', opcoes_empresas, key='fi_empresa_input')
             banco = st.selectbox('Banco', opcoes_bancos, key='fi_banco_input')
             submitido = st.form_submit_button('Filtrar', use_container_width=True)
 
         if submitido:
-            st.session_state['fi_data_base'] = data_base or hoje
-            st.session_state['fi_data_ini'] = data_ini
-            st.session_state['fi_data_fim'] = data_fim
-            st.session_state['fi_empresa'] = None if empresa == 'Todos' else empresa
-            st.session_state['fi_banco'] = None if banco == 'Todos' else banco
+            if ano_x >= ano_y:
+                st.session_state['mensagem_erro'] = 'A Data X deve ser um ano anterior à Data Y.'
+            else:
+                st.session_state['fi_ano_base'] = ano_base
+                st.session_state['fi_ano_x'] = ano_x
+                st.session_state['fi_ano_y'] = ano_y
+                st.session_state['fi_empresa'] = None if empresa == 'Todos' else empresa
+                st.session_state['fi_banco'] = None if banco == 'Todos' else banco
 
-    # consultando o período atual e o mesmo período do ano anterior
+    # datas de cada lado da comparação, derivadas dos anos escolhidos
+    periodos = periodos_comparados(st.session_state['fi_ano_x'], st.session_state['fi_ano_y'],
+                                   st.session_state['fi_ano_base'], hoje)
+    base_y, ini_y, fim_y = periodos['atual']
+    base_x, ini_x, fim_x = periodos['anterior']
+    st.caption(f'**Data X:** {ini_x:%d/%m/%Y} a {fim_x:%d/%m/%Y} (posição em {base_x:%d/%m/%Y})&nbsp;&nbsp;|&nbsp;&nbsp;'
+               f'**Data Y:** {ini_y:%d/%m/%Y} a {fim_y:%d/%m/%Y} (posição em {base_y:%d/%m/%Y})')
+
+    # consultando os dois lados da comparação
     with st.spinner('Consultando indicadores...'):
         dados = consultar_indicadores(
-            st.session_state['fi_data_base'],
-            data_ini=st.session_state['fi_data_ini'],
-            data_fim=st.session_state['fi_data_fim'],
+            periodos,
             empresa=st.session_state.get('fi_empresa'),
             banco=st.session_state.get('fi_banco')
         )
@@ -288,12 +299,12 @@ def main():
         return
 
     atual, anterior = dados['atual'], dados['anterior']
-    ano, ano_anterior = atual['data_base'].year, anterior['data_base'].year
+    ano, ano_anterior = atual['data_ini'].year, anterior['data_ini'].year     # Data Y e Data X
 
     # indicadores calculados antes da formatação (valores ainda numéricos)
     resumo = resumir_indicadores(dados)
 
-    # 1. cartões comparados ao ano anterior
+    # 1. cartões: Data Y comparada à Data X
     cartoes(resumo, ano, ano_anterior)
 
     # 2 e 3 lado a lado: fluxo de pagamentos por mês (ano atual x anterior) e composição; mesmo espaçamento das

@@ -9,6 +9,7 @@ ver o motivo de cada status, as lacunas e a próxima ação, consulte o
 | RF01 | RN04, RN05, RN25 | UC08 | Implementado | Agendar a importação; confirmar acesso do servidor ao site do BNDES. |
 | RF02, RF02.1 | RN01, RN06 | UC01 | Parcial | Completar fluxo de contrato e recursos planejados. |
 | RF02.3 | RN02.1 | UC01 | Implementado | Funções PostgreSQL, queries, service e exibição no modal concluídos. |
+| RF02.4 | RN28 | UC01, UC10, UC14, UC15 | Implementado | Tela de edição de contratos para alterar a data de contabilização com log (BL-032). |
 | RF02.2 | RN08 | UC05 | Planejado | Implementar vínculo de bens e veículos. |
 | RF03 | - | UC02 | Implementado | Validar tratamento de erros e desempenho. |
 | RF03.1 | RN26 | UC02, UC14 | Parcial | Empresa, banco, contrato e "Somente sem anexos" entregues; demais filtros planejados. |
@@ -20,13 +21,16 @@ ver o motivo de cada status, as lacunas e a próxima ação, consulte o
 | RF07.1 | RN02, RN05, RN09, RN13, RN14, RN15, RN19 | UC06 | Implementado | Suportar modalidades além de BNDES FINAME SELIC; validar cálculo com o financeiro. |
 | RF07.2 | RN19, RN20, RN21 | UC07 | Implementado | Perfis para liquidar/estornar (BL-005). |
 | RF07.3 | RN02, RN03, RN20, RN24 | UC09 | Implementado | Contas a Pagar com data base e exportação; validar com o financeiro. |
-| RF07.4 | RN02, RN03, RN24 | UC10 | Implementado | Demais modalidades (consórcios, tributário) fora do Nexus. |
+| RF07.4 | RN02, RN03, RN24, RN28, RN29 | UC10 | Implementado (em calibração) | Validar com o financeiro (BL-033); exportação (BL-011). |
+| RF07.4.1 | RN24, RN28, RN29, RN30 | UC10 | Implementado (em calibração) | Validar o resumo com o financeiro (BL-033). |
 | RF07.5 | RN08, RN10 | UC11 | Implementado | Validar com o financeiro; avaliar exportação. |
 | RF07.6 | RN19, RN20, RN22, RN23 | UC13 | Implementado | Tratar antecipações vindas no CSV do ERP (BL-028). |
 | RF07.7 | RN23 | UC13 | Implementado | Tela de cadastro de vínculos (BL-029). |
-| RF07.8 | RN02, RN24, RN27 | UC15 | Implementado | Validar indicadores com o financeiro; liquidações sem baixa desde 02/2026 deixam o fluxo recente no projetado. |
+| RF07.8 | RN02, RN24, RN27, RN28 | UC15 | Implementado (em calibração) | Validar indicadores com o financeiro; liquidações sem baixa desde 02/2026 deixam o fluxo recente no projetado. |
+| RF07.9 | RN12, RN29, RN32 | UC16 | Implementado | Importar o pago e o a pagar todo mês (por banco e consorciado). |
+| RF07.10 | RN12, RN29, RN31 | UC17 | Implementado | Validar com o financeiro. |
 | RF08 | RN12 | UC02, UC04 | Parcial | Registro implementado (RF08.1); falta consulta na interface (RF08.2). |
-| RF08.1 | RN12 | UC01, UC04, UC06, UC07, UC08, UC12, UC13 | Implementado | Retenção do log e usuário de banco somente-inserção (BL-022). |
+| RF08.1 | RN12 | UC01, UC04, UC06, UC07, UC08, UC12, UC13, UC16, UC17 | Implementado | Retenção do log e usuário de banco somente-inserção (BL-022). |
 | RF08.2 | RN12 | A definir | Planejado | Definir tela de histórico (BL-021). |
 | RF09 | RN20 | UC07, UC13 | Implementado | Ajuste gravado na liquidação; autorização por perfil (BL-005). |
 | RF10 | RN11 | Todos os casos protegidos | Parcial | Autenticação entregue; implementar perfis (RF10.4). |

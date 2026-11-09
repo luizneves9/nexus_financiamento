@@ -2,7 +2,7 @@
 
 **Status:** Parcialmente implementado  
 **Ator principal:** Usuario responsável pelo setor financeiro  
-**Requisitos associados:** RF02, RF02.1, RF02.3, RF03.2, RN01, RN02, RN02.1, RN05, RN26
+**Requisitos associados:** RF02, RF02.1, RF02.3, RF02.4, RF03.2, RN01, RN02, RN02.1, RN05, RN26, RN28
 
 **Rastreamento detalhado:** [Registro de Status e Pendências](../requirements/status-register.md#uc01---inclusão-de-contratos)
 
@@ -32,11 +32,15 @@ Cadastrar um contrato de financiamento com seus dados cadastrais e financeiros, 
    **Ficha Financeira** e **Projeção** (as mesmas do Detalhe do contrato, UC14).
 4. Na aba Dados, o usuário informa empresa, banco, número do contrato, datas,
    tipo, valor, taxas, prazos (inteiros) e parâmetros de cobrança. A taxa de
-   juros efetiva aceita até 6 casas decimais (ex.: 13,125974).
+   juros efetiva aceita até 6 casas decimais (ex.: 13,125974). A **Data
+   Contabilização** (RN28) é obrigatória e vem preenchida com a Data Emissão
+   assim que ela é informada; o usuário pode trocá-la por uma data igual ou
+   posterior à emissão.
 5. Opcionalmente, nas abas Contrato e Ficha Financeira, o usuário seleciona
    PDFs (a linha "Anexos selecionados" mostra a quantidade).
 6. O usuário aciona **Confirmar**.
 7. A aplicação valida campos obrigatórios, valores positivos, ordem das datas
+   (inclusive data de contabilização maior ou igual à emissão)
    e os PDFs (RN26).
 8. A aplicação grava, numa única transação, o contrato, os anexos e os logs —
    se algo falhar, nada é gravado.

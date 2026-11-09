@@ -613,8 +613,13 @@ BEGIN
 END;
 $function$;
 
+-- Só os campos usados por calcular_projecao_contrato disparam o recálculo na alteração
+-- (desde 09/11/2026, database/data_contabilizacao.sql): data de contabilização, empresa, banco,
+-- número e débito em conta não recalculam a projeção.
 CREATE TRIGGER trg_projecao_contratos
-	AFTER INSERT OR UPDATE ON financiamento.contratos
+	AFTER INSERT OR UPDATE OF tipo_contrato, valor_financiado, taxa_juros_efetiva, prazo_carencia,
+		prazo_final, carencia_pagamento, registro_cobranca, data_bndes, data_referencia, selic
+	ON financiamento.contratos
 	FOR EACH ROW EXECUTE FUNCTION financiamento.projecao_trigger_contratos();
 
 -- =====================================================================

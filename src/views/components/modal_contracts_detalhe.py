@@ -60,6 +60,7 @@ def aba_dados(contrato):
     with col1:
         campo('Tipo de contrato', contrato['tipo_contrato'])
         campo('Data de emissão', formatar_data(contrato['data_emissao']))
+        campo('Data de contabilização', formatar_data(contrato['data_contabilizacao']))
         campo('Data BNDES', formatar_data(contrato['data_bndes']))
         campo('Valor financiado', formatar_valor(contrato['valor_financiado']))
         campo('Selic do contrato', f"{float(contrato['selic']):.6f}".replace('.', ',') if contrato['selic'] is not None else '—')

@@ -49,11 +49,13 @@ com este registro.
 | UC07 | Liquidação de parcelas | Implementado | Tela Liquidação: liquidação manual (ajuste gravado) e estorno, com log; parcela liquidada imutável. | Perfis para liquidar/estornar (BL-005). |
 | UC08 | Atualização da Selic | Implementado | Importação sob demanda da série do BNDES (só datas novas), com recálculo e log; tabela recarregada da fonte oficial em 16/10/2026. | Agendar a importação e confirmar acesso do servidor (BL-030). |
 | UC09 | Relatório Contas a Pagar | Implementado | Posição na data base (pago × projetado, Selic da data base), antecipações/quitações, filtros e exportação Excel. | Validar com o financeiro. |
-| UC10 | Relatório de endividamento | Implementado | Fluxo de caixa na posição da data base, filtros (data base, mês de corte, empresa, banco), meses liquidados destacados e Sub Total. | Exportação e demais modalidades (fora do Nexus). |
+| UC10 | Relatório de endividamento | Implementado (em calibração) | Fluxo de caixa na posição da data base com Financiamentos, Compra Santo Anjo, Consórcios e Tributário, créditos de consórcio, Dívida Líquida e resumo do mês (variação); contratos pela data de contabilização. Conferido com a planilha de 08/2026 (diferença só nos contratos em que a planilha calcula a menor). | Validar com o financeiro (BL-033); exportação (BL-011). |
 | UC11 | Consulta de antecipações | Implementado | Aba Antecipação lista todas as antecipações/quitações com filtros no banco e resumo. | Validar com o financeiro. |
 | UC13 | Conciliação com o ERP | Implementado | Importação do CSV do ERP com tabela temporária, prévia por situação, vínculos ERP → Nexus (inclusive grupos com rateio) e liquidação com ajuste. | Antecipações no CSV (BL-028) e tela de vínculos (BL-029). |
 | UC14 | Detalhe do contrato e anexos | Implementado | Detalhe em abas (Dados, Contrato, Ficha Financeira, Histórico) com PDFs no banco, visualização na tela, anexar/baixar/excluir e log; anexos também na inclusão do contrato. | Acrescentar novas abas conforme evolução. |
-| UC15 | Painel de indicadores | Implementado | Painel > Indicadores com saldo devedor, fluxo de pagamentos, juros, contratado e taxa média comparados ao ano anterior, fluxo mensal e composição por empresa/banco/tipo. | Validar com o financeiro (BL-031). |
+| UC15 | Painel de indicadores | Implementado (em calibração) | Painel > Indicadores com saldo devedor, fluxo de pagamentos, juros, contratado e taxa média comparando Data X × Data Y, fluxo mensal e composição por empresa/banco/tipo; contratos pela data de contabilização. | Validar com o financeiro (BL-031). |
+| UC16 | Consórcio | Implementado | Importação dos CSVs pago e a pagar por banco e consorciado, créditos do fechamento por competência, consultas com filtros e log. | Importar pago e a pagar todo mês. |
+| UC17 | Outros pagamentos | Implementado | Lançamento de parcelas de Compra Santo Anjo e Tributário, edição, exclusão, baixa e estorno, com filtros, resumo e log. | Validar com o financeiro. |
 | UC12 | Autenticação de usuário | Implementado | Login, primeiro acesso com cadastro de senha (hash scrypt), sessão de 30 min e Sair; eventos registrados no log. Perfis ainda não existem. | Resolver pendências de segurança BL-014 a BL-018. |
 | RF03.1 | Filtros de contratos | Parcial | Empresa, banco, contrato e "Somente sem anexos" (padrão `key=`, BL-020 resolvido). | Definir demais filtros (taxa, período, valor, tipo). |
 | RF08 | Auditoria | Parcial | Log de auditoria grava todas as escritas e eventos de acesso (RF08.1); não há tela de consulta (RF08.2). | Definir a tela de histórico (BL-021). |
@@ -69,9 +71,12 @@ com este registro.
 - **Status:** Parcial.
 - **Entregue:** formulario web, validação de campos, validação de valores e
   datas, persistência em `financiamento.contratos` e mensagem de resultado.
-  Taxa de juros efetiva com até 6 casas decimais na tela.
+  Taxa de juros efetiva com até 6 casas decimais na tela. Data de
+  contabilização obrigatória (RN28), preenchida com a emissão e validada
+  (maior ou igual à emissão).
 - **Pendente:** vínculo de bens e veículos e autenticação; ampliar a precisão
-  de `contratos.taxa_juros_efetiva` para 6 casas (`BL-024`).
+  de `contratos.taxa_juros_efetiva` para 6 casas (`BL-024`); edição de
+  contratos (data de contabilização e dados cadastrais, `BL-032`).
 - **Evidência:** `database/projection_functions.sql`,
   `src/queries/queries_contracts.py`,
   `src/views/components/modal_contracts_incluir.py` e
@@ -204,19 +209,34 @@ com este registro.
 
 ### UC10 - Relatório de endividamento
 
-- **Status:** Implementado.
-- **Entregue:** fluxo de caixa (ano × mês, milhões) na posição da data base
-  (mesma regra do UC09); filtros data base, vencimentos a partir do mês
-  (01/01/2026), empresa e banco (prefixo `fe_`); meses com parcelas liquidadas
-  na cor do cabeçalho; bloco Sub Total (Financiamentos e Total Geral) com
-  total pago e total a pagar; temas automático/claro/escuro.
-- **Pendente:** exportação; modalidades fora do Nexus (consórcios,
-  tributário, Compra Santo Anjo).
+- **Status:** Implementado (em calibração; selo **BETA** no menu).
+- **Entregue:**
+  - Fluxo de caixa (ano × mês, milhões) na posição da data base, com as
+    modalidades Financiamentos (mesma regra do UC09, só contratos
+    contabilizados até a data base, RN28), Compra Santo Anjo, Consórcios e
+    Tributário (RN29); filtros data base e vencimentos a partir do mês
+    (01/01/2026), prefixo `fe_`.
+  - Saldo Acumulado por modalidade, blocos por ano, meses com parcelas
+    liquidadas na cor do cabeçalho, bloco Sub Total (por modalidade e Total
+    Geral) com total pago e total a pagar; créditos de consórcio e Dívida
+    Líquida; temas automático/claro/escuro.
+  - Resumo do mês (variação, RN30): Saldo Inicial, Juros, Pgto Mês, Contrato
+    Quitado, Contrato Novo e Saldo Final por modalidade, com créditos e Dívida
+    Líquida; o Saldo Final bate com o Total a pagar do Sub Total.
+  - Conferência com a planilha do conselho de 08/2026 (09/11/2026):
+    Santo Anjo, Consórcios e Tributário iguais; Financiamentos +3,970 Mi,
+    todos em três grupos de contratos Itaú (194918…, 195341/195342,
+    194953/194954) em que a planilha usa principal cerca de 8,8% menor —
+    os valores pagos em set/out/2026 confirmam o Nexus.
+- **Pendente:** validação com o financeiro (BL-033); exportação (BL-011).
 - **Evidência:** `src/views/relatorio_endividamento.py`,
   `src/services/relatorio_endividamento.py`,
-  `src/queries/queries_relatorio_endividamento.py`.
-- **Próxima ação:** validar com o financeiro.
-- **Critério de conclusão:** posição conferida com a planilha do financeiro.
+  `src/queries/queries_relatorio_endividamento.py`
+  (`CTE_MOVIMENTOS_ENDIVIDAMENTO`, `SELECT_RESUMO_ENDIVIDAMENTO`).
+- **Próxima ação:** validar com o financeiro e retirar o selo BETA
+  (`PAGINAS_BETA` em `src/main.py`).
+- **Critério de conclusão:** posição e resumo conferidos com a planilha do
+  financeiro.
 
 ### UC13 - Conciliação com o ERP
 
@@ -309,12 +329,18 @@ com este registro.
 
 - **Status:** Implementado.
 - **Entregue:** grupo **Painel** no topo do menu com a tela Indicadores;
-  filtros data base (hoje), período (início do ano até hoje), empresa e banco
-  (prefixo `fi_`); cinco cartões comparados ao mesmo período do ano anterior
+  filtros por ano — Data base (ano atual), Data X (ano anterior) e Data Y
+  (ano atual) —, empresa e banco (prefixo `fi_`); cinco cartões de Y comparados a X
   (saldo devedor, fluxo de pagamentos, juros no período, contratado no
   período, taxa média ponderada); gráfico do fluxo de pagamentos por mês
-  (ano atual × anterior) e composição do fluxo por empresa, banco ou tipo de
+  (X × Y) e composição do fluxo por empresa, banco ou tipo de
   contrato. Fluxo do período conferido com Contas a Pagar (mesmo valor).
+  Contratos considerados pela data de contabilização (RN28), inclusive no
+  "Contratado no período". Selo **BETA** no menu (em calibração). É a
+  página inicial após o login (desde 09/11/2026; antes era Contratos).
+  Período de cada lado = ano inteiro, ou até o dia/mês de hoje quando X ou Y
+  é o ano atual; posição de X deslocada pela diferença de anos; legenda com
+  as datas usadas.
 - **Pendente:** validação dos indicadores pelo financeiro; enquanto as
   liquidações de 03/2026 em diante não forem importadas do ERP, o fluxo desses
   meses usa o valor projetado.
@@ -323,6 +349,48 @@ com este registro.
 - **Próxima ação:** validar com o financeiro (BL-031).
 - **Critério de conclusão:** indicadores conferidos com os controles do
   financeiro.
+
+### UC16 - Consórcio
+
+- **Status:** Implementado.
+- **Entregue:** tela **Operacional > Consórcio** com as abas Pago, A pagar e
+  Créditos (filtros com prefixo `fco_`); **Importar pago** e **Importar a
+  pagar** (CSV `;` no formato brasileiro, um arquivo por banco e consorciado,
+  prévia do que será substituído, gravação numa única transação, RN32);
+  **Créditos** por competência (inclui ou atualiza); log
+  `CONSORCIO_IMPORTAR_PAGO`, `CONSORCIO_IMPORTAR_A_PAGAR` e
+  `CONSORCIO_CREDITO_SALVAR`. Os dados alimentam a modalidade Consórcios e os
+  créditos do Endividamento (RN29).
+- **Pendente:** rotina mensal de importação (pago e a pagar de cada banco e
+  consorciado).
+- **Evidência:** `src/views/consorcio.py`,
+  `src/views/components/modal_consorcio_importar.py`,
+  `src/views/components/modal_consorcio_credito.py`,
+  `src/services/consorcio.py`, `src/queries/queries_consorcio.py`,
+  `database/consorcio_outros_pagamentos.sql`.
+- **Próxima ação:** importar os meses seguintes a 08/2026.
+- **Critério de conclusão:** consórcios do Endividamento conferidos com a
+  planilha do financeiro em mais de um fechamento.
+
+### UC17 - Outros pagamentos
+
+- **Status:** Implementado.
+- **Entregue:** tela **Operacional > Outros Pagamentos** (filtros modalidade,
+  vencimento no ano atual e situação, prefixo `fop_`; resumo de parcelas,
+  lançado, pago e em aberto); **Incluir** uma ou várias parcelas mensais com
+  prévia editável (parcela já paga pode entrar com a baixa); **Editar** e
+  **Excluir** parcelas em aberto; **Baixar** (data e valor pago) e
+  **Estornar** (RN31); log `OUTRO_PAGAMENTO_*` por parcela.
+- **Pendente:** validação com o financeiro.
+- **Evidência:** `src/views/outros_pagamentos.py`,
+  `src/views/components/modal_outros_pagamentos_incluir.py`,
+  `src/views/components/modal_outros_pagamentos_baixar.py`,
+  `src/services/outros_pagamentos.py`,
+  `src/queries/queries_outros_pagamentos.py`,
+  `database/consorcio_outros_pagamentos.sql`.
+- **Próxima ação:** manter as baixas mensais.
+- **Critério de conclusão:** Compra Santo Anjo e Tributário do Endividamento
+  conferidos com a planilha do financeiro.
 
 ### RF08.1 - Log de auditoria
 
@@ -335,8 +403,9 @@ com este registro.
     e `registrar_log_falha` (transação própria, sem esconder o erro original).
   - Ações registradas: `LOGIN`, `LOGIN_FALHA`, `LOGOUT`, `SESSAO_ENCERRADA`,
     `CADASTRO_SENHA`, `CONTRATO_INCLUIR`, `CONTRATO_EXCLUIR` (com cópia do
-    contrato excluído via `DELETE ... RETURNING *`), `ANTECIPACAO_INCLUIR` e
-    `QUITACAO_INCLUIR`.
+    contrato excluído via `DELETE ... RETURNING *`), `ANTECIPACAO_INCLUIR`,
+    `QUITACAO_INCLUIR` e as demais ações do catálogo (DA06), inclusive
+    `CONSORCIO_*` e `OUTRO_PAGAMENTO_*`.
   - Validado em banco de desenvolvimento dentro de transação desfeita
     (sucessos, falhas de integridade e bloqueio de UPDATE/DELETE).
 - **Pendente:** tela de consulta (RF08.2/BL-021), política de retenção e
@@ -364,6 +433,8 @@ com este registro.
 | BL-009 | Criar política de backup e restauração. | Alto | Infraestrutura | Aberto |
 | BL-010 | Documentar a view `vw_agrupamento_projecao` no DDL versionado e definir a exportação da tela de Projeção de Pagamentos (filtros já entregues). | Médio | Acesso ao banco para extrair a definição da view | Concluído (view removida; Contas a Pagar com exportação) |
 | BL-011 | Adicionar filtros (ano, modalidade) e download/exportação à tela de Relatórios > Endividamento. | Médio | Especificação dos filtros aprovada pelo financeiro | Parcial (filtros entregues; exportação pendente) |
+| BL-032 | Tela de edição de contratos (botão Editar em Contratos): só campos que não afetam a projeção — empresa, banco, número, data de contabilização e débito em conta —, validação contabilização ≥ emissão e log `CONTRATO_ALTERAR` (antes/depois). Hoje a data de contabilização só muda por SQL, sem log (em 09/11/2026 os 13 contratos de 2026 foram para 30/09/2026 por SQL). | Médio | — | Aberto |
+| BL-033 | Validar com o financeiro o Endividamento (modalidades, créditos, Dívida Líquida) e o resumo do mês; avisar que a planilha subestima os contratos Itaú 194918…, 195341/195342 e 194953/194954; retirar o selo BETA de Endividamento e Indicadores após a validação. | Médio | Disponibilidade do financeiro | Aberto |
 | BL-012 | Sincronizar no DDL versionado a trigger `trg_after_insert_antecipacao` (`AFTER INSERT` em `financiamento.antecipacao`, aciona `refresh_views_contratos()`) e as colunas `tipo_lancamento`/`data_compensacao`. | Médio | Acesso ao banco para extrair a definição da trigger | Concluído |
 | BL-013 | Avaliar suporte, em UC06, a contratos de modalidades além de BNDES FINAME SELIC (hoje o cálculo de saldo devedor só atende essa modalidade). | Médio | Definição de regra de cálculo para as demais modalidades | Aberto |
 | BL-014 | **Segurança:** remover `.env` do Git (`git rm --cached` + `.gitignore`), criar `.dockerignore` (hoje `.env` e `.git` vão para a imagem), **trocar a senha do banco** (já está no histórico do repositório remoto) e gerar novo `AUTH_SECRET`. Com o `AUTH_SECRET` exposto, é possível fabricar cookie de login de qualquer usuário. | Crítico | Acesso ao banco e ao servidor Git | Aberto |
@@ -371,7 +442,7 @@ com este registro.
 | BL-016 | **Segurança:** limitar tentativas de login (ex.: 5 falhas em 15 min bloqueiam), usando os registros `LOGIN_FALHA` do log. | Alto | — | Aberto |
 | BL-017 | **Segurança:** invalidar cookies antigos ao trocar senha, bloquear ou clicar em Sair (versão de sessão no token) e definir tempo máximo absoluto de sessão. | Médio | Coluna nova em `usuarios` | Aberto |
 | BL-018 | **Segurança:** avaliar scrypt N=2^15 (135 ms, 32 MiB) com rehash no login; igualar o tempo de resposta do caso "senha não cadastrada"; avaliar bloqueio de senhas óbvias. | Baixo | — | Aberto |
-| BL-019 | Sincronizar `database/ddl_financiamento.sql` com as tabelas `usuarios` e `log_auditoria`, a função `log_auditoria_imutavel` e seus triggers (os objetos da projeção persistida estão em `database/projecao_persistida.sql`). | Médio | Extração do DDL do banco | Aberto |
+| BL-019 | Sincronizar `database/ddl_financiamento.sql` com as tabelas `usuarios` e `log_auditoria`, a função `log_auditoria_imutavel` e seus triggers, as tabelas de consórcio e outros pagamentos (`consorcio_outros_pagamentos.sql`) e a coluna `contratos.data_contabilizacao` (`data_contabilizacao.sql`) (os objetos da projeção persistida estão em `database/projecao_persistida.sql`). | Médio | Extração do DDL do banco | Aberto |
 | BL-020 | Corrigir os filtros de `views/contracts.py`: usam `value=st.session_state...`, o que descarta a primeira alteração do usuário (mesmo bug corrigido em Projeção de Pagamentos com `key` própria). | Médio | — | Concluído (UC14) |
 | BL-021 | Tela de consulta do histórico de operações (RF08.2) a partir de `log_auditoria`. | Médio | Perfis (acesso restrito) | Aberto |
 | BL-022 | Definir retenção do log de auditoria e avaliar usuário de banco da aplicação apenas com INSERT no log (hoje `fin` é dono da tabela e poderia remover o trigger). | Médio | Administração do PostgreSQL | Aberto |
@@ -382,7 +453,7 @@ com este registro.
 | BL-027 | Corrigir os bugs herdados das MVs na projeção: TFC ignora antecipação/quitação; SELIC considera uma única antecipação por contrato; parcela do mesmo dia da quitação é cancelada; unificar `projetar_contrato_*` (prévia da inclusão) com `calcular_projecao_contrato`. | Médio | Validação do financeiro | Aberto |
 | BL-028 | Tratar antecipações e quitações que venham no CSV do ERP (hoje entram na soma da chave e aparecem como Diferença). | Médio | Regra para identificá-las no relatório | Aberto |
 | BL-029 | Tela de cadastro dos vínculos ERP → Nexus (listar, buscar, incluir, remover) fora da importação. | Baixo | — | Aberto |
-| BL-031 | Validar com o financeiro os indicadores do Painel (UC15): definição de saldo devedor (só parcelas a vencer), fluxo de pagamentos e comparação com o ano anterior. | Médio | Disponibilidade do financeiro | Aberto |
+| BL-031 | Validar com o financeiro os indicadores do Painel (UC15): definição de saldo devedor (só parcelas a vencer), fluxo de pagamentos e comparação Data X × Data Y. | Médio | Disponibilidade do financeiro | Aberto |
 | BL-030 | Agendar a importação da Selic e confirmar o acesso do servidor de produção a `www.bndes.gov.br`. | Médio | Infraestrutura | Aberto |
 
 ## Regra de atualização

@@ -1,5 +1,6 @@
 import pandas as pd
 import streamlit as st
+from datetime import date
 from sqlalchemy import text
 from database.connection import ConexaoBancoSQL
 from queries.queries_indicadores import SELECT_INDICADORES_CONTRATOS, SELECT_INDICADORES_POSICAO
@@ -11,15 +12,33 @@ engine = connect.conexao_banco()
 # colunas de valor do retorno por contrato (vêm como Decimal/objeto do banco)
 COLUNAS_VALOR_CONTRATO = ['valor_financiado', 'taxa_juros_efetiva', 'saldo_devedor', 'servico_periodo', 'juros_periodo']
 
-def menos_um_ano(data):
-    '''Mesma data no ano anterior (29/02 vira 28/02).'''
+def trocar_ano(data, ano):
+    '''Mesma data (dia e mês) em outro ano (29/02 vira 28/02).'''
 
     if data is None:
         return None
     try:
-        return data.replace(year=data.year - 1)
+        return data.replace(year=ano)
     except ValueError:
-        return data.replace(year=data.year - 1, day=28)
+        return data.replace(year=ano, day=28)
+
+def periodos_comparados(ano_x, ano_y, ano_base, hoje):
+    '''Data base e período de cada lado da comparação Data X (anterior) x Data Y (atual).
+
+    - período: ano inteiro (01/01 a 31/12); se um dos anos for o atual, os dois vão até o dia/mês de hoje
+      (acumulado no ano, comparável entre os anos);
+    - data base do lado Y: hoje se o ano da data base for o atual, senão 31/12; a do lado X é a mesma data
+      deslocada pela diferença entre X e Y (as duas posições ficam à mesma distância de cada período).
+    Devolve {'atual': (base, ini, fim), 'anterior': (base, ini, fim)}.'''
+
+    parcial = hoje.year in (ano_x, ano_y)
+    fim = (lambda ano: trocar_ano(hoje, ano)) if parcial else (lambda ano: date(ano, 12, 31))
+    base_y = hoje if ano_base == hoje.year else date(ano_base, 12, 31)
+    base_x = trocar_ano(base_y, base_y.year - (ano_y - ano_x))
+    return {
+        'atual': (base_y, date(ano_y, 1, 1), fim(ano_y)),
+        'anterior': (base_x, date(ano_x, 1, 1), fim(ano_x)),
+    }
 
 def _consultar_posicao(conn, data_base, data_ini, data_fim, empresa, banco):
     '''Contratos e fluxo de pagamentos mensal na posição de uma data base (valores numéricos).'''
@@ -38,22 +57,19 @@ def _consultar_posicao(conn, data_base, data_ini, data_fim, empresa, banco):
     for coluna in COLUNAS_VALOR_CONTRATO:
         df_contratos[coluna] = pd.to_numeric(df_contratos[coluna], errors='coerce').fillna(0.0)
     df_contratos['data_emissao'] = pd.to_datetime(df_contratos['data_emissao']).dt.date
+    df_contratos['data_contabilizacao'] = pd.to_datetime(df_contratos['data_contabilizacao']).dt.date
     df_contratos['ativo'] = df_contratos['saldo_devedor'] > 0
     df_mensal['servico'] = pd.to_numeric(df_mensal['servico'], errors='coerce').fillna(0.0)
 
     return df_contratos, df_mensal
 
-def consultar_indicadores(data_base, data_ini=None, data_fim=None, empresa=None, banco=None):
-    '''Consulta o painel no período atual e no mesmo período do ano anterior (data base também recuada).
+def consultar_indicadores(periodos, empresa=None, banco=None):
+    '''Consulta o painel nos dois lados da comparação (periodos_comparados: 'atual' = Data Y, 'anterior' = Data X).
 
     Devolve um dicionário com 'atual' e 'anterior' (cada um: contratos, mensal, data_base, data_ini, data_fim);
     ou None em caso de erro (mensagem em session_state).
     '''
 
-    periodos = {
-        'atual': (data_base, data_ini, data_fim),
-        'anterior': (menos_um_ano(data_base), menos_um_ano(data_ini), menos_um_ano(data_fim)),
-    }
     resultado = {}
 
     try:
@@ -76,13 +92,13 @@ def taxa_ponderada(df, peso):
     return float((df['taxa_juros_efetiva'] * df[peso]).sum() / total)
 
 def _contratado(df, data_ini, data_fim):
-    '''Valor financiado dos contratos emitidos no período.'''
+    '''Valor financiado dos contratos contabilizados no período.'''
 
     filtro = pd.Series(True, index=df.index)
     if data_ini:
-        filtro &= df['data_emissao'] >= data_ini
+        filtro &= df['data_contabilizacao'] >= data_ini
     if data_fim:
-        filtro &= df['data_emissao'] <= data_fim
+        filtro &= df['data_contabilizacao'] <= data_fim
     return df[filtro]
 
 def variacao(atual, anterior):
@@ -104,7 +120,7 @@ def _resumo(posicao):
     }
 
 def resumir_indicadores(dados):
-    '''Indicadores dos cartões: valor atual, do ano anterior e variação (valores numéricos, antes da formatação).'''
+    '''Indicadores dos cartões: valor de Y (atual), de X (anterior) e variação (valores numéricos, antes da formatação).'''
 
     atual, anterior = _resumo(dados['atual']), _resumo(dados['anterior'])
 
@@ -130,7 +146,7 @@ def _agrupar(df, coluna):
     return pd.DataFrame.from_dict(linhas, orient='index', columns=['saldo_devedor', 'servico_periodo', 'taxa_media']).rename_axis(coluna)
 
 def agrupar_indicadores(dados, coluna):
-    '''Indicadores por empresa/banco/tipo (coluna) com a variação sobre o ano anterior, ordenados pelo saldo.'''
+    '''Indicadores por empresa/banco/tipo (coluna) com a variação de Y sobre X, ordenados pelo saldo.'''
 
     atual = _agrupar(dados['atual']['contratos'], coluna)
     anterior = _agrupar(dados['anterior']['contratos'], coluna)
@@ -151,18 +167,18 @@ def agrupar_indicadores(dados, coluna):
               'saldo_devedor_anterior', 'servico_periodo_anterior', 'participacao_servico']])
 
 def servico_mensal_comparado(dados):
-    '''Fluxo de pagamentos por mês: período atual x mesmo mês do ano anterior (formato longo para o gráfico).
+    '''Fluxo de pagamentos por mês: Data Y x mesmo mês de Data X (formato longo para o gráfico).
 
-    `mes` = mês do período atual (AAAA-MM); o ano anterior é alinhado somando um ano.
+    `mes` = mês do período de Y (AAAA-MM); X é alinhado somando a diferença de anos entre Y e X.
     '''
 
     atual, anterior = dados['atual'], dados['anterior']
-    mesmo_ano = atual['data_ini'] and atual['data_fim'] and atual['data_ini'].year == atual['data_fim'].year
-    rotulo_atual = str(atual['data_ini'].year) if mesmo_ano else 'Período atual'
-    rotulo_anterior = str(anterior['data_ini'].year) if mesmo_ano else 'Ano anterior'
+    rotulo_atual = str(atual['data_ini'].year)
+    rotulo_anterior = str(anterior['data_ini'].year)
+    diferenca = atual['data_ini'].year - anterior['data_ini'].year
 
     partes = []
-    for posicao, rotulo, deslocamento in ((anterior, rotulo_anterior, 1), (atual, rotulo_atual, 0)):
+    for posicao, rotulo, deslocamento in ((anterior, rotulo_anterior, diferenca), (atual, rotulo_atual, 0)):
         df = posicao['mensal']
         if df.empty:
             continue

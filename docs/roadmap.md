@@ -18,8 +18,15 @@ está no [Registro de Status e Pendências](requirements/status-register.md).
   minutos e Sair (UC12).
 - Log de auditoria de escritas e eventos de acesso (RF08.1).
 - Relatório de endividamento com fluxo de caixa (Relatórios > Endividamento)
-  na posição da data base, com filtros, Sub Total e tema automático/manual,
-  ainda sem download.
+  na posição da data base, com Financiamentos, Compra Santo Anjo, Consórcios e
+  Tributário, créditos de consórcio, Dívida Líquida, resumo do mês (variação)
+  e tema automático/manual, ainda sem download e em calibração (selo BETA).
+- Consórcio (Operacional > Consórcio, UC16): importação dos CSVs pago e a
+  pagar e créditos do fechamento.
+- Outros pagamentos (Operacional > Outros Pagamentos, UC17): parcelas de
+  Compra Santo Anjo e Tributário com baixa e estorno.
+- Data de contabilização do contrato (RN28), que define a entrada no
+  Endividamento e no Painel sem afetar a projeção.
 - Exclusão física de contratos.
 - Estruturas de banco para bens e veículos.
 - Importação da Selic do BNDES (Cadastros > Selic, UC08).
@@ -30,8 +37,8 @@ está no [Registro de Status e Pendências](requirements/status-register.md).
   relatório de pagamentos do ERP, com vínculos ERP → Nexus (UC13).
 - Detalhe do contrato em abas, com anexos (PDF) de contrato e ficha
   financeira no banco e visualização na tela (UC14).
-- Painel de indicadores (Painel > Indicadores) comparados ao mesmo período
-  do ano anterior, com fluxo de pagamentos mensal e composição (UC15).
+- Painel de indicadores (Painel > Indicadores, tela inicial) comparando dois
+  anos (Data X × Data Y), com fluxo de pagamentos mensal e composição (UC15).
 
 ## Versão 1.0
 
@@ -45,6 +52,10 @@ está no [Registro de Status e Pendências](requirements/status-register.md).
   `ACESSO_NEGADO` no log.
 - Implementar filtros e detalhamento.
 - Adicionar download ao relatório de Endividamento (BL-011).
+- Validar Endividamento, resumo do mês e Painel com o financeiro e retirar o
+  selo BETA (BL-033, BL-031).
+- Tela de edição de contratos (data de contabilização e dados cadastrais,
+  com log) (BL-032).
 - Validar cálculos com testes de banco e aceite do financeiro.
 - Agendar a importação da Selic (BL-030).
 - Corrigir os bugs de cálculo herdados das materialized views (BL-027).

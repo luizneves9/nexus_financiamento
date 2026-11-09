@@ -84,7 +84,11 @@ Ações do catálogo: `LOGIN`, `LOGIN_FALHA`, `LOGOUT`, `SESSAO_ENCERRADA`,
 `CADASTRO_SENHA`, `CONTRATO_INCLUIR`, `CONTRATO_EXCLUIR`,
 `ANTECIPACAO_INCLUIR`, `QUITACAO_INCLUIR`, `ANTECIPACAO_EXCLUIR`,
 `LIQUIDACAO_INCLUIR`, `LIQUIDACAO_ESTORNAR`, `CONCILIACAO_ERP` (um registro
-por lote), `VINCULO_ERP_INCLUIR`, `VINCULO_ERP_EXCLUIR`, `SELIC_IMPORTAR`, `ANEXO_INCLUIR`, `ANEXO_EXCLUIR`
+por lote), `VINCULO_ERP_INCLUIR`, `VINCULO_ERP_EXCLUIR`, `SELIC_IMPORTAR`, `ANEXO_INCLUIR`, `ANEXO_EXCLUIR`,
+`CONSORCIO_IMPORTAR_PAGO`, `CONSORCIO_IMPORTAR_A_PAGAR`,
+`CONSORCIO_CREDITO_SALVAR`, `OUTRO_PAGAMENTO_INCLUIR`,
+`OUTRO_PAGAMENTO_ALTERAR`, `OUTRO_PAGAMENTO_EXCLUIR`,
+`OUTRO_PAGAMENTO_BAIXAR`, `OUTRO_PAGAMENTO_ESTORNAR`
 (e, com os perfis, `ACESSO_NEGADO`). O recálculo automático da projeção não
 gera log próprio (é consequência de uma ação já registrada).
 
@@ -139,8 +143,9 @@ estável `(id_contrato, parcela)`) com controle em `projecao_controle`:
 - `recalcular_projecao_contrato(id, motivo)` grava o resultado, nunca altera
   parcelas LIQUIDADAS e marca como `CANCELADA_QUITACAO` as parcelas depois da
   quitação (em vez de excluí-las);
-- triggers por linha recalculam só o contrato afetado na inclusão/alteração de
-  contrato e na inclusão/alteração/exclusão de antecipação; a inclusão de Selic
+- triggers por linha recalculam só o contrato afetado na inclusão de contrato,
+  na alteração de um campo de contrato usado no cálculo (desde 09/11/2026,
+  DA13) e na inclusão/alteração/exclusão de antecipação; a inclusão de Selic
   recalcula, uma vez por comando, os contratos com parcelas abertas afetadas.
 
 **Motivo:** O refresh das MVs recalculava toda a base a cada inclusão, não
@@ -207,3 +212,40 @@ componentes) e o `st.html` remove iframes estáticos.
 **Consequência:** O banco e os backups crescem com os PDFs; o detalhe do
 contrato depende de `st.html(..., unsafe_allow_javascript=True)` (Streamlit
 recente, BL-025).
+
+## DA13 - Data de contabilização do contrato, separada da projeção
+
+**Status:** Aceita (aplicada em 09/11/2026, `database/data_contabilizacao.sql`)
+**Decisão:** `contratos.data_contabilizacao` (obrigatória, maior ou igual à
+emissão) define a partir de quando o contrato entra no Endividamento e no
+Painel de Indicadores, no lugar da data de emissão. Os contratos existentes
+receberam a data de emissão. O trigger `trg_projecao_contratos` passou a ser
+`AFTER INSERT OR UPDATE OF` apenas das colunas usadas por
+`calcular_projecao_contrato` (`tipo_contrato`, `valor_financiado`,
+`taxa_juros_efetiva`, `prazo_carencia`, `prazo_final`, `carencia_pagamento`,
+`registro_cobranca`, `data_bndes`, `data_referencia`, `selic`).
+**Motivo:** A contabilização pode acontecer meses depois da emissão (ex.: os
+contratos de jun–ago/2026 entraram na planilha do conselho só em 09/2026), e
+alterar essa data não pode mexer na projeção; antes, qualquer UPDATE em
+`contratos` recalculava o contrato.
+**Consequência:** Alterar a data de contabilização, empresa, banco, número ou
+débito em conta não recalcula a projeção. `data_referencia` e `selic` continuam
+calculadas só na inclusão (triggers BEFORE INSERT), por isso data de emissão e
+data BNDES não devem ser editadas depois. A tela de edição está em BL-032.
+
+## DA14 - Modalidades do endividamento fora da projeção
+
+**Status:** Aceita
+**Decisão:** Consórcios e outros pagamentos (Compra Santo Anjo, Tributário)
+não têm cálculo no Nexus: os consórcios vêm dos CSVs dos bancos (pago pelo
+histórico de pagamentos; a pagar como foto por competência, banco e
+consorciado) e os créditos do fechamento são lançados por competência; Compra
+Santo Anjo e Tributário são parcelas lançadas manualmente com baixa e estorno
+(`database/consorcio_outros_pagamentos.sql`). O Endividamento junta as quatro
+modalidades num trecho SQL comum (`CTE_MOVIMENTOS_ENDIVIDAMENTO`), usado pelo
+relatório e pelo resumo do mês.
+**Motivo:** As administradoras de consórcio já calculam reajuste e parcelas;
+as demais modalidades não têm regra de cálculo a reproduzir.
+**Consequência:** A posição dessas modalidades depende das importações e
+baixas mensais (UC16, UC17); o a pagar de consórcio usa a última competência
+importada até o mês da data base.

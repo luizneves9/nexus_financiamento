@@ -29,7 +29,8 @@ centralizar no sistema os PDFs do contrato e da ficha financeira.
    **Detalhes**.
 2. O sistema abre o modal **Detalhe do contrato**: número do contrato,
    "Empresa · Banco · Situação" e as abas:
-   - **Dados** — campos do contrato (tipo, datas, valor, Selic, taxas,
+   - **Dados** — campos do contrato (tipo, datas — inclusive a data de
+     contabilização, RN28 —, valor, Selic, taxas,
      prazos, registro de cobrança, situação e parcelas liquidadas);
    - **Contrato** e **Ficha Financeira** — escolha do arquivo, PDF exibido na
      tela (visualizador do navegador, com o link "Abrir em nova aba"),

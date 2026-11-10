@@ -136,7 +136,11 @@ views (Streamlit) → services → repositories/queries → PostgreSQL (schema f
   de `consorcio_a_pagar`) num trecho comum `CTE_MOVIMENTOS_ENDIVIDAMENTO`, usado
   pelo relatório (`SELECT_PROJECAO_ENDIVIDAMENTO`) e pelo resumo do mês
   (`SELECT_RESUMO_ENDIVIDAMENTO`, rodado no fim do mês anterior e na data
-  base). Créditos de consórcio e Dívida Líquida no rodapé. Valores em R$ Mi
+  base). Créditos de consórcio e Dívida Líquida no rodapé. Botão **Gerar
+  PDF**: `imprimir_pdf` abre a impressão do navegador só do Endividamento
+  Bancário (sem o resumo), tema claro, A4 paisagem — sem biblioteca de PDF na
+  imagem; o documento vai em base64 porque o DOMPurify do `st.html` descarta
+  `<script>` com `<` no texto. Valores em R$ Mi
   sem arredondar nas queries: totais e resumo somam o valor exato e arredondam
   em 3 casas só no resultado (Saldo Final = Total a pagar = tela Consórcio; a
   soma das células exibidas pode diferir 0,001 do total).
@@ -176,8 +180,13 @@ views (Streamlit) → services → repositories/queries → PostgreSQL (schema f
   Contabilização (`ic_dt_contabilizacao`) começa vazia e recebe a Data Emissão
   antes de o widget ser criado, quando a emissão é informada.
 - Autenticação — `views/login.py` + `services/login.py`: usuários em
-  `financiamento.usuarios` (criados só pelo desenvolvedor, ver
-  `database/usuarios.sql`); primeiro acesso com senha vazia leva ao cadastro
+  `nexus.usuarios`, o cadastro único do Sistema Nexus (schema do
+  `K:
+exus_portal`), com acesso ao módulo em `nexus.usuario_modulos`
+  (`modulo = 'financiamento'`; sem acesso, login recusado); usuários e
+  acessos administrados no portal (`database/usuarios_nexus.sql`; a antiga
+  `financiamento.usuarios` fica só para o log antigo — FK do log `NOT VALID`,
+  ids antigos não batem com o `nexus`); primeiro acesso com senha vazia leva ao cadastro
   de senha; senha guardada só como hash `scrypt`; cookie `nexus_sessao`
   assinado com HMAC (`AUTH_SECRET`), 30 min deslizantes.
 - Log de auditoria — `services/log.py` (`registrar_log`,
@@ -299,7 +308,9 @@ Toda tela que exibe datas ou valores monetários em `st.dataframe`/
   `database/consorcio_outros_pagamentos.sql` (tabelas de consórcio e outros
   pagamentos) e `database/data_contabilizacao.sql` (coluna e trigger restrito)
   também já foram executados. Nenhum deles está refletido no
-  `ddl_financiamento.sql` (`BL-019`).
+  `ddl_financiamento.sql` (`BL-019`). `database/usuarios_nexus.sql` troca o
+  login para `nexus.usuarios` (a tabela de `usuarios.sql` fica só para o log
+  antigo).
 - `database/projection_functions.sql` documenta as funções PostgreSQL de
   projeção temporária usadas na inclusão de contratos (DA05: a projeção roda
   via função no banco, sem persistir o contrato, para evitar efeitos

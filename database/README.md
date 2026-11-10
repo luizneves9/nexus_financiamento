@@ -14,7 +14,8 @@
 | `consorcio_outros_pagamentos.sql` | Tabelas `consorcio_pago`, `consorcio_a_pagar`, `consorcio_credito` e `outros_pagamentos` (modalidades do Endividamento fora da projeção, DA14; UC16 e UC17). Já executado (a coluna `consorcio_a_pagar.nome_consorciado` foi incluída depois, em 06/11/2026). |
 | `data_contabilizacao.sql` | Coluna `contratos.data_contabilizacao` (preenchida com a emissão, `NOT NULL`, ≥ emissão) e trigger `trg_projecao_contratos` restrito às colunas do cálculo (DA13). Já executado em 09/11/2026, inclusive a etapa 2 (`NOT NULL`). |
 | `projection_functions.sql` | Funções parametrizadas para projeção temporária durante a inclusão de contratos (DA05). |
-| `usuarios.sql` | Script de criação da tabela `usuarios` (autenticação, UC12) e comandos do desenvolvedor: criar usuário, resetar senha, bloquear e conferir. Já executado. |
+| `usuarios.sql` | Script de criação da tabela `usuarios` (autenticação, UC12). Já executado. **Substituída** pelo cadastro único `nexus.usuarios` (ver `usuarios_nexus.sql`); mantida para consulta do log antigo e volta atrás. |
+| `usuarios_nexus.sql` | Troca do login para o cadastro único do portal (`nexus.usuarios` + `nexus.usuario_modulos`, `nexus_portal/database/01_nexus.sql`): copia a senha de quem ainda não tinha no `nexus` e troca a FK de `log_auditoria.id_usuario` para `nexus.usuarios(id)` com `NOT VALID` (logs anteriores guardam o id de `financiamento.usuarios`). Executar uma única vez com o container parado, junto com o código novo do login. |
 | `log_auditoria.sql` | Script de criação da tabela `log_auditoria`, índices, função `log_auditoria_imutavel` e triggers que bloqueiam UPDATE/DELETE/TRUNCATE (DA06), mais consultas úteis de auditoria. Executar depois de `usuarios.sql`. Já executado. |
 
 ## Finalidade

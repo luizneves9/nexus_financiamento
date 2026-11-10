@@ -17,10 +17,13 @@ está no [Registro de Status e Pendências](requirements/status-register.md).
 - Autenticação: login, cadastro de senha no primeiro acesso, sessão de 30
   minutos e Sair (UC12).
 - Log de auditoria de escritas e eventos de acesso (RF08.1).
+- Login pelo cadastro único do Sistema Nexus (`nexus.usuarios`), com acesso
+  ao módulo administrado no portal (UC12).
 - Relatório de endividamento com fluxo de caixa (Relatórios > Endividamento)
   na posição da data base, com Financiamentos, Compra Santo Anjo, Consórcios e
   Tributário, créditos de consórcio, Dívida Líquida, resumo do mês (variação)
-  e tema automático/manual, ainda sem download e em calibração (selo BETA).
+  e tema automático/manual, PDF pela impressão do navegador, ainda sem
+  exportação em Excel e em calibração (selo BETA).
 - Consórcio (Operacional > Consórcio, UC16): importação dos CSVs pago e a
   pagar e créditos do fechamento.
 - Outros pagamentos (Operacional > Outros Pagamentos, UC17): parcelas de
@@ -51,7 +54,8 @@ está no [Registro de Status e Pendências](requirements/status-register.md).
 - Implementar perfis e permissões por aba e ação (BL-005), registrando
   `ACESSO_NEGADO` no log.
 - Implementar filtros e detalhamento.
-- Adicionar download ao relatório de Endividamento (BL-011).
+- Adicionar exportação em Excel ao relatório de Endividamento (BL-011; o PDF
+  já existe).
 - Validar Endividamento, resumo do mês e Painel com o financeiro e retirar o
   selo BETA (BL-033, BL-031).
 - Tela de edição de contratos (data de contabilização e dados cadastrais,

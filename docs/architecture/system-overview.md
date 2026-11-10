@@ -53,8 +53,9 @@ triggers, cálculos financeiros e matérialized views.
 
 ## Autenticação e auditoria
 
-- Login com usuários de `financiamento.usuarios`, senha em hash `scrypt` e
-  sessão em cookie assinado (DA04, UC12).
+- Login com usuários do cadastro único `nexus.usuarios` (acesso ao módulo em
+  `nexus.usuario_modulos`, administrados pelo portal), senha em hash
+  `scrypt` e sessão em cookie assinado (DA04, UC12).
 - Toda escrita e todo evento de acesso gravam em
   `financiamento.log_auditoria`, na mesma transação da operação (DA06).
 

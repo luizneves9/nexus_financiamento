@@ -25,9 +25,11 @@
 ## Execução com Compose
 
 Antes de iniciar a aplicação, confirme que o PostgreSQL possui o schema
-`financiamento`, suas funções auxiliares, views e materialized views, e as
-tabelas `usuarios` e `log_auditoria` (scripts `database/usuarios.sql` e
-`database/log_auditoria.sql`, nessa ordem), com ao menos um usuário criado. Os
+`financiamento`, suas funções auxiliares, views e materialized views, a
+tabela `log_auditoria` (`database/log_auditoria.sql`) e o schema `nexus` do
+portal (`nexus_portal/database/01_nexus.sql`), com ao menos um usuário com
+acesso ao módulo `financiamento` em `nexus.usuario_modulos`
+(`database/usuarios_nexus.sql` troca a FK do log para `nexus.usuarios`). Os
 arquivos em `database/` documentam o estado do banco. O DDL exportado não deve
 ser tratado como instalador ou migração automática; as funções de projeção
 devem estar criadas no banco conforme o procedimento técnico validado.

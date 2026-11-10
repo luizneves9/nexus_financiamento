@@ -2,8 +2,9 @@
 
 ## Estado atual
 
-- **Autenticação:** implementada (UC12, DA04). Usuários em
-  `financiamento.usuarios`, senha em hash `scrypt` com salt, sessão em cookie
+- **Autenticação:** implementada (UC12, DA04). Usuários no cadastro único
+  `nexus.usuarios`, com acesso ao módulo em `nexus.usuario_modulos`
+  (administrados pelo portal; sem permissão = login recusado), senha em hash `scrypt` com salt, sessão em cookie
   assinado por HMAC-SHA256 (`AUTH_SECRET`) válido por 30 minutos
   deslizantes. Mensagem de erro genérica para não revelar quais usuários
   existem.

@@ -1,3 +1,5 @@
+import base64
+import json
 import streamlit as st
 import pandas as pd
 from datetime import date
@@ -322,6 +324,69 @@ def build_html_resumo(resumo, tema, data_base):
 
 
 # ------------------------------------------------------------------
+# PDF (impressão do navegador) --------------------------------------
+# ------------------------------------------------------------------
+# A4 paisagem, fonte ajustada para as 17 colunas preencherem a largura numa página, cores de fundo mantidas na impressão
+CSS_IMPRESSAO = """
+<style>
+    @page { size: A4 landscape; margin: 8mm; }
+    html, body { margin:0; background:#fff; color:#000; font-family:'Segoe UI', sans-serif; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .tabela-endiv { font-size: 11px; }
+    .tabela-endiv th, .tabela-endiv td { padding: 1px 4px; }
+    .titulo-bar { padding: 5px; }
+    .titulo-bar h2 { font-size: 16px; }
+    .legenda-endiv { font-size: 11px; }
+    tr { break-inside: avoid; page-break-inside: avoid; }
+</style>
+"""
+
+
+def imprimir_pdf(html_relatorio, titulo):
+    """Abre a janela de impressão do navegador só com o relatório (o usuário escolhe "Salvar como PDF").
+
+    Não há biblioteca de PDF na imagem: o documento é montado num iframe oculto criado por JavaScript
+    (o st.html remove iframes estáticos) e impresso; o título da página vira o nome sugerido do arquivo."""
+
+    documento = (
+        # CSS de impressão depois do relatório: sobrepõe o CSS da tabela (espaçamento e título)
+        f"<!doctype html><html><head><meta charset='utf-8'><title>{titulo}</title></head>"
+        f"<body>{html_relatorio}{CSS_IMPRESSAO}</body></html>"
+    )
+    # em base64: o st.html filtra o HTML com o DOMPurify, que descarta o <script> cujo texto contenha "<"
+    conteudo = base64.b64encode(documento.encode('utf-8')).decode('ascii')
+
+    st.html(
+        f"""
+        <div style="display:none"></div>
+        <script>
+        (function () {{
+            const quadro = document.createElement('iframe');
+            quadro.style.cssText = 'position:fixed; right:0; bottom:0; width:0; height:0; border:0;';
+            document.body.appendChild(quadro);
+            const doc = quadro.contentWindow.document;
+            doc.open();
+            const binario = atob("{conteudo}");
+            const bytes = new Uint8Array(binario.length);
+            for (let i = 0; i !== binario.length; i++) bytes[i] = binario.charCodeAt(i);
+            doc.write(new TextDecoder('utf-8').decode(bytes));
+            doc.close();
+            setTimeout(function () {{
+                const tituloPagina = document.title;
+                document.title = {json.dumps(titulo)};   // nome sugerido do PDF
+                quadro.contentWindow.focus();
+                quadro.contentWindow.print();
+                document.title = tituloPagina;
+                setTimeout(function () {{ quadro.remove(); }}, 1000);
+            }}, 300);
+        }})();
+        </script>
+        """,
+        unsafe_allow_javascript=True
+    )
+
+
+# ------------------------------------------------------------------
 # RENDER ----------------------------------------------------------
 # ------------------------------------------------------------------
 
@@ -349,6 +414,10 @@ with st.form('endividamento_filtro'):
         st.session_state['fe_data_base'] = data_base or date.today()
         st.session_state['fe_data_corte'] = data_corte
 
+# PDF do Endividamento Bancário (sem o resumo do mês), sempre no tema claro
+gerar_pdf = st.button('Gerar PDF', icon=':material/picture_as_pdf:',
+                      help='Abre a impressão do Endividamento Bancário (sem o resumo do mês): escolha "Salvar como PDF".')
+
 # Buscar dados do banco (financiamentos com a regra do Contas a Pagar; consórcio, Santo Anjo e tributário na data base)
 data_base = st.session_state['fe_data_base']
 with st.spinner('Consultando endividamento...'):
@@ -363,6 +432,10 @@ if not df_raw.empty:
     rodape = montar_rodape(subtotal, credito)
     html_table = build_html(saldo, saldo_total_grupo, anos, subtotal, rodape, st.session_state.tema_endividamento, data_base)
     st.markdown(html_table, unsafe_allow_html=True)
+
+    if gerar_pdf:
+        imprimir_pdf(build_html(saldo, saldo_total_grupo, anos, subtotal, rodape, 'claro', data_base),
+                     f'Endividamento Bancário - Data base {data_base:%d-%m-%Y}')
 
     # resumo do mês (variação): posição no último dia do mês anterior x posição na data base
     with st.spinner('Consultando o resumo do mês...'):

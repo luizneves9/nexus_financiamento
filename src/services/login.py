@@ -119,9 +119,10 @@ def autenticar(usuario, senha):
     try:
         registro = consultar_usuario(usuario)
 
-        if registro is None or not registro['ativo']:
+        if registro is None or not registro['ativo'] or not registro['permitido']:
             verificar_senha(senha, _HASH_FICTICIO)
-            motivo = 'usuario_inexistente' if registro is None else 'usuario_inativo'
+            motivo = ('usuario_inexistente' if registro is None
+                      else 'usuario_inativo' if not registro['ativo'] else 'sem_permissao')
             _falha_login(usuario, registro, motivo)
             return False
 
@@ -198,14 +199,16 @@ def cancelar_primeiro_acesso():
     st.session_state.pop('auth_primeiro_acesso', None)
 
 def usuario_ativo(usuario):
-    '''Retorna o registro do usuário se ele ainda existe, está ativo e com senha cadastrada (senão None).'''
+    '''Retorna o registro do usuário se ele ainda existe, está ativo, tem permissão no Financiamento e senha
+    cadastrada (senão None). Permissão retirada no portal encerra a sessão na próxima renovação.'''
 
     try:
         registro = consultar_usuario(usuario)
     except OperationalError:
         return None
 
-    if registro is not None and registro['ativo'] and registro['senha_hash'] is not None:
+    if (registro is not None and registro['ativo'] and registro['permitido']
+            and registro['senha_hash'] is not None):
         return registro
 
     return None

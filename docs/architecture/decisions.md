@@ -43,8 +43,16 @@ posteriormente; até lá os dados eram carregados manualmente no banco.
 **Decisão:** A autenticação é feita pela própria aplicação, sem provedor
 externo:
 
-- usuários em `financiamento.usuarios`, criados somente pelo desenvolvedor,
-  sem senha; o próprio usuário cadastra a senha no primeiro acesso;
+- usuários no cadastro único do Sistema Nexus, `nexus.usuarios` (schema do
+  repositório `nexus_portal`, banco `fin`), com acesso ao módulo em
+  `nexus.usuario_modulos` (`modulo = 'financiamento'`); criados sem senha
+  pela tela Administração do portal, e o próprio usuário cadastra a senha no
+  primeiro acesso (a senha vale para o portal e todos os módulos). Até
+  11/2026 os usuários ficavam em `financiamento.usuarios`
+  (`database/usuarios.sql`, mantida só para consulta e volta atrás); a FK de
+  `log_auditoria.id_usuario` passou a `nexus.usuarios(id)` com `NOT VALID`,
+  e os logs anteriores guardam o id antigo (vale a coluna `usuario`) —
+  `database/usuarios_nexus.sql`;
 - senha armazenada somente como hash `scrypt` (biblioteca padrão do Python,
   `hashlib.scrypt`, N=2^14, r=8, p=1, salt aleatório de 16 bytes), no formato
   `scrypt$n$r$p$salt$hash` — os parâmetros ficam gravados, permitindo

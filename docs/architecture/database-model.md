@@ -73,6 +73,9 @@ estão em [database/projection_functions.sql](../../database/projection_function
 As tabelas de autenticação e auditoria estão em
 [database/usuarios.sql](../../database/usuarios.sql) e
 [database/log_auditoria.sql](../../database/log_auditoria.sql) (ainda não
-sincronizadas no DDL — BL-019).
+sincronizadas no DDL — BL-019). Desde 11/2026 o login usa o cadastro único
+`nexus.usuarios` / `nexus.usuario_modulos` do portal, e a FK do log aponta
+para `nexus.usuarios` ([database/usuarios_nexus.sql](../../database/usuarios_nexus.sql));
+`financiamento.usuarios` fica só para consulta do log antigo e volta atrás.
 Alterações no banco devem ser refletidas neste documento e, quando aplicável,
 na matriz de rastreabilidade.

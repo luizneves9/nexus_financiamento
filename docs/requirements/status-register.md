@@ -49,14 +49,14 @@ com este registro.
 | UC07 | Liquidação de parcelas | Implementado | Tela Liquidação: liquidação manual (ajuste gravado) e estorno, com log; parcela liquidada imutável. | Perfis para liquidar/estornar (BL-005). |
 | UC08 | Atualização da Selic | Implementado | Importação sob demanda da série do BNDES (só datas novas), com recálculo e log; tabela recarregada da fonte oficial em 16/10/2026. | Agendar a importação e confirmar acesso do servidor (BL-030). |
 | UC09 | Relatório Contas a Pagar | Implementado | Posição na data base (pago × projetado, Selic da data base), antecipações/quitações, filtros e exportação Excel. | Validar com o financeiro. |
-| UC10 | Relatório de endividamento | Implementado (em calibração) | Fluxo de caixa na posição da data base com Financiamentos, Compra Santo Anjo, Consórcios e Tributário, créditos de consórcio, Dívida Líquida e resumo do mês (variação); contratos pela data de contabilização. Conferido com a planilha de 08/2026 (diferença só nos contratos em que a planilha calcula a menor). | Validar com o financeiro (BL-033); exportação (BL-011). |
+| UC10 | Relatório de endividamento | Implementado (em calibração) | Fluxo de caixa na posição da data base com Financiamentos, Compra Santo Anjo, Consórcios e Tributário, créditos de consórcio, Dívida Líquida e resumo do mês (variação); contratos pela data de contabilização. Conferido com a planilha de 08/2026 (diferença só nos contratos em que a planilha calcula a menor). | Validar com o financeiro (BL-033); exportação em Excel (BL-011; PDF entregue). |
 | UC11 | Consulta de antecipações | Implementado | Aba Antecipação lista todas as antecipações/quitações com filtros no banco e resumo. | Validar com o financeiro. |
 | UC13 | Conciliação com o ERP | Implementado | Importação do CSV do ERP com tabela temporária, prévia por situação, vínculos ERP → Nexus (inclusive grupos com rateio) e liquidação com ajuste. | Antecipações no CSV (BL-028) e tela de vínculos (BL-029). |
 | UC14 | Detalhe do contrato e anexos | Implementado | Detalhe em abas (Dados, Contrato, Ficha Financeira, Histórico) com PDFs no banco, visualização na tela, anexar/baixar/excluir e log; anexos também na inclusão do contrato. | Acrescentar novas abas conforme evolução. |
 | UC15 | Painel de indicadores | Implementado (em calibração) | Painel > Indicadores com saldo devedor, fluxo de pagamentos, juros, contratado e taxa média comparando Data X × Data Y, fluxo mensal e composição por empresa/banco/tipo; contratos pela data de contabilização. | Validar com o financeiro (BL-031). |
 | UC16 | Consórcio | Implementado | Importação dos CSVs pago e a pagar por banco e consorciado, créditos do fechamento por competência, consultas com filtros e log. | Importar pago e a pagar todo mês. |
 | UC17 | Outros pagamentos | Implementado | Lançamento de parcelas de Compra Santo Anjo e Tributário, edição, exclusão, baixa e estorno, com filtros, resumo e log. | Validar com o financeiro. |
-| UC12 | Autenticação de usuário | Implementado | Login, primeiro acesso com cadastro de senha (hash scrypt), sessão de 30 min e Sair; eventos registrados no log. Perfis ainda não existem. | Resolver pendências de segurança BL-014 a BL-018. |
+| UC12 | Autenticação de usuário | Implementado | Login pelo cadastro único `nexus.usuarios` com acesso ao módulo em `nexus.usuario_modulos` (administrado no portal), primeiro acesso com cadastro de senha (hash scrypt), sessão de 30 min e Sair; eventos registrados no log. Perfis por aba/ação ainda não existem. | Resolver pendências de segurança BL-014 a BL-018. |
 | RF03.1 | Filtros de contratos | Parcial | Empresa, banco, contrato e "Somente sem anexos" (padrão `key=`, BL-020 resolvido). | Definir demais filtros (taxa, período, valor, tipo). |
 | RF08 | Auditoria | Parcial | Log de auditoria grava todas as escritas e eventos de acesso (RF08.1); não há tela de consulta (RF08.2). | Definir a tela de histórico (BL-021). |
 | RF10 | Autenticação e perfis | Parcial | Autenticação implementada (UC12); perfis e permissões por aba/ação não existem. | Definir matriz de perfis e permissões (BL-005). |
@@ -220,6 +220,11 @@ com este registro.
     liquidadas na cor do cabeçalho, bloco Sub Total (por modalidade e Total
     Geral) com total pago e total a pagar; créditos de consórcio e Dívida
     Líquida; temas automático/claro/escuro.
+  - Gerar PDF (11/2026): impressão do navegador só do Endividamento
+    Bancário (sem o resumo do mês), tema claro, A4 paisagem numa página.
+  - Arredondamento (11/2026): totais e resumo somam o valor exato e
+    arredondam em 3 casas só no resultado (Saldo Final = Total a pagar = tela
+    Consórcio; a soma das células pode diferir 0,001).
   - Resumo do mês (variação, RN30): Saldo Inicial, Juros, Pgto Mês, Contrato
     Quitado, Contrato Novo e Saldo Final por modalidade, com créditos e Dívida
     Líquida; o Saldo Final bate com o Total a pagar do Sub Total.
@@ -228,7 +233,8 @@ com este registro.
     todos em três grupos de contratos Itaú (194918…, 195341/195342,
     194953/194954) em que a planilha usa principal cerca de 8,8% menor —
     os valores pagos em set/out/2026 confirmam o Nexus.
-- **Pendente:** validação com o financeiro (BL-033); exportação (BL-011).
+- **Pendente:** validação com o financeiro (BL-033); exportação em Excel
+  (BL-011; o PDF já existe).
 - **Evidência:** `src/views/relatorio_endividamento.py`,
   `src/services/relatorio_endividamento.py`,
   `src/queries/queries_relatorio_endividamento.py`
@@ -301,8 +307,13 @@ com este registro.
 - **Entregue:**
   - Tela de login (Usuário, Senha, Entrar) antes de qualquer outra tela; sem
     login, nenhuma aba é registrada na navegação.
-  - Usuários em `financiamento.usuarios`, criados somente pelo desenvolvedor
-    (`database/usuarios.sql`).
+  - Usuários no cadastro único do Sistema Nexus (`nexus.usuarios`), com
+    acesso ao módulo em `nexus.usuario_modulos` (`financiamento`),
+    administrados pela tela Administração do portal; sem acesso, o login é
+    recusado (`LOGIN_FALHA`, motivo `sem_permissao`) e a sessão aberta é
+    encerrada na renovação. Até 11/2026 em `financiamento.usuarios`; troca em
+    `database/usuarios_nexus.sql` (senha copiada, FK do log para
+    `nexus.usuarios` com `NOT VALID`).
   - Primeiro acesso: senha vazia leva ao cadastro de senha (mínimo 8
     caracteres + confirmação); grava só o hash `scrypt` (N=2^14, r=8, p=1,
     salt de 16 bytes).
@@ -319,8 +330,8 @@ com este registro.
   BL-014 a BL-018.
 - **Evidência:** `src/main.py`, `src/views/login.py`,
   `src/services/login.py`, `src/queries/queries_login.py`,
-  `src/repositories/login.py`, `src/config/settings.py` e
-  `database/usuarios.sql`.
+  `src/repositories/login.py`, `src/config/settings.py`,
+  `database/usuarios_nexus.sql` e `database/usuarios.sql`.
 - **Próxima ação:** BL-014 (remover `.env` do Git e rotacionar segredos).
 - **Critério de conclusão:** pendências de segurança resolvidas, perfis
   implementados e acesso validado em produção via HTTPS.
@@ -432,7 +443,7 @@ com este registro.
 | BL-008 | Definir integração da Selic. | Alto | Fonte oficial | Concluído (BNDES UM143, UC08) |
 | BL-009 | Criar política de backup e restauração. | Alto | Infraestrutura | Aberto |
 | BL-010 | Documentar a view `vw_agrupamento_projecao` no DDL versionado e definir a exportação da tela de Projeção de Pagamentos (filtros já entregues). | Médio | Acesso ao banco para extrair a definição da view | Concluído (view removida; Contas a Pagar com exportação) |
-| BL-011 | Adicionar filtros (ano, modalidade) e download/exportação à tela de Relatórios > Endividamento. | Médio | Especificação dos filtros aprovada pelo financeiro | Parcial (filtros entregues; exportação pendente) |
+| BL-011 | Adicionar filtros (ano, modalidade) e download/exportação à tela de Relatórios > Endividamento. | Médio | Especificação dos filtros aprovada pelo financeiro | Parcial (filtros e PDF pela impressão do navegador entregues; exportação em Excel pendente) |
 | BL-032 | Tela de edição de contratos (botão Editar em Contratos): só campos que não afetam a projeção — empresa, banco, número, data de contabilização e débito em conta —, validação contabilização ≥ emissão e log `CONTRATO_ALTERAR` (antes/depois). Hoje a data de contabilização só muda por SQL, sem log (em 09/11/2026 os 13 contratos de 2026 foram para 30/09/2026 por SQL). | Médio | — | Aberto |
 | BL-033 | Validar com o financeiro o Endividamento (modalidades, créditos, Dívida Líquida) e o resumo do mês; avisar que a planilha subestima os contratos Itaú 194918…, 195341/195342 e 194953/194954; retirar o selo BETA de Endividamento e Indicadores após a validação. | Médio | Disponibilidade do financeiro | Aberto |
 | BL-012 | Sincronizar no DDL versionado a trigger `trg_after_insert_antecipacao` (`AFTER INSERT` em `financiamento.antecipacao`, aciona `refresh_views_contratos()`) e as colunas `tipo_lancamento`/`data_compensacao`. | Médio | Acesso ao banco para extrair a definição da trigger | Concluído |

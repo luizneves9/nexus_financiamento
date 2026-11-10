@@ -21,7 +21,7 @@ ver o motivo de cada status, as lacunas e a próxima ação, consulte o
 | RF07.1 | RN02, RN05, RN09, RN13, RN14, RN15, RN19 | UC06 | Implementado | Suportar modalidades além de BNDES FINAME SELIC; validar cálculo com o financeiro. |
 | RF07.2 | RN19, RN20, RN21 | UC07 | Implementado | Perfis para liquidar/estornar (BL-005). |
 | RF07.3 | RN02, RN03, RN20, RN24 | UC09 | Implementado | Contas a Pagar com data base e exportação; validar com o financeiro. |
-| RF07.4 | RN02, RN03, RN24, RN28, RN29 | UC10 | Implementado (em calibração) | Validar com o financeiro (BL-033); exportação (BL-011). |
+| RF07.4 | RN02, RN03, RN24, RN28, RN29 | UC10 | Implementado (em calibração) | Validar com o financeiro (BL-033); exportação em Excel (BL-011; PDF entregue). |
 | RF07.4.1 | RN24, RN28, RN29, RN30 | UC10 | Implementado (em calibração) | Validar o resumo com o financeiro (BL-033). |
 | RF07.5 | RN08, RN10 | UC11 | Implementado | Validar com o financeiro; avaliar exportação. |
 | RF07.6 | RN19, RN20, RN22, RN23 | UC13 | Implementado | Tratar antecipações vindas no CSV do ERP (BL-028). |

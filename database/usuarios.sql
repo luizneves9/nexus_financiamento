@@ -7,6 +7,12 @@
 -- nunca a senha em texto.
 --
 -- Executar uma única vez no banco (desenvolvimento e depois produção).
+--
+-- SUBSTITUÍDA (11/2026): o login passou a usar o cadastro único do Sistema
+-- Nexus, nexus.usuarios + nexus.usuario_modulos (nexus_portal), e a FK do
+-- log aponta para nexus.usuarios (database/usuarios_nexus.sql). Esta tabela
+-- fica só para consulta do log antigo e volta atrás; as operações abaixo não
+-- valem mais — use a tela Administração do portal.
 -- =====================================================================
 
 CREATE TABLE financiamento.usuarios (

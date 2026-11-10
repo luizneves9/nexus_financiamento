@@ -84,7 +84,9 @@ tabelas de autenticação e auditoria são criadas por
 outros pagamentos por
 [database/consorcio_outros_pagamentos.sql](../database/consorcio_outros_pagamentos.sql);
 a data de contabilização do contrato por
-[database/data_contabilizacao.sql](../database/data_contabilizacao.sql).
+[database/data_contabilizacao.sql](../database/data_contabilizacao.sql). O
+login usa o cadastro único `nexus.usuarios` do portal desde 11/2026
+([database/usuarios_nexus.sql](../database/usuarios_nexus.sql)).
 
 Para incluir uma nova funcionalidade, use o [Templaté de Rastreabilidade de
 Nova Funcionalidade](requirements/feature-traceability-templaté.md).

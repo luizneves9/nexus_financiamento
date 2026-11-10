@@ -64,7 +64,23 @@ para o resumo do mês.
 Botões Automático, Claro e Escuro; no automático a tabela segue
 `prefers-color-scheme`.
 
-### FA03 - Nenhum registro
+### FA03 - Gerar PDF
+
+1. O usuário aciona **Gerar PDF** (abaixo dos filtros).
+2. O sistema abre a janela de impressão do navegador só com o **Endividamento
+   Bancário** da data base filtrada (título, Saldo Acumulado, anos, Sub
+   Total, créditos, Dívida Líquida e legenda), **sem o resumo do mês**,
+   sempre no tema claro, em A4 paisagem numa página, com as cores mantidas.
+3. O usuário escolhe **Salvar como PDF**; o nome sugerido é
+   `Endividamento Bancário - Data base dd-mm-aaaa`.
+
+Não há biblioteca de PDF na imagem `fin-base`: o documento é montado num
+iframe oculto criado por JavaScript e impresso pelo navegador. O conteúdo vai
+em base64, porque o `st.html` filtra o HTML com o DOMPurify, que descarta o
+`<script>` cujo texto contenha `<`. Se as cores não saírem, marcar
+**Gráficos de plano de fundo** nas configurações da impressão.
+
+### FA04 - Nenhum registro
 
 O sistema exibe "Nenhum dado disponível para o endividamento.".
 
@@ -94,7 +110,9 @@ A mensagem de erro do banco é exibida (relatório, créditos ou resumo do mês)
 - `src/queries/queries_relatorio_endividamento.py`: `CTE_MOVIMENTOS_ENDIVIDAMENTO`
   (usa `CTE_POSICAO_DATA_BASE`) compartilhado por `SELECT_PROJECAO_ENDIVIDAMENTO`
   e `SELECT_RESUMO_ENDIVIDAMENTO`; `SELECT_CREDITO_ENDIVIDAMENTO`.
+- PDF: `imprimir_pdf` e `CSS_IMPRESSAO` em `src/views/relatorio_endividamento.py`
+  (mesmo `build_html` da tela, tema claro).
 
 ## Dados persistidos
 
-Nenhum — somente leitura (sem log de auditoria).
+Nenhum — somente leitura (sem log de auditoria, inclusive a geração do PDF).

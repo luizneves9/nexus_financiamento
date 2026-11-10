@@ -137,8 +137,9 @@ views (Streamlit) → services → repositories/queries → PostgreSQL (schema f
   pelo relatório (`SELECT_PROJECAO_ENDIVIDAMENTO`) e pelo resumo do mês
   (`SELECT_RESUMO_ENDIVIDAMENTO`, rodado no fim do mês anterior e na data
   base). Créditos de consórcio e Dívida Líquida no rodapé. Valores em R$ Mi
-  arredondados por mês antes da soma — o resumo usa o mesmo arredondamento
-  para o Saldo Final bater com o Total a pagar.
+  sem arredondar nas queries: totais e resumo somam o valor exato e arredondam
+  em 3 casas só no resultado (Saldo Final = Total a pagar = tela Consórcio; a
+  soma das células exibidas pode diferir 0,001 do total).
 - Consórcio (`views/consorcio.py`, UC16) e Outros Pagamentos
   (`views/outros_pagamentos.py`, UC17) — importação dos CSVs pago/a pagar por
   banco e consorciado e créditos por competência; parcelas manuais de Compra

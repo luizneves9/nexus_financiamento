@@ -183,7 +183,11 @@ def montar_resumo_mes(df_inicial, df_final, base_inicial, data_base, rodape):
     - Contrato Novo: a pagar, na data base, dos contratos contabilizados no mês;
     - Pgto Mês: pagamentos registrados entre as duas posições, sem as quitações e sem os contratos novos;
     - Juros: o que sobra (Saldo Final - Saldo Inicial + Pgto Mês + Contrato Quitado - Contrato Novo),
-      ou seja, a correção pela Selic e os reajustes/novas contemplações dos consórcios.'''
+      ou seja, a correção pela Selic e os reajustes/novas contemplações dos consórcios.
+
+    As colunas e o Total são calculados com o valor exato e arredondados em 3 casas só no fim: o Saldo Final
+    bate com o Total a pagar do relatório e com a tela Consórcio, mas a soma das linhas exibidas pode diferir
+    0,001 do Total.'''
 
     def por_categoria(df):
         if df is None or df.empty:
@@ -196,25 +200,32 @@ def montar_resumo_mes(df_inicial, df_final, base_inicial, data_base, rodape):
     vazio = {'ordem': 99, 'pago': 0.0, 'a_pagar': 0.0, 'quitado': 0.0, 'novo_pago': 0.0, 'novo_a_pagar': 0.0}
     categorias = sorted(set(inicial) | set(final), key=lambda c: (final.get(c) or inicial.get(c))['ordem'])
 
-    linhas = []
+    colunas = ('saldo_inicial', 'juros', 'pgto_mes', 'quitado', 'novo', 'saldo_final')
+
+    # colunas calculadas com o valor exato (sem arredondar); o arredondamento é só no resultado
+    exatas = []
     for categoria in categorias:
         ini, fim = inicial.get(categoria, vazio), final.get(categoria, vazio)
         quitado = fim['quitado']
         novo = fim['novo_a_pagar']
-        # arredondado em 3 casas (+ 0.0 evita "-0.000" por resíduo de ponto flutuante)
-        pgto = round((fim['pago'] - fim['novo_pago']) - ini['pago'] - quitado, 3) + 0.0
-        linhas.append({
+        pgto = (fim['pago'] - fim['novo_pago']) - ini['pago'] - quitado
+        exatas.append({
             'modalidade': categoria,
             'saldo_inicial': ini['a_pagar'],
-            'juros': round(fim['a_pagar'] - ini['a_pagar'] + pgto + quitado - novo, 3) + 0.0,
+            'juros': fim['a_pagar'] - ini['a_pagar'] + pgto + quitado - novo,
             'pgto_mes': pgto,
             'quitado': quitado,
             'novo': novo,
             'saldo_final': fim['a_pagar'],
         })
+    exato_total = {coluna: sum(linha[coluna] for linha in exatas) for coluna in colunas}
 
-    colunas = ('saldo_inicial', 'juros', 'pgto_mes', 'quitado', 'novo', 'saldo_final')
-    total = {'modalidade': 'Total', **{coluna: sum(linha[coluna] for linha in linhas) for coluna in colunas}}
+    def arredondar(linha):
+        # 3 casas (R$ mil); + 0.0 evita "-0.000" por resíduo de ponto flutuante
+        return {chave: (round(valor, 3) + 0.0 if chave in colunas else valor) for chave, valor in linha.items()}
+
+    linhas = [arredondar(linha) for linha in exatas]
+    total = arredondar({'modalidade': 'Total', **exato_total})
 
     if base_inicial.year == data_base.year:
         periodo = f'{MESES_EXTENSO[base_inicial.month - 1]} x {MESES_EXTENSO[data_base.month - 1]}'
@@ -232,5 +243,5 @@ def montar_resumo_mes(df_inicial, df_final, base_inicial, data_base, rodape):
         'competencia': rodape['competencia'] if rodape else None,
         'credito_cotas_contempladas': cotas,
         'credito_parcelas_nao_contempladas': nao_contempladas,
-        'divida_liquida': total['saldo_final'] - cotas - nao_contempladas,
+        'divida_liquida': round(exato_total['saldo_final'] - cotas - nao_contempladas, 3) + 0.0,
     }

@@ -68,9 +68,9 @@ SELECT_PROJECAO_ENDIVIDAMENTO = CTE_MOVIMENTOS_ENDIVIDAMENTO + '''
 		EXTRACT(MONTH FROM data_referencia)::int AS mes,
 		ordem,
 		categoria,
-		ROUND(SUM(valor) / 1000000, 3) AS valor,
-		ROUND(SUM(CASE WHEN pago THEN valor ELSE 0 END) / 1000000, 3) AS valor_pago,
-		ROUND(SUM(CASE WHEN NOT pago THEN valor ELSE 0 END) / 1000000, 3) AS valor_a_pagar,
+		SUM(valor) / 1000000 AS valor,   -- sem arredondar: os totais somam o valor exato (arredondamento só na exibição)
+		SUM(CASE WHEN pago THEN valor ELSE 0 END) / 1000000 AS valor_pago,
+		SUM(CASE WHEN NOT pago THEN valor ELSE 0 END) / 1000000 AS valor_a_pagar,
 		bool_or(liquidado) AND bool_and(pago) AS mes_pago,   -- só o liquidado marca (antecipação/quitação não)
 		bool_or(liquidado) AS mes_com_pagamento
 	FROM movimentos
@@ -81,28 +81,21 @@ SELECT_PROJECAO_ENDIVIDAMENTO = CTE_MOVIMENTOS_ENDIVIDAMENTO + '''
 
 # Resumo do mês (variação do endividamento): posição por modalidade numa data base, em milhões
 # (o service roda na data base e no último dia do mês anterior e calcula as colunas):
-# - pago / a_pagar: mesmos totais do Sub Total do relatório (mesmo filtro de data de corte e mesmo
-#   arredondamento: cada mês arredondado em 3 casas antes da soma, para o Saldo Final bater com o relatório);
+# - pago / a_pagar: mesmos totais do Sub Total do relatório (mesmo filtro de data de corte), sem arredondar:
+#   o service calcula as colunas com o valor exato e arredonda só no resultado do resumo;
 # - quitado: antecipações e quitações pagas no mês da data base (a partir de :inicio_mes);
 # - novo_pago / novo_a_pagar: contratos com data de contabilização no mês da data base (a partir de :inicio_mes).
-SELECT_RESUMO_ENDIVIDAMENTO = CTE_MOVIMENTOS_ENDIVIDAMENTO + ''',
-	resumo_mes AS (
-		SELECT
-			ordem,
-			categoria,
-			date_trunc('month', data_referencia) AS mes,
-			ROUND(COALESCE(SUM(valor) FILTER (WHERE pago), 0) / 1000000, 3) AS pago,
-			ROUND(COALESCE(SUM(valor) FILTER (WHERE NOT pago), 0) / 1000000, 3) AS a_pagar,
-			ROUND(COALESCE(SUM(valor) FILTER (WHERE quitacao AND data_referencia >= CAST(:inicio_mes AS date)), 0) / 1000000, 3) AS quitado,
-			ROUND(COALESCE(SUM(valor) FILTER (WHERE pago AND data_contabilizacao >= CAST(:inicio_mes AS date)), 0) / 1000000, 3) AS novo_pago,
-			ROUND(COALESCE(SUM(valor) FILTER (WHERE NOT pago AND data_contabilizacao >= CAST(:inicio_mes AS date)), 0) / 1000000, 3) AS novo_a_pagar
-		FROM movimentos
-		WHERE (CAST(:data_corte AS date) IS NULL OR data_referencia >= date_trunc('month', CAST(:data_corte AS date))::date)
-		GROUP BY 1, 2, 3
-	)
-	SELECT ordem, categoria, SUM(pago) AS pago, SUM(a_pagar) AS a_pagar, SUM(quitado) AS quitado,
-		SUM(novo_pago) AS novo_pago, SUM(novo_a_pagar) AS novo_a_pagar
-	FROM resumo_mes
+SELECT_RESUMO_ENDIVIDAMENTO = CTE_MOVIMENTOS_ENDIVIDAMENTO + '''
+	SELECT
+		ordem,
+		categoria,
+		COALESCE(SUM(valor) FILTER (WHERE pago), 0) / 1000000 AS pago,
+		COALESCE(SUM(valor) FILTER (WHERE NOT pago), 0) / 1000000 AS a_pagar,
+		COALESCE(SUM(valor) FILTER (WHERE quitacao AND data_referencia >= CAST(:inicio_mes AS date)), 0) / 1000000 AS quitado,
+		COALESCE(SUM(valor) FILTER (WHERE pago AND data_contabilizacao >= CAST(:inicio_mes AS date)), 0) / 1000000 AS novo_pago,
+		COALESCE(SUM(valor) FILTER (WHERE NOT pago AND data_contabilizacao >= CAST(:inicio_mes AS date)), 0) / 1000000 AS novo_a_pagar
+	FROM movimentos
+	WHERE (CAST(:data_corte AS date) IS NULL OR data_referencia >= date_trunc('month', CAST(:data_corte AS date))::date)
 	GROUP BY 1, 2
 	ORDER BY 1
 '''

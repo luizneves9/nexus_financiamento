@@ -83,8 +83,10 @@ A mensagem de erro do banco é exibida (relatório, créditos ou resumo do mês)
   Dívida Líquida.
 - RN30: colunas do resumo do mês; o Saldo Final é igual ao Total a pagar do
   Sub Total.
-- Valores em milhões com 3 casas decimais; cada mês é arredondado antes da
-  soma (o resumo usa o mesmo arredondamento).
+- Valores em milhões com 3 casas decimais; os totais (anos, Saldo Acumulado,
+  Sub Total, resumo e Dívida Líquida) somam o valor exato e só o resultado é
+  arredondado — batem com a tela Consórcio, mas a soma das células exibidas
+  pode diferir 0,001 do total.
 
 ## Implementação
 
